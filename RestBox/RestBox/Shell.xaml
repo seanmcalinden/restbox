@@ -1,0 +1,47 @@
+﻿<Window x:Class="RestBox.Shell"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:avalondock="http://avalondock.codeplex.com"
+        Title="Shell" Height="600" Width="800" WindowStartupLocation="CenterScreen">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />            
+        </Grid.RowDefinitions>
+        
+        <Menu Grid.Row="0">
+            <MenuItem Header="_File"/>
+        </Menu>
+        <StatusBar DockPanel.Dock="Bottom" x:Name="StatusBar" Height="35" VerticalAlignment="Bottom" Grid.Row="2">
+            <Label Content="Ready" />
+        </StatusBar>
+        
+        <avalondock:DockingManager x:Name="dockingManager" Grid.Row="1">
+            <avalondock:LayoutRoot>
+                <avalondock:LayoutPanel Orientation="Horizontal">
+                    <avalondock:LayoutDocumentPane>
+                        <avalondock:LayoutDocument Title="Start Page">
+                            <TextBox Text="Do something with this page" />
+                        </avalondock:LayoutDocument>
+                    </avalondock:LayoutDocumentPane>
+
+                    <avalondock:LayoutAnchorablePaneGroup DockWidth="300">
+                        <avalondock:LayoutAnchorablePane>
+                            <avalondock:LayoutAnchorable Title="Http Requests" AutoHideWidth="200"  ToolTip="Http Requests" CanClose="False" CanHide="False">
+                                <TextBox Width="200" />
+                            </avalondock:LayoutAnchorable>
+                            <avalondock:LayoutAnchorable Title="Environments" AutoHideWidth="200"  ToolTip="Environments" CanClose="False" CanHide="False">
+                                <TextBox Width="200" />
+                            </avalondock:LayoutAnchorable>
+                            <avalondock:LayoutAnchorable Title="Sequences" AutoHideWidth="200" ToolTip="Sequences" CanClose="False" CanHide="False">
+                                <TextBox Width="200" />
+                            </avalondock:LayoutAnchorable>
+                        </avalondock:LayoutAnchorablePane>
+                    </avalondock:LayoutAnchorablePaneGroup>
+
+                </avalondock:LayoutPanel>
+                
+            </avalondock:LayoutRoot>
+        </avalondock:DockingManager>
+    </Grid>
+</Window>
