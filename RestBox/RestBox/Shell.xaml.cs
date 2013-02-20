@@ -1,4 +1,6 @@
 ﻿using System.Windows;
+using RestBox.Services;
+using RestBox.ViewModels;
 
 namespace RestBox
 {
@@ -7,9 +9,16 @@ namespace RestBox
     /// </summary>
     public partial class Shell : Window
     {
-        public Shell()
+        public Shell(ShellViewModel shellViewModel, IApplicationLayout applicationLayout)
         {
+            DataContext = shellViewModel;
+            shellViewModel.ApplicationTitle = "REST Box";
+            
             InitializeComponent();
+
+            shellViewModel.DockingManager = dockingManager;
+
+            applicationLayout.Load(dockingManager);
         }
     }
 }

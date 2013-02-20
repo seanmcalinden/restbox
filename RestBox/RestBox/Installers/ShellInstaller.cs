@@ -2,6 +2,8 @@
 using Castle.MicroKernel.Registration;
 using Castle.MicroKernel.SubSystems.Configuration;
 using Castle.Windsor;
+using RestBox.Services;
+using RestBox.ViewModels;
 
 namespace RestBox.Installers
 {
@@ -13,6 +15,10 @@ namespace RestBox.Installers
                                  .FromThisAssembly()
                                  .BasedOn<Window>()
                                  .Configure(c => c.LifeStyle.Singleton.Named(c.Implementation.Name)));
+            container.Register(
+                    Component.For<ShellViewModel>().ImplementedBy<ShellViewModel>().LifeStyle.Singleton,
+                    Component.For<IApplicationLayout>().ImplementedBy<ApplicationLayout>().LifeStyle.Singleton
+                );
         }
     }
 }
