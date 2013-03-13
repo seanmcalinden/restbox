@@ -2,7 +2,7 @@
 using System.ComponentModel;
 using System.Linq.Expressions;
 
-namespace RestBox.ViewModels
+namespace RestBox.Domain.Entities
 {
     public abstract class ViewModelBase<TViewModel> : INotifyPropertyChanged
     {

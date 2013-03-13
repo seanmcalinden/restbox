@@ -1,8 +1,8 @@
 ﻿using AvalonDock;
 
-namespace RestBox.Services
+namespace RestBox.ApplicationServices
 {
-    public interface IApplicationLayout
+    public interface ILayoutApplicationService
     {
         void Load(DockingManager dockingManager);
         void Save(DockingManager dockingManager);

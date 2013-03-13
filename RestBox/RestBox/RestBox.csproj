@@ -18,7 +18,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -36,7 +36,13 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>RestBox.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AutoMapper">
+      <HintPath>..\packages\AutoMapper.2.2.1-ci9000\lib\net40\AutoMapper.dll</HintPath>
+    </Reference>
     <Reference Include="AvalonDock">
       <HintPath>..\packages\AvalonDock.2.0.1746\lib\net40\AvalonDock.dll</HintPath>
     </Reference>
@@ -72,11 +78,15 @@
     <Reference Include="Microsoft.Practices.ServiceLocation, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\CommonServiceLocator.1.0\lib\NET35\Microsoft.Practices.ServiceLocation.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.4.5.11\lib\net40\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="PrismContrib.WindsorExtensions, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Prism.WindsorExtensions.4.0.0.0\lib\NET40\PrismContrib.WindsorExtensions.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -98,15 +108,75 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ApplicationServices\FileService.cs" />
+    <Compile Include="ApplicationServices\IFileService.cs" />
+    <Compile Include="ApplicationServices\IHttpRequestCacheService.cs" />
+    <Compile Include="ApplicationServices\IntellisenseService.cs" />
+    <Compile Include="ApplicationServices\HttpRequestService.cs" />
+    <Compile Include="ApplicationServices\IHttpRequestService.cs" />
+    <Compile Include="ApplicationServices\IMainMenuApplicationService.cs" />
+    <Compile Include="ApplicationServices\IIntellisenseService.cs" />
+    <Compile Include="ApplicationServices\MainMenuApplicationService.cs" />
     <Compile Include="Bootstrapper.cs" />
+    <Compile Include="Events\AddInputBindingEvent.cs" />
+    <Compile Include="Events\CloneHttpRequestEvent.cs" />
+    <Compile Include="Events\CloseSolutionEvent.cs" />
+    <Compile Include="Events\AddLayoutDocumentEvent.cs" />
+    <Compile Include="Events\CloseEnvironmentItemEvent.cs" />
+    <Compile Include="Events\CloneEnvironmentEvent.cs" />
+    <Compile Include="Events\ShowErrorEvent.cs" />
+    <Compile Include="Events\UpdateRequestBodyEvent.cs" />
+    <Compile Include="Events\UpdateRequestHeadersEvent.cs" />
+    <Compile Include="Events\IsRequestEnvironmentDirtyEvent.cs" />
+    <Compile Include="Events\UpdateRequestUrlEvent.cs" />
+    <Compile Include="Events\UpdateTabTitleEvent.cs" />
+    <Compile Include="Events\UpdateEnvironmentItemEvent.cs" />
+    <Compile Include="Events\SelectLayoutDocumentEvent.cs" />
+    <Compile Include="Events\IsHttpRequestDirtyEvent.cs" />
+    <Compile Include="Events\MakeRequestEvent.cs" />
+    <Compile Include="Events\NewEnvironmentEvent.cs" />
+    <Compile Include="Events\NewHttpRequestEvent.cs" />
+    <Compile Include="Events\NewSolutionEvent.cs" />
+    <Compile Include="Events\OpenSolutionEvent.cs" />
+    <Compile Include="Events\RemoveInputBindingEvent.cs" />
+    <Compile Include="Events\RemoveTabEvent.cs" />
+    <Compile Include="Events\ResetMenuEvent.cs" />
+    <Compile Include="Events\SelectEnvironmentItemEvent.cs" />
     <Compile Include="Installers\ShellInstaller.cs" />
-    <Compile Include="Services\ApplicationLayout.cs" />
-    <Compile Include="Services\IApplicationLayout.cs" />
+    <Compile Include="ApplicationServices\LayoutApplicationService.cs" />
+    <Compile Include="ApplicationServices\ILayoutApplicationService.cs" />
     <Compile Include="Shell.xaml.cs">
       <DependentUpon>Shell.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UserControls\HttpRequest.xaml.cs">
+      <DependentUpon>HttpRequest.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UserControls\RequestEnvironments.xaml.cs">
+      <DependentUpon>RequestEnvironments.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UserControls\RequestEnvironmentSettings.xaml.cs">
+      <DependentUpon>RequestEnvironmentSettings.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UserControls\RequestExtensions.xaml.cs">
+      <DependentUpon>RequestExtensions.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ViewModels\RequestExtensionViewFile.cs" />
+    <Compile Include="ViewModels\RequestExtensionsViewModel.cs" />
+    <Compile Include="ViewModels\RequestEnvironmentSettingFile.cs" />
+    <Compile Include="ViewModels\RequestEnvironmentSetting.cs" />
+    <Compile Include="ViewModels\RequestEnvironmentSettingsViewModel.cs" />
+    <Compile Include="ViewModels\RequestEnvironmentViewFile.cs" />
+    <Compile Include="ViewModels\RequestEnvironmentFile.cs" />
+    <Compile Include="ViewModels\HttpRequestFile.cs" />
+    <Compile Include="ViewModels\HttpRequestItemFile.cs" />
+    <Compile Include="ViewModels\HttpRequestViewFile.cs" />
+    <Compile Include="ViewModels\HttpRequestViewModel.cs" />
+    <Compile Include="ViewModels\IntellisenseItem.cs" />
+    <Compile Include="ViewModels\KeyBindingData.cs" />
+    <Compile Include="ViewModels\RequestEnvironmentsViewModel.cs" />
     <Compile Include="ViewModels\ShellViewModel.cs" />
-    <Compile Include="ViewModels\ViewModelBase.cs" />
+    <Compile Include="ViewModels\Solution.cs" />
+    <Compile Include="ViewModels\TabHeader.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
@@ -122,6 +192,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <Resource Include="RestBox.ico" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -133,12 +204,59 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <AppDesigner Include="Properties\" />
+    <Resource Include="Images\warning-icon.png" />
+    <Resource Include="Images\httprequest.png" />
+    <Resource Include="Images\edit-icon.png" />
+    <Resource Include="Images\environment-icon.png" />
+    <Resource Include="Images\play-icon.png" />
+    <Resource Include="Images\requestextension-icon.png" />
+    <Content Include="Intellisense.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <Page Include="Shell.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="UserControls\HttpRequest.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\RequestEnvironments.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\RequestEnvironmentSettings.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\RequestExtensions.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\RestBox.Domain.Services\RestBox.Domain.Services.csproj">
+      <Project>{59580005-0DF5-4F97-A65E-DD1130F82234}</Project>
+      <Name>RestBox.Domain.Services</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\RestBox.Domain\RestBox.Domain.csproj">
+      <Project>{92119812-2ABD-449D-B9C6-1FEC89A30E30}</Project>
+      <Name>RestBox.Domain</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\add-icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\delete-icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\new-icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\remove-icon.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

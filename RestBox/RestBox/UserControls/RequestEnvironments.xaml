@@ -1,0 +1,85 @@
+﻿<UserControl x:Class="RestBox.UserControls.RequestEnvironments"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="300">
+
+            <Grid Visibility="{Binding SolutionLoadedVisibility}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="20" />
+                    <RowDefinition Height="30" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" HorizontalAlignment="Stretch">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="20" />
+                <ColumnDefinition Width="20" />
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="0" ToolTip="Create new environment"  Height="20" Width="20" Command="{Binding NewEnvironmentCommand}">
+                <StackPanel>
+                    <Image Source="../Images/new-icon.png" />
+                </StackPanel>
+            </Button>
+            <Button Grid.Column="1"  ToolTip="Add existing environment"  Height="20" Width="20" Command="{Binding AddExistingEnvironmentCommand}">
+                <StackPanel>
+                    <Image Source="../Images/add-icon.png" />
+                </StackPanel>
+            </Button>
+        </Grid>
+
+        <ComboBox Grid.Row="1" ItemsSource="{Binding RequestEnvironmentFiles}" SelectedItem="{Binding SelectedRequestEnvironment, UpdateSourceTrigger=PropertyChanged}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <Label Content="{Binding Name}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>        
+
+        <DataGrid x:Name="EnvironmentsDataGrid" HorizontalAlignment="Stretch" AutoGenerateColumns="False" ItemsSource="{Binding RequestEnvironmentFiles}" SelectionMode="Single" IsReadOnly="True" Grid.Row="2" MouseDoubleClick="DoubleClickedItem" SelectedItem="{Binding SelectedRequestEnvironmentFile}">
+            <DataGrid.ContextMenu>
+                <ContextMenu >
+                    <MenuItem Header="Clone" Command="{Binding CloneEnvironmentCommand}"  />
+                    <Separator />
+                    <MenuItem Header="Rename" Command="{Binding RenameEnvironmentCommand}"  />
+                    <Separator />
+                    <MenuItem Header="Remove" Command="{Binding RemoveEnvironmentCommand}"  />
+                    <MenuItem Header="Delete" Command="{Binding DeleteEnvironmentCommand}"  />
+                </ContextMenu>
+            </DataGrid.ContextMenu>
+            <DataGrid.Columns>
+                <DataGridTemplateColumn Width="*" Header="Name">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Grid HorizontalAlignment="Stretch">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="20" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <Image Width="20" Height="20" Grid.Column="0">
+                                    <Image.Style>
+                                        <Style TargetType="Image">
+                                            <Setter Property="Source" Value="\images\environment-icon.png" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Icon, UpdateSourceTrigger=PropertyChanged}" Value="warning">
+                                                    <Setter Property="Source" Value="..\Images\warning-icon.png" />
+                                                    <Setter Property="ToolTip" Value="File not found" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Image.Style>
+                                </Image>
+                                <TextBox LostFocus="RenameEnvironment" Visibility="{Binding EditableNameVisibility}" Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" ToolTip="{Binding RelativeFilePath, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Stretch"/>
+                                <Label Visibility="{Binding NameVisibility}" Content="{Binding Name, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1" ToolTip="{Binding RelativeFilePath, UpdateSourceTrigger=PropertyChanged}"/>
+                            </Grid>                            
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>                 
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+
+</UserControl>

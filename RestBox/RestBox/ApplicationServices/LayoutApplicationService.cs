@@ -2,9 +2,9 @@
 using AvalonDock;
 using AvalonDock.Layout.Serialization;
 
-namespace RestBox.Services
+namespace RestBox.ApplicationServices
 {
-    public class ApplicationLayout : IApplicationLayout
+    public class LayoutApplicationService : ILayoutApplicationService
     {
         private const string LayoutFileName = @".\RestBox.Layout.config";
 

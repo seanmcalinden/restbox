@@ -1,0 +1,129 @@
+﻿<UserControl x:Class="RestBox.UserControls.HttpRequest"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="300">
+    <Grid VerticalAlignment="Stretch">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <TabControl Grid.Column="0" TabStripPlacement="Bottom">
+            <TabControl.Items>
+                <TabItem Header="Request" x:Name="RequestTab">
+                    <Grid VerticalAlignment="Stretch">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="55"/>
+                            <RowDefinition Height="130" />
+                            <RowDefinition Height="*" MinHeight="10" />
+                            <RowDefinition Height="40" />
+                            <RowDefinition Height="0" />
+                        </Grid.RowDefinitions>
+                        <Grid Grid.Row="0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="30" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="100"/>
+                            </Grid.ColumnDefinitions>
+                            <Label Content="Url" Grid.Row="0" Grid.Column="0"/>
+                            <RichTextBox x:Name="RequestUrl" TextChanged="UrlTextChanged" HorizontalScrollBarVisibility="Auto" Grid.Row="2" KeyUp="OnRequestUrlKeyUp" AcceptsReturn="False" VerticalScrollBarVisibility="Hidden" VerticalAlignment="Stretch">
+                                <RichTextBox.Resources>
+                                    <Style TargetType="{x:Type Paragraph}">
+                                        <Setter Property="Margin" Value="0"/>
+                                    </Style>
+                                </RichTextBox.Resources>
+                            </RichTextBox>
+                            <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding RequestVerbs}" SelectedValue="{Binding Path=RequestVerb, UpdateSourceTrigger=PropertyChanged}" SelectionChanged="MakeDirtyComboEvent" />
+                        </Grid>
+                        <Grid Grid.Row="1" VerticalAlignment="Stretch">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="30" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Label Content="Headers" Grid.Row="0"/>
+                            <RichTextBox x:Name="RequestHeaders" TextChanged="HeadersTextChanged" HorizontalScrollBarVisibility="Auto" Grid.Row="2" KeyUp="OnHeadersKeyUp" AcceptsReturn="True"  VerticalScrollBarVisibility="Auto" VerticalAlignment="Stretch">
+                                <RichTextBox.Resources>
+                                <Style TargetType="{x:Type Paragraph}">
+                                    <Setter Property="Margin" Value="0"/>
+                                </Style>                                      
+                                </RichTextBox.Resources>
+                            </RichTextBox>
+                            
+                        </Grid>
+                        <Grid Grid.Row="2" VerticalAlignment="Stretch">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="30" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Label Content="Body" Grid.Row="0"/>
+                            <RichTextBox x:Name="RequestBody" TextChanged="BodyTextChanged" HorizontalScrollBarVisibility="Auto" Grid.Row="2" KeyUp="OnRequestBodykeyUp" AcceptsReturn="True"  VerticalScrollBarVisibility="Auto" VerticalAlignment="Stretch">
+                                <RichTextBox.Resources>
+                                    <Style TargetType="{x:Type Paragraph}">
+                                        <Setter Property="Margin" Value="0"/>
+                                    </Style>
+                                </RichTextBox.Resources>
+                            </RichTextBox>
+                         </Grid>
+
+                        <Grid Grid.Row="3">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="100" />
+                            </Grid.ColumnDefinitions>
+                            <Label Grid.Column="0" Content="{Binding RequestErrorMessage}" Foreground="Red" />
+
+                            <Button Grid.Column="1" Command="{Binding ExecuteHttpRequestCommand}">
+                                <StackPanel>
+                                    <Image Width="25" Height="25" Grid.Column="0" Source="\images\play-icon.png" ToolTip="Make Request" />
+                                </StackPanel>
+                            </Button>
+                            <ProgressBar IsEnabled="{Binding IsProgressBarEnabled}" Visibility="{Binding ProgressBarVisibility}" IsIndeterminate="True" Grid.Column="1" Width="90" Height="30"  />
+                        </Grid>
+
+                        <Popup x:Name="IntellisensePopup" Grid.Row="4" IsOpen="False" MinWidth="100" MaxHeight="100" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Placement="Bottom" StaysOpen="False">
+                            <ListBox x:Name="IntellisenseItems" ItemsSource="{Binding IntellisenseItems}" KeyDown="OnSelectIntellisenseItem"></ListBox>
+                        </Popup>
+
+                    </Grid>
+                </TabItem>
+                <TabItem Header="Response" x:Name="ResponseTab" Visibility="{Binding ResponseTabVisibility}" IsSelected="{Binding ResponseTabSelected}">
+                    <Grid VerticalAlignment="Stretch">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="90" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <TextBox Grid.Row="0" Text="{Binding Path=ResponseInfo}" x:Name="ResponseInfo" MinLines="5" AcceptsReturn="True" VerticalScrollBarVisibility="Hidden"  VerticalAlignment="Stretch" Visibility="{Binding ResponseInfoVisibility}"></TextBox>
+
+                        <TabControl Grid.Row="1">
+                            <TabControl.Items>
+                                <TabItem Header="Headers" x:Name="HeaderResponseTab" Visibility="{Binding HeaderResponseTabVisibility}">
+                                    <TextBox Text="{Binding Path=HeaderResponse}" x:Name="HeaderResponse" MinLines="5" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" VerticalAlignment="Stretch"></TextBox>
+                                </TabItem>
+                                <TabItem Header="Json" x:Name="JsonResponseTab" Visibility="{Binding JsonResponseTabVisibility}" IsSelected="{Binding JsonResponseTabSelected}">
+                                    <TextBox Text="{Binding Path=JsonResponse}" x:Name="JsonResponse" MinLines="5" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" VerticalAlignment="Stretch"></TextBox>
+                                </TabItem>
+                                <TabItem Header="Xml" x:Name="XmlResponseTab" Visibility="{Binding XmlResponseTabVisibility}" IsSelected="{Binding XmlResponseTabSelected}">
+                                    <TextBox Text="{Binding Path=XmlResponse}" x:Name="XmlResponse" MinLines="5" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" VerticalAlignment="Stretch"></TextBox>
+                                </TabItem>
+                                <TabItem Header="Image" x:Name="ImageResponseTab" Visibility="{Binding ImageResponseTabVisibility}" IsSelected="{Binding ImageResponseTabSelected}">
+                                    <Image x:Name="ImageResponse" VerticalAlignment="Stretch" Source="{Binding Path=ImageSource}"/>
+                                </TabItem>
+                                <!--<TabItem Header="Web View" x:Name="WebBrowserTab" Visibility="{Binding WebBrowserTabVisibility}" IsSelected="{Binding WebBrowserTabSelected}">
+                                    <WebBrowser x:Name="ResponseWebBrowser" />
+                                </TabItem>-->
+                                <TabItem Header="Raw" x:Name="RawResponseTab" Visibility="{Binding RawResponseTabVisibility}" IsSelected="{Binding RawResponseTabSelected}">
+                                    <TextBox Text="{Binding Path=RawResponse}" x:Name="RawResponse" MinLines="5" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" VerticalAlignment="Stretch"></TextBox>
+                                </TabItem>
+                            </TabControl.Items>
+                        </TabControl>
+                    </Grid>
+                </TabItem>
+            </TabControl.Items>
+        </TabControl>
+    </Grid>
+</UserControl>
