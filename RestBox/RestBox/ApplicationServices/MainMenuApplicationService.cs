@@ -1,11 +1,16 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using System.Linq;
 using System.Windows.Controls;
+using AvalonDock.Layout;
 using Microsoft.Practices.Prism.Commands;
 using Microsoft.Practices.Prism.Events;
+using Microsoft.Practices.ServiceLocation;
 using Microsoft.Win32;
 using RestBox.Domain.Entities;
 using RestBox.Domain.Services;
 using RestBox.Events;
+using RestBox.UserControls;
 using RestBox.ViewModels;
 
 namespace RestBox.ApplicationServices
@@ -32,13 +37,28 @@ namespace RestBox.ApplicationServices
             var fileMenu = new MenuItem();
             fileMenu.Header = "_File";
 
+            var newMenu = new MenuItem();
+            newMenu.Header = "_New";
+
+            var openMenu = new MenuItem();
+            openMenu.Header = "_Open";
+
+
             var newSolution = new MenuItem();
             newSolution.Command = new DelegateCommand(CreateNewSolution);
-            newSolution.Header = "_New Solution";
+            newSolution.Header = "_Solution";
+
+            var newRequest = new MenuItem();
+            newRequest.Command = new DelegateCommand(CreateNewRequest);
+            newRequest.Header = "_Http Request";
 
             var openSolution = new MenuItem();
             openSolution.Command = new DelegateCommand(OpenSolution);
-            openSolution.Header = "_Open Solution";
+            openSolution.Header = "_Solution";
+
+            var openRequest = new MenuItem();
+            openRequest.Command = new DelegateCommand(OpenRequest);
+            openRequest.Header = "_Http Request";
 
             var closeSolution = new MenuItem();
             closeSolution.Command = new DelegateCommand(CloseSolution);
@@ -49,13 +69,18 @@ namespace RestBox.ApplicationServices
             exitMenu.Command = shellViewModel.ExitApplicationCommand;
             exitMenu.Header = "E_xit";
 
-            fileMenu.Items.Add(newSolution);
-            fileMenu.Items.Add(openSolution);
+            newMenu.Items.Add(newSolution);
+            newMenu.Items.Add(newRequest);
+            openMenu.Items.Add(openSolution);
+            openMenu.Items.Add(openRequest);
+
+            fileMenu.Items.Add(newMenu);
+            fileMenu.Items.Add(openMenu);
             fileMenu.Items.Add(new Separator());
             fileMenu.Items.Add(closeSolution);
             fileMenu.Items.Add(new Separator());
             fileMenu.Items.Add(exitMenu);
-
+            
             shellViewModel.MenuItems.Add(fileMenu);
         }
 
@@ -107,6 +132,43 @@ namespace RestBox.ApplicationServices
                 Solution.Current.FilePath = saveFileDialog.FileName;
                 fileService.SaveSolution();
                 eventAggregator.GetEvent<NewSolutionEvent>().Publish(true);
+            }
+        }
+
+        private void CreateNewRequest()
+        {
+            eventAggregator.GetEvent<NewHttpRequestEvent>().Publish("StandaloneHttpRequest");
+        }
+
+        private void OpenRequest()
+        {
+            var openFileDialog = new OpenFileDialog
+                                     {
+                                         Filter = "Rest Box Http Request (*.rhrq)|*.rhrq",
+                                         Title = "Open Http Request File"
+                                     };
+            if (openFileDialog.ShowDialog() == true)
+            {
+                var httpRequest = fileService.Load<HttpRequestItemFile>(openFileDialog.FileName);
+                var httpRequestControl = ServiceLocator.Current.GetInstance<HttpRequest>();
+                httpRequestControl.FilePath = openFileDialog.FileName;
+                var viewModel = httpRequestControl.DataContext as HttpRequestViewModel;
+
+                viewModel.RequestUrl = httpRequest.Url;
+                viewModel.RequestVerb = viewModel.RequestVerbs.First(x => x.Content.ToString() == httpRequest.Verb);
+                viewModel.RequestHeaders = httpRequest.Headers;
+                viewModel.RequestBody = httpRequest.Body;
+
+                var layoutDocument = new LayoutDocument
+                {
+                    Title = Path.GetFileNameWithoutExtension(openFileDialog.FileName),
+                    ContentId = "StandaloneHttpRequest",
+                    Content = httpRequestControl,
+                    IsSelected = true,
+                    CanFloat = true
+                };
+
+                eventAggregator.GetEvent<AddLayoutDocumentEvent>().Publish(layoutDocument);
             }
         }
 

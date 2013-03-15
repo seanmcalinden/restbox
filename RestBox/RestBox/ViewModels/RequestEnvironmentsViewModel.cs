@@ -251,13 +251,13 @@ namespace RestBox.ViewModels
                 Content = ServiceLocator.Current.GetInstance<RequestEnvironmentSettings>(),
                 Title = NewEnvironmentTitle,
                 IsSelected = true,
-                CanFloat = false
+                CanFloat = true
             };
             
             newEnvironmentDocument.IsActiveChanged += SelectDataGridItem;
             newEnvironmentDocument.Closing += EnvironmentDocumentOnClosing;
 
-            eventAggregator.GetEvent<AddLayoutDocumentEvent>().Publish(newEnvironmentDocument);
+            eventAggregator.GetEvent<AddEnvironmentLayoutDocumentEvent>().Publish(newEnvironmentDocument);
         }
 
         private void AddExistingEnvironment()

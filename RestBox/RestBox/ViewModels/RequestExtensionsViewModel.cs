@@ -113,6 +113,8 @@ namespace RestBox.ViewModels
             RequestExtensionFiles.Remove(currentUiHttpRequestFile);
             SelectedRequestExtensionFile = null;
             fileService.SaveSolution();
+
+            intellisenseService.RemoveRequestExtensionIntellisenseItem(currentUiHttpRequestFile.Name);
         }
 
         private void AddRequestExtension()
@@ -137,6 +139,7 @@ namespace RestBox.ViewModels
                 Solution.Current.RequestExtensionsFilePaths.Add(relativeFile);
                 RequestExtensionFiles.Add(requestEnvironmentViewFile);
                 fileService.SaveSolution();
+                intellisenseService.AddRequestExtensionIntellisenseItem(requestEnvironmentViewFile.Name);
             }
         }
     }

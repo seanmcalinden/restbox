@@ -29,46 +29,58 @@ namespace RestBox.ApplicationServices
             HttpResponseMessage httpResponseMessage;
             DateTime startTime;
             DateTime completedTime;
+            var httpRequestMessage = new HttpRequestMessage();
             using (var client = new HttpClient())
             {
-                var httpRequestMessage = new HttpRequestMessage();
-                httpResponseMessage = null;
-                completedTime = DateTime.UtcNow;
-
-                httpRequestMessage.RequestUri = new Uri(ReplaceTokensTokens(httpRequestViewModel.RequestUrl, requestEnvironmentSettings));
-                httpRequestMessage.Method = GetHttpMethod(httpRequestViewModel.RequestVerbString);
-                var headerItems = GetHeaderItems(ReplaceTokensTokens(httpRequestViewModel.RequestHeaders, requestEnvironmentSettings));
-                SetContentHeadersAndBody(httpRequestMessage, headerItems, httpRequestViewModel.RequestVerbString, ReplaceTokensTokens(httpRequestViewModel.RequestBody, requestEnvironmentSettings));
-                SetHeaders(httpRequestMessage, headerItems);
-
-                startTime = DateTime.Now;
                 try
                 {
+                    httpResponseMessage = null;
+                    completedTime = DateTime.UtcNow;
+
+                    httpRequestMessage.RequestUri =
+                        new Uri(ReplaceTokensTokens(httpRequestViewModel.RequestUrl, requestEnvironmentSettings));
+                    httpRequestMessage.Method = GetHttpMethod(httpRequestViewModel.RequestVerbString);
+                    var headerItems =
+                        GetHeaderItems(ReplaceTokensTokens(httpRequestViewModel.RequestHeaders,
+                                                           requestEnvironmentSettings));
+                    SetContentHeadersAndBody(httpRequestMessage, headerItems, httpRequestViewModel.RequestVerbString,
+                                             ReplaceTokensTokens(httpRequestViewModel.RequestBody,
+                                                                 requestEnvironmentSettings));
+                    SetHeaders(httpRequestMessage, headerItems);
+
+                    startTime = DateTime.Now;
+
                     httpResponseMessage = client.SendAsync(httpRequestMessage).Result;
                     completedTime = DateTime.Now;
+
+
+                    httpRequestViewModel.ResponseStatusCode = (int) httpResponseMessage.StatusCode;
+                    httpRequestViewModel.ResponseReasonPhrase = httpResponseMessage.ReasonPhrase;
+                    httpRequestViewModel.ResponseContentType = GetContentType(httpResponseMessage);
+                    httpRequestViewModel.ResponseBody = SetContent(httpResponseMessage);
+                    httpRequestViewModel.ResponseHeaders = GetResponseHeaders(httpResponseMessage);
+                    httpRequestViewModel.RequestStart = startTime.ToShortDateString() + " " +
+                                                        startTime.ToLongTimeString();
+                    httpRequestViewModel.ResponseReceived = completedTime.ToShortDateString() + " " +
+                                                            completedTime.ToLongTimeString();
+                    httpRequestViewModel.RequestTime =
+                        Math.Round((completedTime - startTime).TotalMinutes, 4).ToString(CultureInfo.InvariantCulture) +
+                        " secs";
+
+                    Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Normal,
+                                                               new Action<Uri, List<RequestEnvironmentSetting>>(
+                                                                   httpRequestViewModel.DisplayHttpResponse),
+                                                               httpRequestMessage.RequestUri, requestEnvironmentSettings);
                 }
                 catch (Exception ex)
                 {
                     Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Normal,
-                                                  new Action<string>(httpRequestViewModel.ShowRequestError), GetBestErrorMessage(ex));
+                                                               new Action<string>(httpRequestViewModel.ShowRequestError),
+                                                               GetBestErrorMessage(ex));
                     return;
                 }
-              
+
             }
-
-            httpRequestViewModel.ResponseStatusCode = (int) httpResponseMessage.StatusCode;
-            httpRequestViewModel.ResponseReasonPhrase = httpResponseMessage.ReasonPhrase;
-            httpRequestViewModel.ResponseContentType = GetContentType(httpResponseMessage);
-            httpRequestViewModel.ResponseBody = SetContent(httpResponseMessage);
-            httpRequestViewModel.ResponseHeaders = GetResponseHeaders(httpResponseMessage);
-            httpRequestViewModel.RequestStart = startTime.ToShortDateString() + " " + startTime.ToLongTimeString();
-            httpRequestViewModel.ResponseReceived = completedTime.ToShortDateString() + " " +
-                                                    completedTime.ToLongTimeString();
-            httpRequestViewModel.RequestTime =
-                Math.Round((completedTime - startTime).TotalMinutes, 4).ToString(CultureInfo.InvariantCulture) + " secs";
-
-            Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Normal,
-                                                       new Action<List<RequestEnvironmentSetting>>(httpRequestViewModel.DisplayHttpResponse), requestEnvironmentSettings);
         }
 
         private string GetBestErrorMessage(Exception ex)
@@ -86,7 +98,7 @@ namespace RestBox.ApplicationServices
 
         private string ReplaceTokensTokens(string value, List<RequestEnvironmentSetting> requestEnvironmentSettings)
         {
-            if(requestEnvironmentSettings == null || requestEnvironmentSettings.Count == 0)
+            if(value == null || requestEnvironmentSettings == null || requestEnvironmentSettings.Count == 0)
             {
                 return value;
             }
@@ -95,8 +107,6 @@ namespace RestBox.ApplicationServices
             {
                 value = value.Replace("env." + requestEnvironmentSetting.Setting, requestEnvironmentSetting.SettingValue);
             }
-
-
 
             foreach (var requestExtensionFilePath in Solution.Current.RequestExtensionsFilePaths)
             {

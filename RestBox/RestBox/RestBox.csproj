@@ -121,9 +121,10 @@
     <Compile Include="Events\AddInputBindingEvent.cs" />
     <Compile Include="Events\CloneHttpRequestEvent.cs" />
     <Compile Include="Events\CloseSolutionEvent.cs" />
-    <Compile Include="Events\AddLayoutDocumentEvent.cs" />
+    <Compile Include="Events\AddEnvironmentLayoutDocumentEvent.cs" />
     <Compile Include="Events\CloseEnvironmentItemEvent.cs" />
     <Compile Include="Events\CloneEnvironmentEvent.cs" />
+    <Compile Include="Events\AddLayoutDocumentEvent.cs" />
     <Compile Include="Events\ShowErrorEvent.cs" />
     <Compile Include="Events\UpdateRequestBodyEvent.cs" />
     <Compile Include="Events\UpdateRequestHeadersEvent.cs" />
@@ -218,6 +219,34 @@
     <Page Include="Shell.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Themes\BureauBlack.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Themes\BureauBlue.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Themes\ExpressionDark.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Themes\ExpressionLight.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Themes\ShinyBlue.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Themes\ShinyRed.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Themes\WhistlerBlue.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="UserControls\HttpRequest.xaml">
       <SubType>Designer</SubType>

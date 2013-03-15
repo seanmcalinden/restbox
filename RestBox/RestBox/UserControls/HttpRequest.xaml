@@ -30,7 +30,7 @@
                                 <ColumnDefinition Width="100"/>
                             </Grid.ColumnDefinitions>
                             <Label Content="Url" Grid.Row="0" Grid.Column="0"/>
-                            <RichTextBox x:Name="RequestUrl" TextChanged="UrlTextChanged" HorizontalScrollBarVisibility="Auto" Grid.Row="2" KeyUp="OnRequestUrlKeyUp" AcceptsReturn="False" VerticalScrollBarVisibility="Hidden" VerticalAlignment="Stretch">
+                            <RichTextBox x:Name="RequestUrl" Background="{Binding RequestUriColor}" TextChanged="UrlTextChanged" HorizontalScrollBarVisibility="Auto" Grid.Row="2" KeyUp="OnRequestUrlKeyUp" AcceptsReturn="False" VerticalScrollBarVisibility="Hidden" VerticalAlignment="Stretch">
                                 <RichTextBox.Resources>
                                     <Style TargetType="{x:Type Paragraph}">
                                         <Setter Property="Margin" Value="0"/>
@@ -45,7 +45,7 @@
                                 <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
                             <Label Content="Headers" Grid.Row="0"/>
-                            <RichTextBox x:Name="RequestHeaders" TextChanged="HeadersTextChanged" HorizontalScrollBarVisibility="Auto" Grid.Row="2" KeyUp="OnHeadersKeyUp" AcceptsReturn="True"  VerticalScrollBarVisibility="Auto" VerticalAlignment="Stretch">
+                            <RichTextBox x:Name="RequestHeaders" Background="{Binding RequestHeadersColor}" TextChanged="HeadersTextChanged" HorizontalScrollBarVisibility="Auto" Grid.Row="2" KeyUp="OnHeadersKeyUp" AcceptsReturn="True"  VerticalScrollBarVisibility="Auto" VerticalAlignment="Stretch">
                                 <RichTextBox.Resources>
                                 <Style TargetType="{x:Type Paragraph}">
                                     <Setter Property="Margin" Value="0"/>
@@ -60,7 +60,7 @@
                                 <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
                             <Label Content="Body" Grid.Row="0"/>
-                            <RichTextBox x:Name="RequestBody" TextChanged="BodyTextChanged" HorizontalScrollBarVisibility="Auto" Grid.Row="2" KeyUp="OnRequestBodykeyUp" AcceptsReturn="True"  VerticalScrollBarVisibility="Auto" VerticalAlignment="Stretch">
+                            <RichTextBox x:Name="RequestBody" Background="{Binding RequestBodyColor}" TextChanged="BodyTextChanged" HorizontalScrollBarVisibility="Auto" Grid.Row="2" KeyUp="OnRequestBodykeyUp" AcceptsReturn="True"  VerticalScrollBarVisibility="Auto" VerticalAlignment="Stretch">
                                 <RichTextBox.Resources>
                                     <Style TargetType="{x:Type Paragraph}">
                                         <Setter Property="Margin" Value="0"/>

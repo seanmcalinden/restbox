@@ -1,14 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Xml;
 using Microsoft.Practices.Prism.Commands;
@@ -53,11 +56,17 @@ namespace RestBox.ViewModels
             ProgressBarVisibility = Visibility.Hidden;
             IntellisenseItems = new ObservableCollection<string>();
             eventAggregator.GetEvent<MakeRequestEvent>().Subscribe(MakeRequest);
+            RequestUriColor = Brushes.White;
+            RequestHeadersColor = Brushes.White;
+            RequestBodyColor = Brushes.White;
         }
 
-        private void MakeRequest(bool obj)
+        private void MakeRequest(HttpRequestViewModel httpRequestViewModel)
         {
-            ExecuteRequest();
+            if (httpRequestViewModel == this)
+            {
+                ExecuteRequest();
+            }
         }
 
         public ObservableCollection<ComboBoxItem> RequestVerbs { get; set; }
@@ -128,6 +137,27 @@ namespace RestBox.ViewModels
                 eventAggregator.GetEvent<UpdateRequestBodyEvent>().Publish(this);
                 OnPropertyChanged(x => x.RequestBody); 
             }
+        }
+        
+        private SolidColorBrush requestUriColor;
+        public SolidColorBrush RequestUriColor
+        {
+            get { return requestUriColor; }
+            set { requestUriColor = value; OnPropertyChanged(x => x.RequestUriColor); }
+        }
+
+        private SolidColorBrush requestHeadersColor;
+        public SolidColorBrush RequestHeadersColor
+        {
+            get { return requestHeadersColor; }
+            set { requestHeadersColor = value; OnPropertyChanged(x => x.RequestHeadersColor); }
+        }
+
+        private SolidColorBrush requestBodyColor;
+        public SolidColorBrush RequestBodyColor
+        {
+            get { return requestBodyColor; }
+            set { requestBodyColor = value; OnPropertyChanged(x => x.RequestBodyColor); }
         }
 
         public int ResponseStatusCode { get; set; }
@@ -321,6 +351,31 @@ namespace RestBox.ViewModels
         {
             try
             {
+                bool isValidRequest = true;
+                if(string.IsNullOrWhiteSpace(RequestUrl))
+                {
+                    RequestUriColor = Brushes.Pink;
+                    isValidRequest = false;
+                }
+                else
+                {
+                    RequestUriColor = Brushes.White;
+                }
+                if ((RequestVerbString == "POST" || RequestVerbString == "PUT") && string.IsNullOrWhiteSpace(RequestBody))
+                {
+                    RequestBodyColor = Brushes.MistyRose;
+                }
+                else
+                {
+                    RequestBodyColor = Brushes.White;
+                }
+
+                if(!isValidRequest)
+                {
+                    return;
+                }
+               
+
                 IsProgressBarEnabled = true;
                 RequestErrorMessage = null;
                 var requestEnvironment = ServiceLocator.Current.GetInstance<RequestEnvironmentsViewModel>();
@@ -362,7 +417,7 @@ namespace RestBox.ViewModels
             eventAggregator.GetEvent<ShowErrorEvent>().Publish(new KeyValuePair<string, string>("Request Error", errorMessage));
         }
 
-        public void DisplayHttpResponse(List<RequestEnvironmentSetting> requestEnvironmentSettings)
+        public void DisplayHttpResponse(Uri requestUri, List<RequestEnvironmentSetting> requestEnvironmentSettings)
         {
             IsProgressBarEnabled = false;
             if (ResponseHeaders == null)
@@ -373,7 +428,7 @@ namespace RestBox.ViewModels
             ResponseTabVisibility = Visibility.Visible;
             ResponseTabSelected = true;
 
-            ResponseInfo = ReplaceEnvironmentTokens(GetResponseInfo(), requestEnvironmentSettings);
+            ResponseInfo = ReplaceEnvironmentTokens(GetResponseInfo(requestUri), requestEnvironmentSettings);
             HeaderResponse = ResponseHeaders;
 
             ResponseInfoVisibility = Visibility.Visible;
@@ -453,17 +508,17 @@ namespace RestBox.ViewModels
             return regex.Replace(content, string.Empty);
         }
 
-        private string GetResponseInfo()
+        private string GetResponseInfo(Uri requestUri)
         {
             var sb = new StringBuilder();
-            sb.AppendLine(RequestVerb.Content + " " + RequestUrl);
+            sb.AppendLine(RequestVerb.Content + " " + requestUri);
             sb.AppendLine(ResponseStatusCode + " " + ResponseReasonPhrase);
             sb.AppendLine("Time Taken: " + RequestTime);
             sb.AppendLine("Request Start: " + RequestStart);
             sb.AppendLine("Response Received: " + ResponseReceived);
             return sb.ToString();
         }
-
+        
         public string GetFormattedJson(string json)
         {
             dynamic parsedJson = JsonConvert.DeserializeObject(json);

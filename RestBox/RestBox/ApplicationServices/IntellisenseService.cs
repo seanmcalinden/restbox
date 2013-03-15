@@ -51,6 +51,15 @@ namespace RestBox.ApplicationServices
             requestExtensionsIntellisenseItems.Add(intellisenseItem);
         }
 
+        public void RemoveRequestExtensionIntellisenseItem(string key)
+        {
+            var intellisenseItem = requestExtensionsIntellisenseItems.FirstOrDefault(x => x.Key.ToLower() == string.Format("ext.{0}", key).ToLower());
+            if(intellisenseItem != null)
+            {
+                requestExtensionsIntellisenseItems.Remove(intellisenseItem);
+            }
+        }
+
         public List<string> GetEnvironmentIntellisenseItems(string currentText)
         {
             if (string.IsNullOrWhiteSpace(currentText))

@@ -72,6 +72,7 @@ namespace RestBox
             eventAggregator.GetEvent<IsHttpRequestDirtyEvent>().Subscribe(IsDirtyHandler);
 
             eventAggregator.GetEvent<NewEnvironmentEvent>().Subscribe(NewEnvironment);
+            eventAggregator.GetEvent<AddEnvironmentLayoutDocumentEvent>().Subscribe(AddEnvironmentLayoutDocument);
             eventAggregator.GetEvent<AddLayoutDocumentEvent>().Subscribe(AddLayoutDocument);
             eventAggregator.GetEvent<SelectLayoutDocumentEvent>().Subscribe(SelectLayoutDocument);
             eventAggregator.GetEvent<CloneEnvironmentEvent>().Subscribe(CloneEnvironment);
@@ -94,7 +95,7 @@ namespace RestBox
 
         private void IsRequestEnvironmentDirtyEventHandler(RequestEnvironmentSettings requestEnvironmentSettings)
         {
-            var requestEnvironmentSettingsDocuments = DocumentsPane.Children.Where(x => x.Content is RequestEnvironmentSettings).ToList();
+            var requestEnvironmentSettingsDocuments = GetDocuments().Where(x => x.Content is RequestEnvironmentSettings).ToList();
             var currentSettingDocument = requestEnvironmentSettingsDocuments.FirstOrDefault(x => ((RequestEnvironmentSettings) x.Content) == requestEnvironmentSettings);
             if(currentSettingDocument == null)
             {
@@ -120,14 +121,24 @@ namespace RestBox
 
         private void UpdateTabTitle(TabHeader tabHeader)
         {
-            var correspondingTab = DocumentsPane.Children.FirstOrDefault(x => x.ContentId == tabHeader.Id);
+            var correspondingTab = GetDocumentById(tabHeader.Id);
             if (correspondingTab != null)
             {
                 correspondingTab.Title = tabHeader.Title;
             }
         }
 
-        private void AddLayoutDocument(LayoutDocument layoutDocument)
+        private LayoutDocument GetDocumentById(string contentId)
+        {
+            return dockingManager.Layout.Descendents().OfType<LayoutDocument>().FirstOrDefault(d => d.ContentId == contentId);
+        }
+
+        private List<LayoutDocument> GetDocuments()
+        {
+            return dockingManager.Layout.Descendents().OfType<LayoutDocument>().ToList();
+        }
+
+        private void AddEnvironmentLayoutDocument(LayoutDocument layoutDocument)
         {
             DocumentsPane.Children.Add(layoutDocument);
             layoutDocument.IsSelected = true;
@@ -136,9 +147,20 @@ namespace RestBox
             AddEnvironmentMenuItems();
         }
 
+        private void AddLayoutDocument(LayoutDocument layoutDocument)
+        {
+            DocumentsPane.Children.Add(layoutDocument);
+            layoutDocument.IsSelected = true;
+            layoutDocument.IsActive = true;
+            layoutDocument.IsActiveChanged += DocumentIsActiveChanged;
+            RemoveInputBindings();
+            mainMenuApplicationService.CreateInitialMenuItems(shellViewModel);
+            AddHttpRequestMenuItems();
+        }
+
         private void IsDirtyHandler(bool isDirty)
         {
-            var selectedDocument = DocumentsPane.Children.FirstOrDefault(x => x.IsSelected && x.IsActive);
+            var selectedDocument = dockingManager.Layout.ActiveContent;
             if (selectedDocument == null)
             {
                 return;
@@ -168,7 +190,7 @@ namespace RestBox
 
         private void RemoveTabById(string id)
         {
-            var documentPane = DocumentsPane.Children.FirstOrDefault(x => x.ContentId == id);
+            var documentPane = GetDocumentById(id);
             if(documentPane != null)
             {
                 documentPane.Close();
@@ -177,7 +199,7 @@ namespace RestBox
 
         private void CloseSolution(bool obj)
         {
-            var documents = DocumentsPane.Children.Where(x => x.Title != "Start Page").ToList();
+            var documents = GetDocuments();
 
             for(var i = 0; i < documents.Count; i++)
             {
@@ -194,7 +216,7 @@ namespace RestBox
                 Content = ServiceLocator.Current.GetInstance<RequestEnvironmentSettings>(),
                 Title = RequestEnvironmentsViewModel.NewEnvironmentTitle,
                 IsSelected = true,
-                CanFloat = false
+                CanFloat = true
             };
 
             newEnvironmentDocument.IsActiveChanged += DocumentIsActiveChanged;
@@ -209,7 +231,7 @@ namespace RestBox
                                                  Content = ServiceLocator.Current.GetInstance<HttpRequest>(),
                                                  Title = "New Http Request *",
                                                  IsSelected = true,
-                                                 CanFloat = false
+                                                 CanFloat = true
                                              };
             newHttpRequestDocument.IsActiveChanged += DocumentIsActiveChanged;
             newHttpRequestDocument.Closing += NewHttpRequestDocumentOnClosing;
@@ -238,7 +260,7 @@ namespace RestBox
                 Content = environmentSettings,
                 Title = RequestEnvironmentsViewModel.NewEnvironmentTitle,
                 IsSelected = true,
-                CanFloat = false
+                CanFloat = true
             };
             newRequestEnvironmentDocument.IsActiveChanged += DocumentIsActiveChanged;
             newRequestEnvironmentDocument.Closing += CloseEnvironmentItem;
@@ -267,7 +289,7 @@ namespace RestBox
                 Content = httpRequestControl,
                 Title = "New Http Request *",
                 IsSelected = true,
-                CanFloat = false
+                CanFloat = true
             };
             newHttpRequestDocument.IsActiveChanged += DocumentIsActiveChanged;
             newHttpRequestDocument.Closing += NewHttpRequestDocumentOnClosing;
@@ -277,7 +299,7 @@ namespace RestBox
         private void NewHttpRequestDocumentOnClosing(object sender, CancelEventArgs cancelEventArgs)
         {
             var layoutDocument = ((LayoutDocument)sender);
-            if(layoutDocument.Title == "New Http Request *")
+            if (layoutDocument.Title == "New Http Request *" && layoutDocument.ContentId != "StandaloneHttpRequest")
             {
                 var httpRequestFile = shellViewModel.HttpRequestFiles.First(x => x.Id == layoutDocument.ContentId);
                 shellViewModel.HttpRequestFiles.Remove(httpRequestFile);
@@ -292,7 +314,7 @@ namespace RestBox
 
             SetCloseSolutionState();
 
-            var currentSelectedTab = DocumentsPane.Children.FirstOrDefault(x => x.IsSelected);
+            var currentSelectedTab = dockingManager.Layout.ActiveContent;
 
             if (currentSelectedTab != null && currentSelectedTab.Content is HttpRequest)
             {
@@ -342,7 +364,7 @@ namespace RestBox
 
         private void SaveAll()
         {
-            foreach (var layoutContent in DocumentsPane.Children)
+            foreach (var layoutContent in GetDocuments())
             {
                 if (layoutContent.Content is HttpRequest)
                 {
@@ -414,7 +436,7 @@ namespace RestBox
 
         private void SaveEnvironmentFileAs()
         {
-            var currentTab = DocumentsPane.Children.FirstOrDefault(x => x.IsSelected);
+            var currentTab = dockingManager.Layout.ActiveContent;
 
             if (currentTab == null)
             {
@@ -479,7 +501,7 @@ namespace RestBox
 
         private void SaveEnvironmentFile()
         {
-            var currentTab = DocumentsPane.Children.FirstOrDefault(x => x.IsSelected);
+            var currentTab = dockingManager.Layout.ActiveContent;
 
             if (currentTab == null)
             {
@@ -493,7 +515,7 @@ namespace RestBox
         {
             if (currentTab == null)
             {
-                currentTab = DocumentsPane.Children.FirstOrDefault(x => x.IsSelected);
+                currentTab = dockingManager.Layout.ActiveContent;
             }
 
             if (currentTab == null)
@@ -544,7 +566,18 @@ namespace RestBox
 
         private void MakeRequest()
         {
-            eventAggregator.GetEvent<MakeRequestEvent>().Publish(true);
+            var currentTab = dockingManager.Layout.ActiveContent;
+
+            if (currentTab == null)
+            {
+                return;
+            }
+
+            var httpRequest = currentTab.Content as HttpRequest;
+
+            var httpRequestViewModel = httpRequest.DataContext as HttpRequestViewModel;
+
+            eventAggregator.GetEvent<MakeRequestEvent>().Publish(httpRequestViewModel);
         }
 
         protected override void OnClosed(System.EventArgs e)
@@ -573,7 +606,7 @@ namespace RestBox
                 }
             }
 
-            var correspondingTab = DocumentsPane.Children.FirstOrDefault(x => x.ContentId == requestEnvironmentViewFile.Id);
+            var correspondingTab = GetDocumentById(requestEnvironmentViewFile.Id);
             if (correspondingTab != null)
             {
                 correspondingTab.IsActive = true;
@@ -604,15 +637,15 @@ namespace RestBox
                     ContentId = requestEnvironmentViewFile.Id,
                     Content = requestEnvironmentSettings,
                     IsSelected = true,
-                    CanFloat = false
+                    CanFloat = true
                 };
                 DocumentsPane.Children.Add(layoutDocument);
                 layoutDocument.IsActiveChanged += DocumentIsActiveChanged;
                 layoutDocument.Closing += CloseEnvironmentItem;
             }
 
-            DocumentsPane.Children.First(x => x.ContentId == requestEnvironmentViewFile.Id).IsSelected = true;
-            DocumentsPane.Children.First(x => x.ContentId == requestEnvironmentViewFile.Id).IsActive = true;
+            GetDocuments().First(x => x.ContentId == requestEnvironmentViewFile.Id).IsSelected = true;
+            GetDocuments().First(x => x.ContentId == requestEnvironmentViewFile.Id).IsActive = true;
         }
 
         private void CloseEnvironmentItem(object sender, CancelEventArgs cancelEventArgs)
@@ -648,7 +681,7 @@ namespace RestBox
                 }
             }
 
-            var correspondingTab = DocumentsPane.Children.FirstOrDefault(x => x.ContentId == httpRequestFile.Id);
+            var correspondingTab = GetDocumentById(httpRequestFile.Id);
             if (correspondingTab != null)
             {
                 correspondingTab.IsActive = true;
@@ -678,7 +711,7 @@ namespace RestBox
                                              ContentId = httpRequestFile.Id,
                                              Content = httpRequestControl,
                                              IsSelected = true,
-                                             CanFloat = false
+                                             CanFloat = true
                                          };
                 DocumentsPane.Children.Add(layoutDocument);
                 layoutDocument.IsActiveChanged += DocumentIsActiveChanged;
@@ -688,6 +721,7 @@ namespace RestBox
 
         private void AddInputBinding(KeyBindingData keyBindingData)
         {
+            RemoveInputBinding(keyBindingData);
             InputBindings.Add(new KeyBinding(keyBindingData.Command, keyBindingData.KeyGesture));
         }
 
@@ -713,7 +747,7 @@ namespace RestBox
 
         private void SaveRequestAs()
         {
-            var currentTab = DocumentsPane.Children.FirstOrDefault(x => x.IsSelected);
+            var currentTab = dockingManager.Layout.ActiveContent;
 
             if(currentTab == null)
             {
@@ -730,41 +764,56 @@ namespace RestBox
                 FileName = Path.GetFileName(httpRequest.FilePath) ?? "Untitled",
                 Title = "Save Http Request As..."
             };
+
             if (saveFileDialog.ShowDialog() == true)
             {
-                var relativePath = fileService.GetRelativePath(new Uri(Solution.Current.FilePath), saveFileDialog.FileName);
-
                 var title = Path.GetFileNameWithoutExtension(saveFileDialog.FileName);
-
-                var requestExists = Solution.Current.HttpRequestFiles.Any(x => x.Id == currentTab.ContentId);
-                if (!requestExists)
+                var httpRequestFile = new HttpRequestItemFile
                 {
-                    Solution.Current.HttpRequestFiles.Add(
-                        new HttpRequestFile{Id = currentTab.ContentId,RelativeFilePath = relativePath,Name = title});
+                    Url = httpRequestViewModel.RequestUrl,
+                    Verb = httpRequestViewModel.RequestVerb.Content.ToString(),
+                    Headers = httpRequestViewModel.RequestHeaders,
+                    Body = httpRequestViewModel.RequestBody
+                };
+
+                if (currentTab.ContentId != "StandaloneHttpRequest")
+                {
+                    var relativePath = fileService.GetRelativePath(new Uri(Solution.Current.FilePath),
+                                                                   saveFileDialog.FileName);
+
+                    
+
+                    var requestExists = Solution.Current.HttpRequestFiles.Any(x => x.Id == currentTab.ContentId);
+                    if (!requestExists)
+                    {
+                        Solution.Current.HttpRequestFiles.Add(
+                            new HttpRequestFile
+                                {Id = currentTab.ContentId, RelativeFilePath = relativePath, Name = title});
+                    }
+                    else
+                    {
+                        var existingHttpRequestFile =
+                            Solution.Current.HttpRequestFiles.First(x => x.Id == currentTab.ContentId);
+                        existingHttpRequestFile.Name = title;
+                        existingHttpRequestFile.RelativeFilePath = relativePath;
+                    }
+
+                    fileService.SaveSolution();
+
+                    fileService.SaveFile(saveFileDialog.FileName, jsonSerializer.ToJsonString(httpRequestFile));
+
+                    httpRequest.FilePath = relativePath;
+                    currentTab.Title = title;
+                    shellViewModel.HttpRequestFiles.First(x => x.Id == currentTab.ContentId).Name = title;
+                    shellViewModel.HttpRequestFiles.First(x => x.Id == currentTab.ContentId).RelativeFilePath =
+                        relativePath;
                 }
                 else
                 {
-                    var existingHttpRequestFile = Solution.Current.HttpRequestFiles.First(x => x.Id == currentTab.ContentId);
-                    existingHttpRequestFile.Name = title;
-                    existingHttpRequestFile.RelativeFilePath = relativePath;
+                    httpRequest.FilePath = saveFileDialog.FileName;
+                    currentTab.Title = title;
+                    fileService.SaveFile(saveFileDialog.FileName, jsonSerializer.ToJsonString(httpRequestFile));
                 }
-
-                fileService.SaveSolution();
-                
-                var httpRequestFile = new HttpRequestItemFile
-                                          {
-                                              Url = httpRequestViewModel.RequestUrl,
-                                              Verb = httpRequestViewModel.RequestVerb.Content.ToString(),
-                                              Headers = httpRequestViewModel.RequestHeaders,
-                                              Body = httpRequestViewModel.RequestBody
-                                          };
-
-                fileService.SaveFile(saveFileDialog.FileName, jsonSerializer.ToJsonString(httpRequestFile));
-                
-                httpRequest.FilePath = relativePath;
-                currentTab.Title = title;
-                shellViewModel.HttpRequestFiles.First(x => x.Id == currentTab.ContentId).Name = title;
-                shellViewModel.HttpRequestFiles.First(x => x.Id == currentTab.ContentId).RelativeFilePath = relativePath;
             }
             Keyboard.ClearFocus();
             eventAggregator.GetEvent<IsHttpRequestDirtyEvent>().Publish(false);
@@ -773,7 +822,7 @@ namespace RestBox
         
         private void SaveRequest()
         {
-            var currentTab = DocumentsPane.Children.FirstOrDefault(x => x.IsSelected);
+            var currentTab = dockingManager.Layout.ActiveContent;
 
             if (currentTab == null)
             {
@@ -787,7 +836,7 @@ namespace RestBox
         {
             if (currentTab == null)
             {
-                currentTab = DocumentsPane.Children.FirstOrDefault(x => x.IsSelected);
+                currentTab = dockingManager.Layout.ActiveContent;
             }
 
             if (currentTab == null)
@@ -812,12 +861,20 @@ namespace RestBox
                 Headers = httpRequestViewModel.RequestHeaders,
                 Body = httpRequestViewModel.RequestBody
             };
+            
+            string filePath = string.Empty;
 
-            var filePath = fileService.GetFilePath(Solution.Current.FilePath, httpRequest.FilePath);
+            if (currentTab.ContentId != "StandaloneHttpRequest")
+            {
+                 filePath = fileService.GetFilePath(Solution.Current.FilePath, httpRequest.FilePath);
+            }
+            else
+            {
+                filePath = httpRequest.FilePath;
+            }
 
             fileService.SaveFile(filePath, jsonSerializer.ToJsonString(httpRequestFile));
-
-
+            
             eventAggregator.GetEvent<IsHttpRequestDirtyEvent>().Publish(false);
             Keyboard.ClearFocus();
             httpRequestViewModel.IsDirty = false;
@@ -869,7 +926,7 @@ namespace RestBox
 
             fileService.SaveSolution();
 
-            var correspondingTab = DocumentsPane.Children.FirstOrDefault(x => x.ContentId == selectedItem.Id);
+            var correspondingTab = GetDocumentById(selectedItem.Id);
             if(correspondingTab != null)
             {
                 correspondingTab.Title = selectedItem.Name;
