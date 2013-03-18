@@ -32,13 +32,15 @@
 
         <DataGrid x:Name="HttpRequestFilesDataGrid" Grid.Row="1" AutoGenerateColumns="False" SelectionMode="Single" SelectedItem="{Binding SelectedHttpRequestFile}" ItemsSource="{Binding HttpRequestFilesView}" MouseDoubleClick="ActivateHttpRequestFile"  HorizontalAlignment="Stretch" IsReadOnly="True">
             <DataGrid.ContextMenu>
-                <ContextMenu >
+                <ContextMenu>                    
                     <MenuItem Header="Clone" Command="{Binding CloneHttpRequestFile}"  />
                     <Separator />
                     <MenuItem Header="Rename" Command="{Binding RenameHttpRequestFile}"  />
                     <Separator />
                     <MenuItem Header="Remove" Command="{Binding RemoveHttpRequestFile}"  />
                     <MenuItem Header="Delete" Command="{Binding DeleteHttpRequestFile}"  />
+                    <Separator />
+                    <MenuItem Header="Open folder in windows explorer" Command="{Binding OpenFolderInWindowsExplorer}"  />                   
                 </ContextMenu>
             </DataGrid.ContextMenu>
 

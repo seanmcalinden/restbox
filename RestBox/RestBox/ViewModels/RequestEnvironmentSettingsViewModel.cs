@@ -18,19 +18,25 @@ namespace RestBox.ViewModels
 {
     public class RequestEnvironmentSettingsViewModel : ViewModelBase<RequestEnvironmentSettingsViewModel>
     {
+        #region Declarations
+
         private IEventAggregator eventAggregator;
         private readonly IMainMenuApplicationService mainMenuApplicationService;
         private readonly IFileService fileService;
         private readonly IJsonSerializer jsonSerializer;
         private readonly IIntellisenseService intellisenseService;
-        private readonly KeyGesture saveKeyGesture;
+        private readonly KeyGesture saveKeyGesture; 
+
+        #endregion
+
+        #region Constructor 
 
         public RequestEnvironmentSettingsViewModel(
-            IEventAggregator eventAggregator, 
-            IMainMenuApplicationService mainMenuApplicationService, 
-            IFileService fileService,
-            IJsonSerializer jsonSerializer,
-            IIntellisenseService intellisenseService)
+           IEventAggregator eventAggregator,
+           IMainMenuApplicationService mainMenuApplicationService,
+           IFileService fileService,
+           IJsonSerializer jsonSerializer,
+           IIntellisenseService intellisenseService)
         {
             this.eventAggregator = eventAggregator;
             this.mainMenuApplicationService = mainMenuApplicationService;
@@ -40,13 +46,30 @@ namespace RestBox.ViewModels
             Settings = new ObservableCollection<RequestEnvironmentSetting>();
             eventAggregator.GetEvent<AddRequestEnvironmentMenuItemsEvent>().Subscribe(AddRequestEnvironmentSettingsMenuItems);
             saveKeyGesture = new KeyGesture(Key.S, ModifierKeys.Control);
+        } 
+
+        #endregion
+
+        #region Properties
+
+        public ObservableCollection<RequestEnvironmentSetting> Settings { get; set; }
+
+        private bool isDirty;
+        public bool IsDirty
+        {
+            get { return isDirty; }
+            set { isDirty = value; OnPropertyChanged(x => x.IsDirty); }
         }
+
+        #endregion
+
+        #region Event Handlers
 
         private void AddRequestEnvironmentSettingsMenuItems(RequestEnvironmentSettingsViewModel requestEnvironmentSettingsViewModel)
         {
-            if(requestEnvironmentSettingsViewModel != this)
+            if (requestEnvironmentSettingsViewModel != this)
             {
-                return;    
+                return;
             }
 
             eventAggregator.GetEvent<RemoveInputBindingEvent>().Publish(true);
@@ -63,16 +86,11 @@ namespace RestBox.ViewModels
             mainMenuApplicationService.InsertSeparator(fileMenu, 4);
             mainMenuApplicationService.InsertMenuItem(fileMenu, saveEnvironment, 5);
             mainMenuApplicationService.InsertMenuItem(fileMenu, saveEnvironmentAs, 6);
-        }
+        } 
 
-        public ObservableCollection<RequestEnvironmentSetting> Settings { get; set; }
+        #endregion
 
-        private bool isDirty;
-        public bool IsDirty
-        {
-            get { return isDirty; }
-            set { isDirty = value; OnPropertyChanged(x => x.IsDirty); }
-        }
+        #region Command handlers
 
         private void SetupSaveRequestAs()
         {
@@ -108,7 +126,7 @@ namespace RestBox.ViewModels
                 SaveEnvironmentFileAs(id, requestEnvironmentSettingsContent);
                 return;
             }
-            
+
             var environmentSettingsViewModel = environmentSettings.DataContext as RequestEnvironmentSettingsViewModel;
 
             var requestEnvironmentFile = new RequestEnvironmentSettingFile
@@ -194,10 +212,12 @@ namespace RestBox.ViewModels
             eventAggregator.GetEvent<IsDirtyEvent>().Publish(false);
             environmentSettingsViewModel.IsDirty = false;
             eventAggregator.GetEvent<UpdateTabTitleEvent>().Publish(new TabHeader
-                                                                        {
-                                                                            Id = id,
-                                                                            Title = title
-                                                                        });
+            {
+                Id = id,
+                Title = title
+            });
         }
+
+        #endregion
     }
 }

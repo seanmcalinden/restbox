@@ -3,6 +3,8 @@ using Castle.MicroKernel.Registration;
 using Castle.MicroKernel.SubSystems.Configuration;
 using Castle.Windsor;
 using RestBox.ApplicationServices;
+using RestBox.Domain.Services;
+using RestBox.Factories;
 using RestBox.UserControls;
 using RestBox.ViewModels;
 
@@ -18,6 +20,7 @@ namespace RestBox.Installers
                                  .Configure(c => c.LifeStyle.Singleton.Named(c.Implementation.Name)));
             container.Register(
                     Component.For<ShellViewModel>().ImplementedBy<ShellViewModel>().LifeStyle.Singleton,
+                    Component.For<ILayoutDataFactory>().ImplementedBy<LayoutDataFactory>().LifeStyle.Singleton,
                     Component.For<ILayoutApplicationService>().ImplementedBy<LayoutApplicationService>().LifeStyle.Singleton,
                     Component.For<IMainMenuApplicationService>().ImplementedBy<MainMenuApplicationService>().LifeStyle.Singleton,
                     Component.For<HttpRequest>().ImplementedBy<HttpRequest>().LifeStyle.Transient,
@@ -34,8 +37,8 @@ namespace RestBox.Installers
                     Component.For<RequestEnvironmentSettingsViewModel>().ImplementedBy<RequestEnvironmentSettingsViewModel>().LifeStyle.Transient,
 
                     Component.For<RequestExtensions>().ImplementedBy<RequestExtensions>().LifeStyle.Singleton,
-                    Component.For<RequestExtensionsViewModel>().ImplementedBy<RequestExtensionsViewModel>().LifeStyle.Singleton
-                );
+                    Component.For<RequestExtensionsViewModel>().ImplementedBy<RequestExtensionsViewModel>().LifeStyle.Singleton,
+                    Component.For<IJsonSerializer>().ImplementedBy<JsonSerializer>().LifeStyle.Transient);
         }
     }
 }

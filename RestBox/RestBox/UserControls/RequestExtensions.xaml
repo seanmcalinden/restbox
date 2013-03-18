@@ -27,6 +27,8 @@
                 <DataGrid.ContextMenu>
                     <ContextMenu>
                         <MenuItem Header="Remove" Command="{Binding RemoveRequestExtensionCommand}"  />
+                        <Separator />
+                        <MenuItem Header="Open folder in windows explorer" Command="{Binding OpenFolderInWindowsExplorer}"  />
                     </ContextMenu>
                 </DataGrid.ContextMenu>
                 <DataGrid.Columns>

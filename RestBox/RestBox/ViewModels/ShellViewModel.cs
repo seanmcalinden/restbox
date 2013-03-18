@@ -12,11 +12,17 @@ namespace RestBox.ViewModels
 {
     public class ShellViewModel : ViewModelBase<ShellViewModel>
     {
-        private readonly IMainMenuApplicationService mainMenuApplicationService;
+        #region Declarations
+
+        private readonly IMainMenuApplicationService mainMenuApplicationService; 
+
+        #endregion
+
+        #region Constructor
 
         public ShellViewModel(
-            IEventAggregator eventAggregator, 
-            IMainMenuApplicationService mainMenuApplicationService)
+          IEventAggregator eventAggregator,
+          IMainMenuApplicationService mainMenuApplicationService)
         {
             this.mainMenuApplicationService = mainMenuApplicationService;
             MenuItems = new ObservableCollection<MenuItem>();
@@ -25,7 +31,11 @@ namespace RestBox.ViewModels
             eventAggregator.GetEvent<CloseSolutionEvent>().Subscribe(CloseSolution);
             eventAggregator.GetEvent<ResetMenuEvent>().Subscribe(ResetMenu);
             SolutionLoadedVisibility = Visibility.Visible;
-        }
+        } 
+
+        #endregion
+
+        #region Properties
 
         private Visibility solutionLoadedVisibility;
         public Visibility SolutionLoadedVisibility
@@ -33,6 +43,19 @@ namespace RestBox.ViewModels
             get { return solutionLoadedVisibility; }
             set { solutionLoadedVisibility = value; OnPropertyChanged(x => x.SolutionLoadedVisibility); }
         }
+
+        private string applicationTitle;
+        public string ApplicationTitle
+        {
+            get { return applicationTitle; }
+            set { applicationTitle = value; OnPropertyChanged(x => x.ApplicationTitle); }
+        }
+
+        public ObservableCollection<MenuItem> MenuItems { get; private set; }
+
+        #endregion
+
+        #region Event Handlers
 
         private void ResetMenu(bool obj)
         {
@@ -59,28 +82,29 @@ namespace RestBox.ViewModels
             SolutionLoadedVisibility = Visibility.Hidden;
             MenuItems.Clear();
             mainMenuApplicationService.CreateInitialMenuItems();
-        }
+        } 
 
-        private string applicationTitle;
-        public string ApplicationTitle
-        {
-            get { return applicationTitle; }
-            set { applicationTitle = value; OnPropertyChanged(x => x.ApplicationTitle); }
-        }
+        #endregion
 
-        public ObservableCollection<MenuItem> MenuItems { get; private set; }
-        
+        #region Commands
+
         public ICommand ExitApplicationCommand
         {
             get
             {
                 return new DelegateCommand(ExitApplication);
             }
-        }
+        } 
+
+        #endregion
+
+        #region Command Handlers
 
         private void ExitApplication()
         {
             Application.Current.Shutdown();
-        }
+        } 
+
+        #endregion
     }
 }

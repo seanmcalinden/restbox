@@ -2,69 +2,36 @@
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Windows;
 using System.Windows.Input;
 using Microsoft.Practices.Prism.Commands;
 using Microsoft.Practices.Prism.Events;
 using Microsoft.Win32;
 using RestBox.ApplicationServices;
-using RestBox.Domain.Entities;
-using RestBox.Events;
 
 namespace RestBox.ViewModels
 {
-    public class RequestExtensionsViewModel : ViewModelBase<RequestEnvironmentsViewModel>
+    public class RequestExtensionsViewModel : FileListViewModel<RequestExtensionsViewModel>
     {
-        private readonly IFileService fileService;
-        private readonly IIntellisenseService intellisenseService;
+        #region Declarations
 
+        private readonly IFileService fileService;
+        private readonly IIntellisenseService intellisenseService; 
+
+        #endregion
+
+        #region Constructor
+        
         public RequestExtensionsViewModel(IEventAggregator eventAggregator, IFileService fileService, IIntellisenseService intellisenseService)
+            : base(eventAggregator)
         {
             this.fileService = fileService;
             this.intellisenseService = intellisenseService;
             RequestExtensionFiles = new ObservableCollection<RequestExtensionViewFile>();
-            SolutionLoadedVisibility = Visibility.Hidden;
-            eventAggregator.GetEvent<NewSolutionEvent>().Subscribe(SolutionLoadedEvent);
-            eventAggregator.GetEvent<OpenSolutionEvent>().Subscribe(SolutionLoadedEvent);
-            eventAggregator.GetEvent<CloseSolutionEvent>().Subscribe(SolutionClosedEvent);
+        } 
 
-        }
+        #endregion
 
-        private void SolutionLoadedEvent(bool obj)
-        {
-            RequestExtensionFiles.Clear();
-            foreach(var requestExtensionFile in Solution.Current.RequestExtensionsFilePaths)
-            {
-                var viewFile = new RequestExtensionViewFile
-                                   {
-                                       Name = Path.GetFileNameWithoutExtension(requestExtensionFile),
-                                       RelativeFilePath = requestExtensionFile
-                                   };
-                RequestExtensionFiles.Add(viewFile);
-
-                intellisenseService.AddRequestExtensionIntellisenseItem(viewFile.Name);
-            }
-
-            if (RequestExtensionFiles.Count > 0)
-            {
-                SelectedRequestExtension = RequestExtensionFiles[0];
-            }
-
-            SolutionLoadedVisibility = Visibility.Visible;
-        }
-
-        private void SolutionClosedEvent(bool obj)
-        {
-            RequestExtensionFiles.Clear();
-            SolutionLoadedVisibility = Visibility.Hidden; 
-        }
-
-        private Visibility solutionLoadedVisibility;
-        public Visibility SolutionLoadedVisibility
-        {
-            get { return solutionLoadedVisibility; }
-            set { solutionLoadedVisibility = value; OnPropertyChanged(x => x.SolutionLoadedVisibility); }
-        }
+        #region Properties
 
         public ObservableCollection<RequestExtensionViewFile> RequestExtensionFiles { get; set; }
 
@@ -72,14 +39,23 @@ namespace RestBox.ViewModels
         public RequestExtensionViewFile SelectedRequestExtension
         {
             get { return selectedRequestExtension; }
-            set { selectedRequestExtension = value; OnPropertyChanged(x => x.SelectedRequestEnvironment); }
+            set { selectedRequestExtension = value; OnPropertyChanged(x => x.SelectedRequestExtension); }
         }
 
         private RequestExtensionViewFile selectedRequestExtensionFile;
         public RequestExtensionViewFile SelectedRequestExtensionFile
         {
             get { return selectedRequestExtensionFile; }
-            set { selectedRequestExtensionFile = value; OnPropertyChanged(x => x.SelectedRequestEnvironmentFile); }
+            set { selectedRequestExtensionFile = value; OnPropertyChanged(x => x.SelectedRequestExtensionFile); }
+        } 
+
+        #endregion
+
+        #region Commands
+
+        public ICommand OpenFolderInWindowsExplorer
+        {
+            get { return new DelegateCommand(OpenFolder); }
         }
 
         public ICommand AddRequestExtensionCommand
@@ -89,7 +65,16 @@ namespace RestBox.ViewModels
 
         public ICommand RemoveRequestExtensionCommand
         {
-            get{return new DelegateCommand(RemoveRequestExtension);}
+            get { return new DelegateCommand(RemoveRequestExtension); }
+        } 
+
+        #endregion
+
+        #region Command Handlers
+
+        private void OpenFolder()
+        {
+            fileService.OpenFileInWindowsExplorer(SelectedRequestExtensionFile.RelativeFilePath);
         }
 
         private void RemoveRequestExtension()
@@ -133,6 +118,41 @@ namespace RestBox.ViewModels
                 fileService.SaveSolution();
                 intellisenseService.AddRequestExtensionIntellisenseItem(requestEnvironmentViewFile.Name);
             }
+        } 
+
+        #endregion
+
+        #region Event Handlers
+
+        protected override void SolutionLoadedEvent(bool obj)
+        {
+            RequestExtensionFiles.Clear();
+            foreach (var requestExtensionFile in Solution.Current.RequestExtensionsFilePaths)
+            {
+                var viewFile = new RequestExtensionViewFile
+                {
+                    Name = Path.GetFileNameWithoutExtension(requestExtensionFile),
+                    RelativeFilePath = requestExtensionFile
+                };
+                RequestExtensionFiles.Add(viewFile);
+
+                intellisenseService.AddRequestExtensionIntellisenseItem(viewFile.Name);
+            }
+
+            if (RequestExtensionFiles.Count > 0)
+            {
+                SelectedRequestExtension = RequestExtensionFiles[0];
+            }
+
+            base.SolutionLoadedEvent(true);
         }
+
+        protected override void SolutionClosedEvent(bool obj)
+        {
+            RequestExtensionFiles.Clear();
+            base.SolutionClosedEvent(obj);
+        }
+
+        #endregion
     }
 }

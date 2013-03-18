@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace RestBox.Domain.Entities
+namespace RestBox.ViewModels
 {
     public class MainMenuItem
     {

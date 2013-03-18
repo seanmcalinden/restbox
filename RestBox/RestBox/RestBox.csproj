@@ -111,11 +111,13 @@
     <Compile Include="ApplicationServices\FileService.cs" />
     <Compile Include="ApplicationServices\IFileService.cs" />
     <Compile Include="ApplicationServices\IHttpRequestCacheService.cs" />
+    <Compile Include="ApplicationServices\IJsonSerializer.cs" />
     <Compile Include="ApplicationServices\IntellisenseService.cs" />
     <Compile Include="ApplicationServices\HttpRequestService.cs" />
     <Compile Include="ApplicationServices\IHttpRequestService.cs" />
     <Compile Include="ApplicationServices\IMainMenuApplicationService.cs" />
     <Compile Include="ApplicationServices\IIntellisenseService.cs" />
+    <Compile Include="ApplicationServices\JsonSerializer.cs" />
     <Compile Include="ApplicationServices\MainMenuApplicationService.cs" />
     <Compile Include="Bootstrapper.cs" />
     <Compile Include="Events\AddInputBindingEvent.cs" />
@@ -145,6 +147,8 @@
     <Compile Include="Events\RemoveTabEvent.cs" />
     <Compile Include="Events\ResetMenuEvent.cs" />
     <Compile Include="Events\SelectEnvironmentItemEvent.cs" />
+    <Compile Include="Factories\ILayoutDataFactory.cs" />
+    <Compile Include="Factories\LayoutDataFactory.cs" />
     <Compile Include="Installers\ShellInstaller.cs" />
     <Compile Include="ApplicationServices\LayoutApplicationService.cs" />
     <Compile Include="ApplicationServices\ILayoutApplicationService.cs" />
@@ -166,8 +170,11 @@
     <Compile Include="UserControls\RequestExtensions.xaml.cs">
       <DependentUpon>RequestExtensions.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ViewModels\FileListViewModel.cs" />
+    <Compile Include="ViewModels\HeaderItem.cs" />
     <Compile Include="ViewModels\HttpRequestFilesViewModel.cs" />
     <Compile Include="ViewModels\LayoutData.cs" />
+    <Compile Include="ViewModels\MainMenuItem.cs" />
     <Compile Include="ViewModels\RequestExtensionViewFile.cs" />
     <Compile Include="ViewModels\RequestExtensionsViewModel.cs" />
     <Compile Include="ViewModels\RequestEnvironmentSettingFile.cs" />
@@ -185,6 +192,7 @@
     <Compile Include="ViewModels\ShellViewModel.cs" />
     <Compile Include="ViewModels\Solution.cs" />
     <Compile Include="ViewModels\TabHeader.cs" />
+    <Compile Include="ViewModels\ViewModelBase.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
@@ -275,16 +283,6 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\RestBox.Domain.Services\RestBox.Domain.Services.csproj">
-      <Project>{59580005-0DF5-4F97-A65E-DD1130F82234}</Project>
-      <Name>RestBox.Domain.Services</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\RestBox.Domain\RestBox.Domain.csproj">
-      <Project>{92119812-2ABD-449D-B9C6-1FEC89A30E30}</Project>
-      <Name>RestBox.Domain</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\add-icon.png" />

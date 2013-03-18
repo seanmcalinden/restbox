@@ -14,19 +14,29 @@ namespace RestBox.ApplicationServices
 {
     public class MainMenuApplicationService : IMainMenuApplicationService
     {
+        #region Declarations
+        
         private readonly IFileService fileService;
         private readonly IJsonSerializer jsonSerializer;
-        private readonly IEventAggregator eventAggregator;
+        private readonly IEventAggregator eventAggregator; 
+
+        #endregion
+
+        #region Constructor
 
         public MainMenuApplicationService(
-            IFileService fileService, 
-            IJsonSerializer jsonSerializer,
-            IEventAggregator eventAggregator)
+          IFileService fileService,
+          IJsonSerializer jsonSerializer,
+          IEventAggregator eventAggregator)
         {
             this.fileService = fileService;
             this.jsonSerializer = jsonSerializer;
             this.eventAggregator = eventAggregator;
-        }
+        } 
+
+        #endregion
+
+        #region Public Methods
 
         public void CreateInitialMenuItems()
         {
@@ -78,7 +88,7 @@ namespace RestBox.ApplicationServices
             fileMenu.Items.Add(closeSolution);
             fileMenu.Items.Add(new Separator());
             fileMenu.Items.Add(exitMenu);
-            
+
             shellViewModel.MenuItems.Add(fileMenu);
         }
 
@@ -105,7 +115,7 @@ namespace RestBox.ApplicationServices
 
         public MenuItem Get(MenuItem parent, string headerText)
         {
-            if(parent == null)
+            if (parent == null)
             {
                 var shellViewModel = ServiceLocator.Current.GetInstance<ShellViewModel>();
                 return shellViewModel.MenuItems.FirstOrDefault(x => x.Header.ToString() == headerText);
@@ -115,11 +125,15 @@ namespace RestBox.ApplicationServices
             {
                 if (item is MenuItem && ((MenuItem)item).Header.ToString() == headerText)
                 {
-                    return (MenuItem) item;
+                    return (MenuItem)item;
                 }
             }
             return null;
-        }
+        } 
+
+        #endregion
+
+        #region Helpers
 
         private void CreateNewSolution()
         {
@@ -166,7 +180,7 @@ namespace RestBox.ApplicationServices
                                          Filter = "Rest Box Solution (*.rsln)|*.rsln",
                                          Title = "Open Solution File"
                                      };
-            if(openFileDialog.ShowDialog() == true)
+            if (openFileDialog.ShowDialog() == true)
             {
                 Solution.Current.Clear();
 
@@ -177,17 +191,18 @@ namespace RestBox.ApplicationServices
                         var fileContent = reader.ReadToEnd();
                         Solution.Current = jsonSerializer.FromJsonString<Solution>(fileContent);
                     }
-                    
+
                 }
                 eventAggregator.GetEvent<OpenSolutionEvent>().Publish(true);
             }
         }
 
-
         private void CloseSolution()
         {
             Solution.Current.Clear();
             eventAggregator.GetEvent<CloseSolutionEvent>().Publish(true);
-        }
+        } 
+
+        #endregion
     }
 }

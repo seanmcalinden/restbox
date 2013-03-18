@@ -12,5 +12,6 @@ namespace RestBox.ApplicationServices
         string GetFilePath(string solutionPath, string relativeFilePath);
         string GetRelativePath(Uri solutionPath, string fileName);
         void MoveFile(string sourceFilePath, string destinationFilePath);
+        void OpenFileInWindowsExplorer(string relativeFilePath);
     }
 }

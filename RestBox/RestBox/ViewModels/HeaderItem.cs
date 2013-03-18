@@ -1,4 +1,4 @@
-﻿namespace RestBox.Domain.Entities
+﻿namespace RestBox.ViewModels
 {
     public class HeaderItem
     {

@@ -6,7 +6,13 @@ namespace RestBox.ApplicationServices
 {
     public class LayoutApplicationService : ILayoutApplicationService
     {
-        private const string LayoutFileName = @".\RestBox.Layout.config";
+        #region Declarations
+        
+        private const string LayoutFileName = @".\RestBox.Layout.config"; 
+
+        #endregion
+
+        #region Public Methods
 
         public void Load(DockingManager dockingManager)
         {
@@ -24,6 +30,8 @@ namespace RestBox.ApplicationServices
         {
             var layoutSerializer = new XmlLayoutSerializer(dockingManager);
             layoutSerializer.Serialize(LayoutFileName);
-        }
+        } 
+
+        #endregion
     }
 }

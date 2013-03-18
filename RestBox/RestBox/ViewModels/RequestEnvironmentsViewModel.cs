@@ -11,98 +11,39 @@ using Microsoft.Practices.Prism.Events;
 using Microsoft.Practices.ServiceLocation;
 using Microsoft.Win32;
 using RestBox.ApplicationServices;
-using RestBox.Domain.Entities;
 using RestBox.Events;
 using RestBox.UserControls;
 
 namespace RestBox.ViewModels
 {
-    public class RequestEnvironmentsViewModel : ViewModelBase<RequestEnvironmentsViewModel>
+    public class RequestEnvironmentsViewModel : FileListViewModel<RequestEnvironmentsViewModel>
     {
+        #region Declarations
+
         public static string NewEnvironmentTitle = "New Environment *";
         private readonly IEventAggregator eventAggregator;
         private readonly IFileService fileService;
-        private readonly IIntellisenseService intellisenseService;
+        private readonly IIntellisenseService intellisenseService; 
+
+        #endregion
+
+        #region Constructor
 
         public RequestEnvironmentsViewModel(IEventAggregator eventAggregator, IFileService fileService, IIntellisenseService intellisenseService)
+            : base(eventAggregator)
         {
             this.eventAggregator = eventAggregator;
             this.fileService = fileService;
             this.intellisenseService = intellisenseService;
             RequestEnvironmentFiles = new ObservableCollection<RequestEnvironmentViewFile>();
-            SolutionLoadedVisibility = Visibility.Hidden;
-            eventAggregator.GetEvent<NewSolutionEvent>().Subscribe(SolutionLoadedEvent);
-            eventAggregator.GetEvent<OpenSolutionEvent>().Subscribe(SolutionLoadedEvent);
-            eventAggregator.GetEvent<CloseSolutionEvent>().Subscribe(SolutionClosedEvent);
             eventAggregator.GetEvent<UpdateEnvironmentItemEvent>().Subscribe(UpdateEnvironmentItem);
             eventAggregator.GetEvent<CloseEnvironmentItemEvent>().Subscribe(CloseEnvironmentItem);
-            eventAggregator.GetEvent<DocumentChangedEvent>().Subscribe(DocumentChanged);
 
-        }
+        } 
 
-        private void DocumentChanged(LayoutData layoutData)
-        {
-            if (layoutData != null && layoutData.Content is RequestEnvironmentSettings)
-            {
-                if (layoutData.IsSelected)
-                {
-                    eventAggregator.GetEvent<SelectEnvironmentItemEvent>().Publish(layoutData.ContentId);
-                    eventAggregator.GetEvent<AddRequestEnvironmentMenuItemsEvent>().Publish((RequestEnvironmentSettingsViewModel)((RequestEnvironmentSettings)layoutData.Content).DataContext);
-                }
-            }
-        }
+        #endregion
 
-        private void CloseEnvironmentItem(string id)
-        {
-            RequestEnvironmentFiles.Remove(RequestEnvironmentFiles.First(x => x.Id == id));
-        }
-
-        private void UpdateEnvironmentItem(RequestEnvironmentFile requestEnvironmentFile)
-        {
-            var requestEnvironmentFileToUpdate = RequestEnvironmentFiles.First(x => x.Id == requestEnvironmentFile.Id);
-            requestEnvironmentFileToUpdate.Name = requestEnvironmentFile.Name;
-            requestEnvironmentFileToUpdate.RelativeFilePath = requestEnvironmentFile.RelativeFilePath;
-        }
-
-        private void SolutionLoadedEvent(bool obj)
-        {
-            RequestEnvironmentFiles.Clear();
-            foreach(var requestEnvironmentFile in Solution.Current.RequestEnvironmentFiles)
-            {
-                RequestEnvironmentFiles.Add(new RequestEnvironmentViewFile
-                                                {
-                                                    Id = requestEnvironmentFile.Id,
-                                                    Name = requestEnvironmentFile.Name,
-                                                    RelativeFilePath = requestEnvironmentFile.RelativeFilePath
-                                                });
-                var requestEnvironmentSetting = fileService.Load<RequestEnvironmentSettingFile>(fileService.GetFilePath(Solution.Current.FilePath,
-                                                                                 requestEnvironmentFile.RelativeFilePath));
-                foreach (var environmentSetting in requestEnvironmentSetting.RequestEnvironmentSettings)
-                {
-                    intellisenseService.AddEnvironmentIntellisenseItem(environmentSetting.Setting, environmentSetting.SettingValue);
-                }
-            }
-
-            if (RequestEnvironmentFiles.Count > 0)
-            {
-                SelectedRequestEnvironment = RequestEnvironmentFiles[0];
-            }
-
-            SolutionLoadedVisibility = Visibility.Visible;
-        }
-
-        private void SolutionClosedEvent(bool obj)
-        {
-            RequestEnvironmentFiles.Clear();
-            SolutionLoadedVisibility = Visibility.Hidden; 
-        }
-
-        private Visibility solutionLoadedVisibility;
-        public Visibility SolutionLoadedVisibility
-        {
-            get { return solutionLoadedVisibility; }
-            set { solutionLoadedVisibility = value; OnPropertyChanged(x => x.SolutionLoadedVisibility); }
-        }
+        #region Properties
 
         public ObservableCollection<RequestEnvironmentViewFile> RequestEnvironmentFiles { get; set; }
 
@@ -120,70 +61,79 @@ namespace RestBox.ViewModels
             set { selectedRequestEnvironmentFile = value; OnPropertyChanged(x => x.SelectedRequestEnvironmentFile); }
         }
 
+        #endregion
+
+        #region Event Handlers
+
+        protected override void DocumentChanged(LayoutData layoutData)
+        {
+            RaiseDocumentChanged<RequestEnvironmentSettings, RequestEnvironmentSettingsViewModel, SelectEnvironmentItemEvent, AddRequestEnvironmentMenuItemsEvent>(layoutData);
+        }
+
+        protected override void SolutionLoadedEvent(bool obj)
+        {
+            RequestEnvironmentFiles.Clear();
+            foreach (var requestEnvironmentFile in Solution.Current.RequestEnvironmentFiles)
+            {
+                RequestEnvironmentFiles.Add(new RequestEnvironmentViewFile
+                {
+                    Id = requestEnvironmentFile.Id,
+                    Name = requestEnvironmentFile.Name,
+                    RelativeFilePath = requestEnvironmentFile.RelativeFilePath
+                });
+                var requestEnvironmentSetting = fileService.Load<RequestEnvironmentSettingFile>(fileService.GetFilePath(Solution.Current.FilePath,
+                                                                                 requestEnvironmentFile.RelativeFilePath));
+                foreach (var environmentSetting in requestEnvironmentSetting.RequestEnvironmentSettings)
+                {
+                    intellisenseService.AddEnvironmentIntellisenseItem(environmentSetting.Setting, environmentSetting.SettingValue);
+                }
+            }
+
+            if (RequestEnvironmentFiles.Count > 0)
+            {
+                SelectedRequestEnvironment = RequestEnvironmentFiles[0];
+            }
+
+            base.SolutionLoadedEvent(obj);
+        }
+
+        protected override void SolutionClosedEvent(bool obj)
+        {
+            RequestEnvironmentFiles.Clear();
+            base.SolutionClosedEvent(obj);
+        }
+
+        private void CloseEnvironmentItem(string id)
+        {
+            RequestEnvironmentFiles.Remove(RequestEnvironmentFiles.First(x => x.Id == id));
+        }
+
+        private void UpdateEnvironmentItem(RequestEnvironmentFile requestEnvironmentFile)
+        {
+            var requestEnvironmentFileToUpdate = RequestEnvironmentFiles.First(x => x.Id == requestEnvironmentFile.Id);
+            requestEnvironmentFileToUpdate.Name = requestEnvironmentFile.Name;
+            requestEnvironmentFileToUpdate.RelativeFilePath = requestEnvironmentFile.RelativeFilePath;
+        }
+
+        #endregion
+
+        #region Public Methods
+
         public void DoubleClickedItem()
         {
-            if(selectedRequestEnvironmentFile != null)
+            if (selectedRequestEnvironmentFile != null)
             {
                 SelectLayoutDocument(selectedRequestEnvironmentFile);
             }
-        }
+        } 
 
-        private void SelectLayoutDocument(RequestEnvironmentViewFile requestEnvironmentViewFile)
+        #endregion
+
+        #region Commands
+
+        public ICommand OpenFolderInWindowsExplorer
         {
-            var fileMissing = false;
-
-            RequestEnvironmentSettings requestEnvironmentSettings;
-            if (requestEnvironmentViewFile.Name != NewEnvironmentTitle)
-            {
-                if (
-                    !fileService.FileExists(fileService.GetFilePath(Solution.Current.FilePath,
-                                                                    requestEnvironmentViewFile.RelativeFilePath)))
-                {
-                    requestEnvironmentViewFile.Icon = "warning";
-                    fileMissing = true;
-                }
-                else
-                {
-                    requestEnvironmentViewFile.Icon = string.Empty;
-                }
-
-
-                if (fileMissing)
-                {
-                    return;
-                }
-                var requestEnvironmentSettingFile =
-                    fileService.Load<RequestEnvironmentSettingFile>(fileService.GetFilePath(Solution.Current.FilePath,
-                                                                                            requestEnvironmentViewFile.
-                                                                                                RelativeFilePath));
-
-                requestEnvironmentSettings = ServiceLocator.Current.GetInstance<RequestEnvironmentSettings>();
-                requestEnvironmentSettings.FilePath = requestEnvironmentViewFile.RelativeFilePath;
-                var viewModel = requestEnvironmentSettings.DataContext as RequestEnvironmentSettingsViewModel;
-
-                foreach (var requestEnvironmentSetting in requestEnvironmentSettingFile.RequestEnvironmentSettings)
-                {
-                    viewModel.Settings.Add(requestEnvironmentSetting);
-                }
-            }
-            else
-            {
-                requestEnvironmentSettings = ServiceLocator.Current.GetInstance<RequestEnvironmentSettings>();
-            }
-            var layoutDocument = new LayoutDocument
-                                     {
-                                         Title = requestEnvironmentViewFile.Name,
-                                         ContentId = requestEnvironmentViewFile.Id,
-                                         Content = requestEnvironmentSettings,
-                                         IsSelected = true,
-                                         CanFloat = true
-                                     };
-
-            eventAggregator.GetEvent<AddLayoutDocumentEvent>().Publish(layoutDocument);
-            eventAggregator.GetEvent<AddRequestEnvironmentMenuItemsEvent>().Publish(
-                (RequestEnvironmentSettingsViewModel) ((RequestEnvironmentSettings) layoutDocument.Content).DataContext);
-
-            layoutDocument.Closing += EnvironmentDocumentOnClosing;
+            get { return new DelegateCommand(OpenFolder); }
         }
 
         public ICommand NewEnvironmentCommand
@@ -198,22 +148,31 @@ namespace RestBox.ViewModels
 
         public ICommand CloneEnvironmentCommand
         {
-            get{return new DelegateCommand(CloneEnvironment);}
+            get { return new DelegateCommand(CloneEnvironment); }
         }
 
         public ICommand RemoveEnvironmentCommand
         {
-            get{return new DelegateCommand(RemoveEnvironment);}
+            get { return new DelegateCommand(RemoveEnvironment); }
         }
 
         public ICommand DeleteEnvironmentCommand
         {
-            get{return new DelegateCommand(DeleteEnvironment);}
+            get { return new DelegateCommand(DeleteEnvironment); }
         }
 
         public ICommand RenameEnvironmentCommand
         {
             get { return new DelegateCommand(RenameEnvironment); }
+        } 
+
+        #endregion
+
+        #region Command Handlers
+
+        private void OpenFolder()
+        {
+            fileService.OpenFileInWindowsExplorer(SelectedRequestEnvironmentFile.RelativeFilePath);
         }
 
         private void RenameEnvironment()
@@ -289,7 +248,7 @@ namespace RestBox.ViewModels
 
         private void CloneEnvironment()
         {
-            if(string.IsNullOrWhiteSpace(SelectedRequestEnvironmentFile.RelativeFilePath))
+            if (string.IsNullOrWhiteSpace(SelectedRequestEnvironmentFile.RelativeFilePath))
             {
                 return;
             }
@@ -334,10 +293,10 @@ namespace RestBox.ViewModels
         private void CreateNewEnvironment()
         {
             var newEnvironment = new RequestEnvironmentViewFile
-                                     {
-                                         Id = Guid.NewGuid().ToString(),
-                                         Name = NewEnvironmentTitle
-                                     };
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = NewEnvironmentTitle
+            };
             RequestEnvironmentFiles.Add(newEnvironment);
 
             var newEnvironmentDocument = new LayoutDocument
@@ -348,7 +307,7 @@ namespace RestBox.ViewModels
                 IsSelected = true,
                 CanFloat = true
             };
-            
+
             newEnvironmentDocument.IsActiveChanged += SelectDataGridItem;
             newEnvironmentDocument.Closing += EnvironmentDocumentOnClosing;
 
@@ -381,6 +340,10 @@ namespace RestBox.ViewModels
             }
         }
 
+        #endregion
+
+        #region Helpers
+
         private void SelectDataGridItem(object sender, EventArgs e)
         {
             eventAggregator.GetEvent<ResetMenuEvent>().Publish(true);
@@ -397,5 +360,65 @@ namespace RestBox.ViewModels
                 RequestEnvironmentFiles.Remove(RequestEnvironmentFiles.First(x => x.Id == layoutDocument.ContentId));
             }
         }
+
+        private void SelectLayoutDocument(RequestEnvironmentViewFile requestEnvironmentViewFile)
+        {
+            var fileMissing = false;
+
+            RequestEnvironmentSettings requestEnvironmentSettings;
+            if (requestEnvironmentViewFile.Name != NewEnvironmentTitle)
+            {
+                if (
+                    !fileService.FileExists(fileService.GetFilePath(Solution.Current.FilePath,
+                                                                    requestEnvironmentViewFile.RelativeFilePath)))
+                {
+                    requestEnvironmentViewFile.Icon = "warning";
+                    fileMissing = true;
+                }
+                else
+                {
+                    requestEnvironmentViewFile.Icon = string.Empty;
+                }
+
+
+                if (fileMissing)
+                {
+                    return;
+                }
+                var requestEnvironmentSettingFile =
+                    fileService.Load<RequestEnvironmentSettingFile>(fileService.GetFilePath(Solution.Current.FilePath,
+                                                                                            requestEnvironmentViewFile.
+                                                                                                RelativeFilePath));
+
+                requestEnvironmentSettings = ServiceLocator.Current.GetInstance<RequestEnvironmentSettings>();
+                requestEnvironmentSettings.FilePath = requestEnvironmentViewFile.RelativeFilePath;
+                var viewModel = requestEnvironmentSettings.DataContext as RequestEnvironmentSettingsViewModel;
+
+                foreach (var requestEnvironmentSetting in requestEnvironmentSettingFile.RequestEnvironmentSettings)
+                {
+                    viewModel.Settings.Add(requestEnvironmentSetting);
+                }
+            }
+            else
+            {
+                requestEnvironmentSettings = ServiceLocator.Current.GetInstance<RequestEnvironmentSettings>();
+            }
+            var layoutDocument = new LayoutDocument
+            {
+                Title = requestEnvironmentViewFile.Name,
+                ContentId = requestEnvironmentViewFile.Id,
+                Content = requestEnvironmentSettings,
+                IsSelected = true,
+                CanFloat = true
+            };
+
+            eventAggregator.GetEvent<AddLayoutDocumentEvent>().Publish(layoutDocument);
+            eventAggregator.GetEvent<AddRequestEnvironmentMenuItemsEvent>().Publish(
+                (RequestEnvironmentSettingsViewModel)((RequestEnvironmentSettings)layoutDocument.Content).DataContext);
+
+            layoutDocument.Closing += EnvironmentDocumentOnClosing;
+        } 
+
+        #endregion
     }
 }

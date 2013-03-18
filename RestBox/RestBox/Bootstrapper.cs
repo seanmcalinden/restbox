@@ -2,9 +2,7 @@
 using Microsoft.Practices.ServiceLocation;
 using PrismContrib.WindsorExtensions;
 using RestBox.ApplicationServices;
-using RestBox.Domain.Services.Installers;
 using RestBox.Installers;
-using RestBox.ViewModels;
 
 namespace RestBox
 {
@@ -13,7 +11,6 @@ namespace RestBox
         protected override DependencyObject CreateShell()
         {
             Container.Install(new ShellInstaller());
-            Container.Install(new ServicesInstaller());
 
             var serviceLocator = ServiceLocator.Current;
 

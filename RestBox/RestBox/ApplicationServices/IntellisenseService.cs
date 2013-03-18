@@ -10,9 +10,15 @@ namespace RestBox.ApplicationServices
 {
     public class IntellisenseService : IIntellisenseService
     {
+        #region Declarations
+
         private readonly List<IntellisenseItem> intellisenseItems;
         private readonly List<IntellisenseItem> environmentIntellisenseItems;
-        private readonly List<IntellisenseItem> requestExtensionsIntellisenseItems;
+        private readonly List<IntellisenseItem> requestExtensionsIntellisenseItems; 
+
+        #endregion
+
+        #region Constructor
 
         public IntellisenseService(IEventAggregator eventAggregator)
         {
@@ -21,13 +27,21 @@ namespace RestBox.ApplicationServices
             environmentIntellisenseItems = new List<IntellisenseItem>();
             requestExtensionsIntellisenseItems = new List<IntellisenseItem>();
             eventAggregator.GetEvent<CloseSolutionEvent>().Subscribe(SolutionClosedEvent);
-        }
+        } 
 
+        #endregion
+
+        #region Event Handlers
+        
         private void SolutionClosedEvent(bool obj)
         {
             environmentIntellisenseItems.Clear();
             requestExtensionsIntellisenseItems.Clear();
-        }
+        } 
+
+        #endregion
+
+        #region Public Methods
 
         public void AddEnvironmentIntellisenseItem(string key, string value)
         {
@@ -63,7 +77,7 @@ namespace RestBox.ApplicationServices
         public void RemoveRequestExtensionIntellisenseItem(string key)
         {
             var intellisenseItem = requestExtensionsIntellisenseItems.FirstOrDefault(x => x.Key.ToLower() == string.Format("ext.{0}", key).ToLower());
-            if(intellisenseItem != null)
+            if (intellisenseItem != null)
             {
                 requestExtensionsIntellisenseItems.Remove(intellisenseItem);
             }
@@ -121,7 +135,7 @@ namespace RestBox.ApplicationServices
 
                 if (intellisenseHeaderItem != null)
                 {
-                    var filteredValue = values.Where(x => !intellisenseHeaderItem.Values.Contains(x)).FirstOrDefault();
+                    var filteredValue = values.FirstOrDefault(x => !intellisenseHeaderItem.Values.Contains(x));
                     if (filteredValue == null)
                     {
                         return new List<string>();
@@ -148,6 +162,8 @@ namespace RestBox.ApplicationServices
             {
                 return requestExtensionsIntellisenseItems.Any(x => x.Key.ToLower() == "ext." + key.ToLower());
             }
-        }
+        } 
+
+        #endregion
     }
 }

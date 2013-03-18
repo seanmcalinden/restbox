@@ -12,19 +12,26 @@ using Microsoft.Practices.Prism.Events;
 using Microsoft.Practices.ServiceLocation;
 using Microsoft.Win32;
 using RestBox.ApplicationServices;
-using RestBox.Domain.Entities;
 using RestBox.Events;
 using RestBox.UserControls;
 
 namespace RestBox.ViewModels
 {
-    public class HttpRequestFilesViewModel : ViewModelBase<HttpRequestFilesViewModel>
+    public class HttpRequestFilesViewModel : FileListViewModel<HttpRequestFilesViewModel>
     {
+        #region Declarations
+        
         private readonly IFileService fileService;
         private readonly IEventAggregator eventAggregator;
         private readonly IMainMenuApplicationService mainMenuApplicationService;
+        private HttpRequestViewFile httpRequestViewFileToOpen;
+
+        #endregion
+
+        #region Constructor
 
         public HttpRequestFilesViewModel(IFileService fileService, IEventAggregator eventAggregator, IMainMenuApplicationService mainMenuApplicationService)
+            : base(eventAggregator)
         {
             this.fileService = fileService;
             this.eventAggregator = eventAggregator;
@@ -36,41 +43,57 @@ namespace RestBox.ViewModels
                 Source = HttpRequestFiles
             }.View;
             HttpRequestFilesView.Filter = FilterHttpRequestFiles;
-            SolutionLoadedVisibility = Visibility.Hidden;
-            eventAggregator.GetEvent<NewSolutionEvent>().Subscribe(SolutionLoadedEvent);
-            eventAggregator.GetEvent<OpenSolutionEvent>().Subscribe(SolutionLoadedEvent);
-            eventAggregator.GetEvent<CloseSolutionEvent>().Subscribe(SolutionClosedEvent);
             eventAggregator.GetEvent<NewHttpRequestEvent>().Subscribe(NewHttpRequest);
             eventAggregator.GetEvent<UpdateHttpRequestFileItemEvent>().Subscribe(UpdateHttpRequestFileItem);
             eventAggregator.GetEvent<OpenHttpRequestEvent>().Subscribe(OpenHttpRequest);
-            eventAggregator.GetEvent<DocumentChangedEvent>().Subscribe(DocumentChanged);
+        } 
+
+        #endregion
+
+        #region Properties
+
+        private string httpRequestFilesFilter;
+        public string HttpRequestFilesFilter
+        {
+            get { return httpRequestFilesFilter; }
+            set { httpRequestFilesFilter = value; OnPropertyChanged(x => x.HttpRequestFilesFilter); HttpRequestFilesView.Refresh(); }
         }
 
-        private void DocumentChanged(LayoutData layoutData)
+        public ObservableCollection<string> HttpRequestGroups { get; set; }
+
+        public ObservableCollection<HttpRequestViewFile> HttpRequestFiles { get; set; }
+
+        public ICollectionView HttpRequestFilesView { get; set; }
+
+        private HttpRequestFile selectedHttpRequestFile;
+
+        public HttpRequestFile SelectedHttpRequestFile
         {
-            if (layoutData != null && layoutData.Content is HttpRequest)
+            get { return selectedHttpRequestFile; }
+            set
             {
-                if(layoutData.IsSelected)
-                {
-                    eventAggregator.GetEvent<SelectHttpRequestItemEvent>().Publish(layoutData.ContentId);
-                    eventAggregator.GetEvent<AddHttpRequestMenuItemsEvent>().Publish((HttpRequestViewModel)((HttpRequest)layoutData.Content).DataContext);
-                }
+                selectedHttpRequestFile = value;
+                OnPropertyChanged(x => x.SelectedHttpRequestFile);
             }
         }
 
-        private void UpdateHttpRequestFileItem(HttpRequestFile httpRequestFile)
+        private Visibility httpRequestFileNewOpenVisibility;
+        public Visibility HttpRequestFileNewOpenVisibility
         {
-            var item = HttpRequestFiles.FirstOrDefault(x => x.Id == httpRequestFile.Id);
-            if(item == null)
-            {
-                return;
-            }
-
-            item.Name = httpRequestFile.Name;
-            item.RelativeFilePath = httpRequestFile.RelativeFilePath;
+            get { return httpRequestFileNewOpenVisibility; }
+            set { httpRequestFileNewOpenVisibility = value; OnPropertyChanged(x => x.HttpRequestFileNewOpenVisibility); }
         }
 
-        private void SolutionLoadedEvent(bool obj)
+        #endregion
+
+        #region Event Handlers
+
+        protected override void DocumentChanged(LayoutData layoutData)
+        {
+            RaiseDocumentChanged<HttpRequest, HttpRequestViewModel, SelectHttpRequestItemEvent, AddHttpRequestMenuItemsEvent>(layoutData);
+        }
+
+        protected override void SolutionLoadedEvent(bool obj)
         {
             HttpRequestFiles.Clear();
 
@@ -89,8 +112,20 @@ namespace RestBox.ViewModels
                 }
 
                 HttpRequestFiles.Add(requestView);
-                SolutionLoadedVisibility = Visibility.Visible;
+                base.SolutionLoadedEvent(obj);
             }
+        }
+
+        private void UpdateHttpRequestFileItem(HttpRequestFile httpRequestFile)
+        {
+            var item = HttpRequestFiles.FirstOrDefault(x => x.Id == httpRequestFile.Id);
+            if (item == null)
+            {
+                return;
+            }
+
+            item.Name = httpRequestFile.Name;
+            item.RelativeFilePath = httpRequestFile.RelativeFilePath;
         }
 
         private void NewHttpRequest(string id)
@@ -107,38 +142,6 @@ namespace RestBox.ViewModels
             eventAggregator.GetEvent<AddLayoutDocumentEvent>().Publish(newHttpRequestDocument);
             eventAggregator.GetEvent<AddHttpRequestMenuItemsEvent>().Publish((HttpRequestViewModel)((HttpRequest)newHttpRequestDocument.Content).DataContext);
             newHttpRequestDocument.Closing += RequestDocumentOnClosing;
-        }
-
-        private HttpRequestViewFile httpRequestViewFileToOpen;
-
-        public void OpenHttpRequest(HttpRequestViewFile httpRequestViewFile)
-        {
-            if (httpRequestViewFile.Icon == "warning")
-            {
-                return;
-            }
-
-            httpRequestViewFileToOpen = httpRequestViewFile;
-
-            if(httpRequestViewFileToOpen.Name == "New Http Request *")
-            {
-                var layoutDocument = new LayoutDocument
-                {
-                    Title = Path.GetFileNameWithoutExtension("New Http Request *"),
-                    ContentId = httpRequestViewFileToOpen.Id,
-                    Content = ServiceLocator.Current.GetInstance<HttpRequest>(),
-                    IsSelected = true,
-                    CanFloat = true
-                };
-                layoutDocument.Closing += RequestDocumentOnClosing;
-
-                eventAggregator.GetEvent<AddLayoutDocumentEvent>().Publish(layoutDocument);
-                eventAggregator.GetEvent<AddHttpRequestMenuItemsEvent>().Publish((HttpRequestViewModel)((HttpRequest)layoutDocument.Content).DataContext);
-            }
-            else
-            {
-                OpenHttpRequest(fileService.GetFilePath(Solution.Current.FilePath, httpRequestViewFile.RelativeFilePath));    
-            }
         }
 
         private void OpenHttpRequest(string fileName)
@@ -166,7 +169,13 @@ namespace RestBox.ViewModels
             eventAggregator.GetEvent<AddLayoutDocumentEvent>().Publish(layoutDocument);
             eventAggregator.GetEvent<AddHttpRequestMenuItemsEvent>().Publish((HttpRequestViewModel)((HttpRequest)layoutDocument.Content).DataContext);
         }
-        
+
+        protected override void SolutionClosedEvent(bool obj)
+        {
+            HttpRequestFiles.Clear();
+            base.SolutionClosedEvent(obj);
+        }
+
         private void RequestDocumentOnClosing(object sender, CancelEventArgs cancelEventArgs)
         {
             var layoutDocument = ((LayoutDocument)sender);
@@ -178,104 +187,53 @@ namespace RestBox.ViewModels
             mainMenuApplicationService.CreateInitialMenuItems();
         }
 
-        private void SolutionClosedEvent(bool obj)
-        {
-            HttpRequestFiles.Clear();
-            SolutionLoadedVisibility = Visibility.Hidden;
-        }
+        #endregion
 
-        private Visibility solutionLoadedVisibility;
-        public Visibility SolutionLoadedVisibility
-        {
-            get { return solutionLoadedVisibility; }
-            set { solutionLoadedVisibility = value; OnPropertyChanged(x => x.SolutionLoadedVisibility); }
-        }
+        #region Public Methods
 
-        private bool FilterHttpRequestFiles(object httpRequestFile)
+        public void OpenHttpRequest(HttpRequestViewFile httpRequestViewFile)
         {
-            if (string.IsNullOrWhiteSpace(HttpRequestFilesFilter))
+            if (httpRequestViewFile.Icon == "warning")
             {
-                return true;
+                return;
             }
-            return (((HttpRequestFile)httpRequestFile).Groups != null && ((HttpRequestFile)httpRequestFile).Groups.ToLower().Contains(HttpRequestFilesFilter.ToLower()))
-                || ((HttpRequestFile)httpRequestFile).Name.ToLower().Contains(HttpRequestFilesFilter.ToLower());
-        }
 
-        private string httpRequestFilesFilter;
-        public string HttpRequestFilesFilter
-        {
-            get { return httpRequestFilesFilter; }
-            set { httpRequestFilesFilter = value; OnPropertyChanged(x => x.HttpRequestFilesFilter); HttpRequestFilesView.Refresh(); }
-        }
+            httpRequestViewFileToOpen = httpRequestViewFile;
 
-        public ObservableCollection<HttpRequestViewFile> HttpRequestFiles { get; set; }
-
-        public ICollectionView HttpRequestFilesView { get; set; }
-
-        private HttpRequestFile selectedHttpRequestFile;
-
-        public HttpRequestFile SelectedHttpRequestFile
-        {
-            get { return selectedHttpRequestFile; }
-            set
+            if (httpRequestViewFileToOpen.Name == "New Http Request *")
             {
-                selectedHttpRequestFile = value;
-                OnPropertyChanged(x => x.SelectedHttpRequestFile);
-            }
-        }
+                var layoutDocument = new LayoutDocument
+                {
+                    Title = Path.GetFileNameWithoutExtension("New Http Request *"),
+                    ContentId = httpRequestViewFileToOpen.Id,
+                    Content = ServiceLocator.Current.GetInstance<HttpRequest>(),
+                    IsSelected = true,
+                    CanFloat = true
+                };
+                layoutDocument.Closing += RequestDocumentOnClosing;
 
-        private Visibility httpRequestFileNewOpenVisibility;
-        public Visibility HttpRequestFileNewOpenVisibility
-        {
-            get { return httpRequestFileNewOpenVisibility; }
-            set { httpRequestFileNewOpenVisibility = value; OnPropertyChanged(x => x.HttpRequestFileNewOpenVisibility); }
-        }
+                eventAggregator.GetEvent<AddLayoutDocumentEvent>().Publish(layoutDocument);
+                eventAggregator.GetEvent<AddHttpRequestMenuItemsEvent>().Publish((HttpRequestViewModel)((HttpRequest)layoutDocument.Content).DataContext);
+            }
+            else
+            {
+                OpenHttpRequest(fileService.GetFilePath(Solution.Current.FilePath, httpRequestViewFile.RelativeFilePath));
+            }
+        } 
+
+        #endregion
+
+        #region Commands
 
         public ICommand NewHttpRequestFile
         {
             get { return new DelegateCommand(NewHttpRequestItem); }
-        }
+        } 
 
-        private void NewHttpRequestItem()
+
+        public ICommand OpenFolderInWindowsExplorer
         {
-            var id = Guid.NewGuid().ToString();
-            var httpRequestFile = new HttpRequestViewFile
-            {
-                Id = id,
-                Name = "New Http Request *"
-            };
-            HttpRequestFiles.Add(httpRequestFile);
-            eventAggregator.GetEvent<NewHttpRequestEvent>().Publish(id);
-        }
-
-        public ICommand AddExistingHttpRequestFile
-        {
-            get { return new DelegateCommand(AddExistingHttpRequest); }
-        }
-
-        private void AddExistingHttpRequest()
-        {
-            var openFileDialog = new OpenFileDialog
-            {
-                Filter = "Rest Box Http Request (*.rhrq)|*.rhrq",
-                Title = "Add Existing Http Request"
-            };
-            if (openFileDialog.ShowDialog() == true)
-            {
-                var fileName = Path.GetFileNameWithoutExtension(openFileDialog.FileName);
-
-                var httpRequestFile = new HttpRequestViewFile
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    RelativeFilePath = fileService.GetRelativePath(new Uri(Solution.Current.FilePath),
-                                                     openFileDialog.FileName),
-                    Name = fileName
-                };
-
-                Solution.Current.HttpRequestFiles.Add(httpRequestFile);
-                HttpRequestFiles.Add(httpRequestFile);
-                fileService.SaveSolution();
-            }
+            get { return new DelegateCommand(OpenFolder); }
         }
 
         public ICommand DeleteHttpRequestFile
@@ -293,6 +251,32 @@ namespace RestBox.ViewModels
             get { return new DelegateCommand(CloneHttpRequestItem); }
         }
 
+        public ICommand RenameHttpRequestFile
+        {
+            get { return new DelegateCommand(RenameHttpRequestItem); }
+        }
+
+        public ICommand AddExistingHttpRequestFile
+        {
+            get { return new DelegateCommand(AddExistingHttpRequest); }
+        }
+
+        #endregion
+
+        #region Command Handlers
+        
+        private void NewHttpRequestItem()
+        {
+            var id = Guid.NewGuid().ToString();
+            var httpRequestFile = new HttpRequestViewFile
+            {
+                Id = id,
+                Name = "New Http Request *"
+            };
+            HttpRequestFiles.Add(httpRequestFile);
+            eventAggregator.GetEvent<NewHttpRequestEvent>().Publish(id);
+        }
+
         private void CloneHttpRequestItem()
         {
             var id = Guid.NewGuid().ToString();
@@ -303,11 +287,6 @@ namespace RestBox.ViewModels
             };
             HttpRequestFiles.Add(httpRequestFile);
             eventAggregator.GetEvent<CloneHttpRequestEvent>().Publish(id);
-        }
-
-        public ICommand RenameHttpRequestFile
-        {
-            get { return new DelegateCommand(RenameHttpRequestItem); }
         }
 
         private void RenameHttpRequestItem()
@@ -376,8 +355,50 @@ namespace RestBox.ViewModels
             eventAggregator.GetEvent<RemoveTabEvent>().Publish(id);
         }
 
-        public ObservableCollection<string> HttpRequestGroups { get; set; } 
+        private void AddExistingHttpRequest()
+        {
+            var openFileDialog = new OpenFileDialog
+            {
+                Filter = "Rest Box Http Request (*.rhrq)|*.rhrq",
+                Title = "Add Existing Http Request"
+            };
+            if (openFileDialog.ShowDialog() == true)
+            {
+                var fileName = Path.GetFileNameWithoutExtension(openFileDialog.FileName);
 
+                var httpRequestFile = new HttpRequestViewFile
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    RelativeFilePath = fileService.GetRelativePath(new Uri(Solution.Current.FilePath),
+                                                     openFileDialog.FileName),
+                    Name = fileName
+                };
 
+                Solution.Current.HttpRequestFiles.Add(httpRequestFile);
+                HttpRequestFiles.Add(httpRequestFile);
+                fileService.SaveSolution();
+            }
+        }
+
+        private void OpenFolder()
+        {
+            fileService.OpenFileInWindowsExplorer(selectedHttpRequestFile.RelativeFilePath);
+        }
+
+        #endregion
+
+        #region Helpers
+
+        private bool FilterHttpRequestFiles(object httpRequestFile)
+        {
+            if (string.IsNullOrWhiteSpace(HttpRequestFilesFilter))
+            {
+                return true;
+            }
+            return (((HttpRequestFile)httpRequestFile).Groups != null && ((HttpRequestFile)httpRequestFile).Groups.ToLower().Contains(HttpRequestFilesFilter.ToLower()))
+                || ((HttpRequestFile)httpRequestFile).Name.ToLower().Contains(HttpRequestFilesFilter.ToLower());
+        } 
+
+        #endregion
     }
 }

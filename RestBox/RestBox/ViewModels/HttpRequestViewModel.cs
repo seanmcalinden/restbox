@@ -28,13 +28,19 @@ namespace RestBox.ViewModels
 {
     public class HttpRequestViewModel : ViewModelBase<HttpRequestViewModel>
     {
+        #region Declarations
+
         private readonly IHttpRequestService httpRequestService;
         private readonly IEventAggregator eventAggregator;
         private readonly IFileService fileService;
         private readonly IMainMenuApplicationService mainMenuApplicationService;
         private readonly IJsonSerializer jsonSerializer;
         private readonly KeyGesture saveKeyGesture;
-        private readonly KeyGesture runHttpRequestKeyGesture;
+        private readonly KeyGesture runHttpRequestKeyGesture; 
+
+        #endregion
+
+        #region Constructor
 
         public HttpRequestViewModel(IHttpRequestService httpRequestService, IEventAggregator eventAggregator,
                                     IFileService fileService, IMainMenuApplicationService mainMenuApplicationService,
@@ -71,61 +77,11 @@ namespace RestBox.ViewModels
             saveKeyGesture = new KeyGesture(Key.S, ModifierKeys.Control);
             runHttpRequestKeyGesture = new KeyGesture(Key.F5);
             eventAggregator.GetEvent<AddHttpRequestMenuItemsEvent>().Subscribe(AddHttpRequestMenuItems);
-        }
+        } 
 
-        private void AddHttpRequestMenuItems(HttpRequestViewModel httpRequestViewModel)
-        {
-            if (httpRequestViewModel != this)
-            {
-                return;
-            }
+        #endregion
 
-            eventAggregator.GetEvent<RemoveInputBindingEvent>().Publish(true);
-
-            mainMenuApplicationService.CreateInitialMenuItems();
-            var fileMenu = mainMenuApplicationService.Get(null, "_File");
-            var saveHttpRequest = new MenuItem {Header = "Save Http Request", InputGestureText = "Ctrl+S"};
-            var saveHttpRequestAs = new MenuItem {Header = "Save Http Request As..."};
-
-            saveHttpRequest.Command = new DelegateCommand(SetupSaveRequest);
-            saveHttpRequestAs.Command = new DelegateCommand(SetupSaveRequestAs);
-
-            mainMenuApplicationService.InsertSeparator(fileMenu, 4);
-            mainMenuApplicationService.InsertMenuItem(fileMenu, saveHttpRequest, 5);
-            mainMenuApplicationService.InsertMenuItem(fileMenu, saveHttpRequestAs, 6);
-
-            var httpRequestMenu = new MenuItem {Header = "_Http Requests"};
-            var runHttpRequest = new MenuItem {Header = "_Run", InputGestureText = "F5", Command = MakeRequestCommand};
-
-            eventAggregator.GetEvent<AddInputBindingEvent>().Publish(new KeyBindingData { KeyGesture = saveKeyGesture, Command = saveHttpRequest.Command });
-            eventAggregator.GetEvent<AddInputBindingEvent>().Publish(new KeyBindingData { KeyGesture = runHttpRequestKeyGesture, Command = MakeRequestCommand });
-
-            mainMenuApplicationService.InsertTopLevelMenuItem(httpRequestMenu, 1);
-            mainMenuApplicationService.InsertMenuItem(httpRequestMenu, runHttpRequest, 0);
-        }
-
-        public ICommand MakeRequestCommand
-        {
-            get { return new DelegateCommand(SetupRequest); }
-        }
-
-        private void SetupRequest()
-        {
-            eventAggregator.GetEvent<GetLayoutDataEvent>().Publish(new LayoutDataRequest
-                                                                       {
-                                                                           Action = MakeRequest,
-                                                                           UserControlType = typeof(HttpRequest),
-                                                                           DataContext = this
-                                                                       });
-        }
-
-        private void MakeRequest(string contentId, object httpRequest)
-        {
-            if (((HttpRequest) httpRequest).DataContext == this)
-            {
-                ExecuteRequest();
-            }
-        }
+        #region Properties
 
         public ObservableCollection<ComboBoxItem> RequestVerbs { get; set; }
         public ObservableCollection<string> IntellisenseItems { get; set; }
@@ -133,7 +89,6 @@ namespace RestBox.ViewModels
         public bool IsDirty { get; set; }
 
         private string requestUrl;
-
         public string RequestUrl
         {
             get { return requestUrl; }
@@ -145,23 +100,7 @@ namespace RestBox.ViewModels
             }
         }
 
-        public void SetRequestUrl(string requestUrlField)
-        {
-            requestUrl = requestUrlField;
-        }
-
-        public void SetRequestHeaders(string requestHeadersField)
-        {
-            requestHeaders = requestHeadersField;
-        }
-
-        public void SetRequestBody(string requestBodyField)
-        {
-            requestBody = requestBodyField;
-        }
-
         private ComboBoxItem requestVerb;
-
         public ComboBoxItem RequestVerb
         {
             get { return requestVerb; }
@@ -519,9 +458,75 @@ namespace RestBox.ViewModels
             }
         }
 
+        #endregion
+
+        #region EventHandlers
+
+        private void AddHttpRequestMenuItems(HttpRequestViewModel httpRequestViewModel)
+        {
+            if (httpRequestViewModel != this)
+            {
+                return;
+            }
+
+            eventAggregator.GetEvent<RemoveInputBindingEvent>().Publish(true);
+
+            mainMenuApplicationService.CreateInitialMenuItems();
+            var fileMenu = mainMenuApplicationService.Get(null, "_File");
+            var saveHttpRequest = new MenuItem { Header = "Save Http Request", InputGestureText = "Ctrl+S" };
+            var saveHttpRequestAs = new MenuItem { Header = "Save Http Request As..." };
+
+            saveHttpRequest.Command = new DelegateCommand(SetupSaveRequest);
+            saveHttpRequestAs.Command = new DelegateCommand(SetupSaveRequestAs);
+
+            mainMenuApplicationService.InsertSeparator(fileMenu, 4);
+            mainMenuApplicationService.InsertMenuItem(fileMenu, saveHttpRequest, 5);
+            mainMenuApplicationService.InsertMenuItem(fileMenu, saveHttpRequestAs, 6);
+
+            var httpRequestMenu = new MenuItem { Header = "_Http Requests" };
+            var runHttpRequest = new MenuItem { Header = "_Run", InputGestureText = "F5", Command = MakeRequestCommand };
+
+            eventAggregator.GetEvent<AddInputBindingEvent>().Publish(new KeyBindingData { KeyGesture = saveKeyGesture, Command = saveHttpRequest.Command });
+            eventAggregator.GetEvent<AddInputBindingEvent>().Publish(new KeyBindingData { KeyGesture = runHttpRequestKeyGesture, Command = MakeRequestCommand });
+
+            mainMenuApplicationService.InsertTopLevelMenuItem(httpRequestMenu, 1);
+            mainMenuApplicationService.InsertMenuItem(httpRequestMenu, runHttpRequest, 0);
+        } 
+
+        #endregion
+
+        #region Commands
+
+        public ICommand MakeRequestCommand
+        {
+            get { return new DelegateCommand(SetupRequest); }
+        }
+        
         public ICommand ExecuteHttpRequestCommand
         {
             get { return new DelegateCommand(ExecuteRequest); }
+        }
+
+        #endregion
+
+        #region Command Handlers
+
+        private void SetupRequest()
+        {
+            eventAggregator.GetEvent<GetLayoutDataEvent>().Publish(new LayoutDataRequest
+                                                                       {
+                                                                           Action = MakeRequest,
+                                                                           UserControlType = typeof(HttpRequest),
+                                                                           DataContext = this
+                                                                       });
+        }
+
+        private void MakeRequest(string contentId, object httpRequest)
+        {
+            if (((HttpRequest)httpRequest).DataContext == this)
+            {
+                ExecuteRequest();
+            }
         }
 
         private void ExecuteRequest()
@@ -576,18 +581,176 @@ namespace RestBox.ViewModels
             }
         }
 
-        private string ReplaceEnvironmentTokens(string value, List<RequestEnvironmentSetting> requestEnvironmentSettings)
+        private void SetupSaveRequestAs()
         {
-            if (requestEnvironmentSettings == null || requestEnvironmentSettings.Count == 0)
+            eventAggregator.GetEvent<GetLayoutDataEvent>().Publish(new LayoutDataRequest
             {
-                return value;
+                Action = SaveRequestAs,
+                UserControlType = typeof(HttpRequest),
+                DataContext = this
+            });
+        }
+
+        private void SetupSaveRequest()
+        {
+            eventAggregator.GetEvent<GetLayoutDataEvent>().Publish(new LayoutDataRequest
+            {
+                Action = SaveRequest,
+                UserControlType = typeof(HttpRequest),
+                DataContext = this
+            });
+        }
+
+        private void SaveRequestAs(string id, object httpRequestContent)
+        {
+            if (((HttpRequest)httpRequestContent).DataContext != this)
+            {
+                return;
             }
 
-            foreach (var requestEnvironmentSetting in requestEnvironmentSettings)
+            var httpRequest = httpRequestContent as HttpRequest;
+
+            var httpRequestViewModel = httpRequest.DataContext as HttpRequestViewModel;
+
+            var saveFileDialog = new SaveFileDialog
             {
-                value = value.Replace("env." + requestEnvironmentSetting.Setting, requestEnvironmentSetting.SettingValue);
+                Filter = "Rest Box HttpRequest (*.rhrq)|*.rhrq",
+                FileName = Path.GetFileName(httpRequest.FilePath) ?? "Untitled",
+                Title = "Save Http Request As..."
+            };
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                var title = Path.GetFileNameWithoutExtension(saveFileDialog.FileName);
+                var httpRequestFile = new HttpRequestItemFile
+                {
+                    Url = httpRequestViewModel.RequestUrl,
+                    Verb = httpRequestViewModel.RequestVerb.Content.ToString(),
+                    Headers = httpRequestViewModel.RequestHeaders,
+                    Body = httpRequestViewModel.RequestBody
+                };
+
+                if (!id.StartsWith("StandaloneHttpRequest"))
+                {
+                    var relativePath = fileService.GetRelativePath(new Uri(Solution.Current.FilePath),
+                                                                   saveFileDialog.FileName);
+
+
+
+                    var requestExists = Solution.Current.HttpRequestFiles.Any(x => x.Id == id);
+                    if (!requestExists)
+                    {
+                        Solution.Current.HttpRequestFiles.Add(
+                            new HttpRequestFile { Id = id, RelativeFilePath = relativePath, Name = title });
+                    }
+                    else
+                    {
+                        var existingHttpRequestFile =
+                            Solution.Current.HttpRequestFiles.First(x => x.Id == id);
+                        existingHttpRequestFile.Name = title;
+                        existingHttpRequestFile.RelativeFilePath = relativePath;
+                    }
+
+                    fileService.SaveSolution();
+
+                    fileService.SaveFile(saveFileDialog.FileName, jsonSerializer.ToJsonString(httpRequestFile));
+
+                    httpRequest.FilePath = relativePath;
+                    eventAggregator.GetEvent<UpdateTabTitleEvent>().Publish(new TabHeader
+                    {
+                        Id = id,
+                        Title = title
+                    });
+                    eventAggregator.GetEvent<UpdateHttpRequestFileItemEvent>().Publish(new HttpRequestFile
+                    {
+                        Id = id,
+                        Name = title,
+                        RelativeFilePath =
+                            relativePath
+                    });
+                }
+                else
+                {
+                    httpRequest.FilePath = saveFileDialog.FileName;
+                    eventAggregator.GetEvent<UpdateTabTitleEvent>().Publish(new TabHeader
+                    {
+                        Id = id,
+                        Title = title
+                    });
+                    fileService.SaveFile(saveFileDialog.FileName, jsonSerializer.ToJsonString(httpRequestFile));
+                }
             }
-            return value;
+            Keyboard.ClearFocus();
+            eventAggregator.GetEvent<IsDirtyEvent>().Publish(false);
+            IsDirty = false;
+        }
+
+        private void SaveRequest(string id, object httpRequestContent)
+        {
+            if (!(httpRequestContent is HttpRequest))
+            {
+                return;
+            }
+
+            if (((HttpRequest)httpRequestContent).DataContext != this)
+            {
+                return;
+            }
+
+
+            var httpRequest = httpRequestContent as HttpRequest;
+
+            var httpRequestViewModel = httpRequest.DataContext as HttpRequestViewModel;
+
+            if (string.IsNullOrWhiteSpace(httpRequest.FilePath))
+            {
+                SaveRequestAs(id, httpRequestContent);
+                return;
+            }
+
+            var httpRequestFile = new HttpRequestItemFile
+            {
+                Url = httpRequestViewModel.RequestUrl,
+                Verb = httpRequestViewModel.RequestVerb.Content.ToString(),
+                Headers = httpRequestViewModel.RequestHeaders,
+                Body = httpRequestViewModel.RequestBody
+            };
+
+            string filePath;
+
+            if (!id.StartsWith("StandaloneHttpRequest"))
+            {
+                filePath = fileService.GetFilePath(Solution.Current.FilePath, httpRequest.FilePath);
+            }
+            else
+            {
+                filePath = httpRequest.FilePath;
+            }
+
+            fileService.SaveFile(filePath, jsonSerializer.ToJsonString(httpRequestFile));
+
+            eventAggregator.GetEvent<IsDirtyEvent>().Publish(false);
+            Keyboard.ClearFocus();
+            httpRequestViewModel.IsDirty = false;
+        }
+
+        #endregion
+
+        #region Public Methods
+
+        public void SetRequestUrl(string requestUrlField)
+        {
+            requestUrl = requestUrlField;
+        }
+
+        public void SetRequestHeaders(string requestHeadersField)
+        {
+            requestHeaders = requestHeadersField;
+        }
+
+        public void SetRequestBody(string requestBodyField)
+        {
+            requestBody = requestBodyField;
         }
 
         public void ShowRequestError(string errorMessage)
@@ -690,6 +853,24 @@ namespace RestBox.ViewModels
             return regex.Replace(content, string.Empty);
         }
 
+        #endregion
+
+        #region Helpers
+
+        private string ReplaceEnvironmentTokens(string value, List<RequestEnvironmentSetting> requestEnvironmentSettings)
+        {
+            if (requestEnvironmentSettings == null || requestEnvironmentSettings.Count == 0)
+            {
+                return value;
+            }
+
+            foreach (var requestEnvironmentSetting in requestEnvironmentSettings)
+            {
+                value = value.Replace("env." + requestEnvironmentSetting.Setting, requestEnvironmentSetting.SettingValue);
+            }
+            return value;
+        }
+
         private string GetResponseInfo(Uri requestUri)
         {
             var sb = new StringBuilder();
@@ -707,7 +888,7 @@ namespace RestBox.ViewModels
             return JsonConvert.SerializeObject(parsedJson, Newtonsoft.Json.Formatting.Indented);
         }
 
-        private static string IndentXMLString(string xml)
+        private string IndentXMLString(string xml)
         {
             try
             {
@@ -744,159 +925,8 @@ namespace RestBox.ViewModels
             }
 
             return message;
-        }
+        } 
 
-        private void SetupSaveRequestAs()
-        {
-            eventAggregator.GetEvent<GetLayoutDataEvent>().Publish(new LayoutDataRequest
-                                                                       {
-                                                                           Action = SaveRequestAs,
-                                                                           UserControlType = typeof(HttpRequest),
-                                                                           DataContext = this
-                                                                       });
-        }
-
-        private void SetupSaveRequest()
-        {
-            eventAggregator.GetEvent<GetLayoutDataEvent>().Publish(new LayoutDataRequest
-            {
-                Action = SaveRequest,
-                UserControlType = typeof(HttpRequest),
-                DataContext = this
-            });
-        }
-
-        private void SaveRequestAs(string id, object httpRequestContent)
-        {
-            if (((HttpRequest) httpRequestContent).DataContext != this)
-            {
-                return;
-            }
-
-            var httpRequest = httpRequestContent as HttpRequest;
-
-            var httpRequestViewModel = httpRequest.DataContext as HttpRequestViewModel;
-
-            var saveFileDialog = new SaveFileDialog
-                                     {
-                                         Filter = "Rest Box HttpRequest (*.rhrq)|*.rhrq",
-                                         FileName = Path.GetFileName(httpRequest.FilePath) ?? "Untitled",
-                                         Title = "Save Http Request As..."
-                                     };
-
-            if (saveFileDialog.ShowDialog() == true)
-            {
-                var title = Path.GetFileNameWithoutExtension(saveFileDialog.FileName);
-                var httpRequestFile = new HttpRequestItemFile
-                                          {
-                                              Url = httpRequestViewModel.RequestUrl,
-                                              Verb = httpRequestViewModel.RequestVerb.Content.ToString(),
-                                              Headers = httpRequestViewModel.RequestHeaders,
-                                              Body = httpRequestViewModel.RequestBody
-                                          };
-
-                if (!id.StartsWith("StandaloneHttpRequest"))
-                {
-                    var relativePath = fileService.GetRelativePath(new Uri(Solution.Current.FilePath),
-                                                                   saveFileDialog.FileName);
-
-
-
-                    var requestExists = Solution.Current.HttpRequestFiles.Any(x => x.Id == id);
-                    if (!requestExists)
-                    {
-                        Solution.Current.HttpRequestFiles.Add(
-                            new HttpRequestFile {Id = id, RelativeFilePath = relativePath, Name = title});
-                    }
-                    else
-                    {
-                        var existingHttpRequestFile =
-                            Solution.Current.HttpRequestFiles.First(x => x.Id == id);
-                        existingHttpRequestFile.Name = title;
-                        existingHttpRequestFile.RelativeFilePath = relativePath;
-                    }
-
-                    fileService.SaveSolution();
-
-                    fileService.SaveFile(saveFileDialog.FileName, jsonSerializer.ToJsonString(httpRequestFile));
-
-                    httpRequest.FilePath = relativePath;
-                    eventAggregator.GetEvent<UpdateTabTitleEvent>().Publish(new TabHeader
-                                                                                {
-                                                                                    Id = id,
-                                                                                    Title = title
-                                                                                });
-                    eventAggregator.GetEvent<UpdateHttpRequestFileItemEvent>().Publish(new HttpRequestFile
-                                                                                           {
-                                                                                               Id = id,
-                                                                                               Name = title,
-                                                                                               RelativeFilePath =
-                                                                                                   relativePath
-                                                                                           });
-                }
-                else
-                {
-                    httpRequest.FilePath = saveFileDialog.FileName;
-                    eventAggregator.GetEvent<UpdateTabTitleEvent>().Publish(new TabHeader
-                                                                                {
-                                                                                    Id = id,
-                                                                                    Title = title
-                                                                                });
-                    fileService.SaveFile(saveFileDialog.FileName, jsonSerializer.ToJsonString(httpRequestFile));
-                }
-            }
-            Keyboard.ClearFocus();
-            eventAggregator.GetEvent<IsDirtyEvent>().Publish(false);
-            IsDirty = false;
-        }
-
-        private void SaveRequest(string id, object httpRequestContent)
-        {
-            if(!(httpRequestContent is HttpRequest))
-            {
-                return;
-            }
-
-            if (((HttpRequest) httpRequestContent).DataContext != this)
-            {
-                return;
-            }
-
-
-            var httpRequest = httpRequestContent as HttpRequest;
-
-            var httpRequestViewModel = httpRequest.DataContext as HttpRequestViewModel;
-
-            if (string.IsNullOrWhiteSpace(httpRequest.FilePath))
-            {
-                SaveRequestAs(id, httpRequestContent);
-                return;
-            }
-
-            var httpRequestFile = new HttpRequestItemFile
-                                      {
-                                          Url = httpRequestViewModel.RequestUrl,
-                                          Verb = httpRequestViewModel.RequestVerb.Content.ToString(),
-                                          Headers = httpRequestViewModel.RequestHeaders,
-                                          Body = httpRequestViewModel.RequestBody
-                                      };
-
-            string filePath;
-
-            if (!id.StartsWith("StandaloneHttpRequest"))
-            {
-                filePath = fileService.GetFilePath(Solution.Current.FilePath, httpRequest.FilePath);
-            }
-            else
-            {
-                filePath = httpRequest.FilePath;
-            }
-
-            fileService.SaveFile(filePath, jsonSerializer.ToJsonString(httpRequestFile));
-
-            eventAggregator.GetEvent<IsDirtyEvent>().Publish(false);
-            Keyboard.ClearFocus();
-            httpRequestViewModel.IsDirty = false;
-        }
+        #endregion
     }
 }

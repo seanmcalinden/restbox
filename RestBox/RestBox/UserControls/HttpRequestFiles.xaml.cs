@@ -17,10 +17,16 @@ namespace RestBox.UserControls
     /// </summary>
     public partial class HttpRequestFiles : UserControl
     {
+        #region Declarations
+
         private readonly IFileService fileService;
         private readonly IEventAggregator eventAggregator;
-        private readonly HttpRequestFilesViewModel httpRequestFilesViewModel;
+        private readonly HttpRequestFilesViewModel httpRequestFilesViewModel; 
 
+        #endregion
+        
+        #region Constructor
+        
         public HttpRequestFiles(HttpRequestFilesViewModel httpRequestFilesViewModel, IFileService fileService, IEventAggregator eventAggregator)
         {
             this.fileService = fileService;
@@ -30,11 +36,15 @@ namespace RestBox.UserControls
             InitializeComponent();
             eventAggregator.GetEvent<CloneHttpRequestEvent>().Subscribe(CloneHttpRequest);
             eventAggregator.GetEvent<SelectHttpRequestItemEvent>().Subscribe(SelectHttpRequestItem);
-        }
+        } 
+
+        #endregion
+
+        #region Event Handlers
 
         private void SelectHttpRequestItem(string id)
         {
-            if(id == null)
+            if (id == null)
             {
                 HttpRequestFilesDataGrid.SelectedItem = null;
             }
@@ -48,6 +58,38 @@ namespace RestBox.UserControls
                 }
                 counter++;
             }
+        }
+
+        private void CloneHttpRequest(string id)
+        {
+            var selectedItem = HttpRequestFilesDataGrid.CurrentItem as HttpRequestFile;
+            if (selectedItem == null)
+            {
+                //TODO:selected item can be null, maybe should throw an error
+                return;
+            }
+            var httpRequest =
+                   fileService.Load<HttpRequestItemFile>(fileService.GetFilePath(Solution.Current.FilePath,
+                                                                     selectedItem.RelativeFilePath));
+            var httpRequestControl = ServiceLocator.Current.GetInstance<HttpRequest>();
+            httpRequestControl.FilePath = null;
+            var viewModel = httpRequestControl.DataContext as HttpRequestViewModel;
+
+            viewModel.RequestUrl = httpRequest.Url;
+            viewModel.RequestVerb = viewModel.RequestVerbs.First(x => x.Content.ToString() == httpRequest.Verb);
+            viewModel.RequestHeaders = httpRequest.Headers;
+            viewModel.RequestBody = httpRequest.Body;
+
+            var newHttpRequestDocument = new LayoutDocument
+            {
+                ContentId = id,
+                Content = httpRequestControl,
+                Title = "New Http Request *",
+                IsSelected = true,
+                CanFloat = true
+            };
+
+            eventAggregator.GetEvent<AddLayoutDocumentEvent>().Publish(newHttpRequestDocument);
         }
 
         private void UpdateGroupsEvent(object sender, TextChangedEventArgs e)
@@ -109,7 +151,7 @@ namespace RestBox.UserControls
 
             var httpRequestViewFile = grid.CurrentItem as HttpRequestViewFile;
             var httpRequestFile = grid.CurrentItem as HttpRequestFile;
-            
+
             if (httpRequestViewFile.Name != "New Http Request *")
             {
                 if (
@@ -125,38 +167,8 @@ namespace RestBox.UserControls
             }
 
             httpRequestFilesViewModel.OpenHttpRequest(httpRequestViewFile);
-        }
+        } 
 
-        private void CloneHttpRequest(string id)
-        {
-            var selectedItem = HttpRequestFilesDataGrid.CurrentItem as HttpRequestFile;
-            if(selectedItem == null)
-            {
-                //TODO:selected item can be null, maybe should throw an error
-                return;
-            }
-            var httpRequest =
-                   fileService.Load<HttpRequestItemFile>(fileService.GetFilePath(Solution.Current.FilePath,
-                                                                     selectedItem.RelativeFilePath));
-            var httpRequestControl = ServiceLocator.Current.GetInstance<HttpRequest>();
-            httpRequestControl.FilePath = null;
-            var viewModel = httpRequestControl.DataContext as HttpRequestViewModel;
-
-            viewModel.RequestUrl = httpRequest.Url;
-            viewModel.RequestVerb = viewModel.RequestVerbs.First(x => x.Content.ToString() == httpRequest.Verb);
-            viewModel.RequestHeaders = httpRequest.Headers;
-            viewModel.RequestBody = httpRequest.Body;
-
-            var newHttpRequestDocument = new LayoutDocument
-            {
-                ContentId = id,
-                Content = httpRequestControl,
-                Title = "New Http Request *",
-                IsSelected = true,
-                CanFloat = true
-            };
-
-            eventAggregator.GetEvent<AddLayoutDocumentEvent>().Publish(newHttpRequestDocument);
-        }
+        #endregion
     }
 }

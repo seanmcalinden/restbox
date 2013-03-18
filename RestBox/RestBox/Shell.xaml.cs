@@ -9,6 +9,7 @@ using Microsoft.Practices.Prism.Events;
 using Microsoft.Practices.ServiceLocation;
 using RestBox.ApplicationServices;
 using RestBox.Events;
+using RestBox.Factories;
 using RestBox.UserControls;
 using RestBox.ViewModels;
 
@@ -20,15 +21,18 @@ namespace RestBox
     public partial class Shell
     {
         private readonly IMainMenuApplicationService mainMenuApplicationService;
+        private readonly ILayoutDataFactory layoutDataFactory;
         private readonly IEventAggregator eventAggregator;
         private readonly ShellViewModel shellViewModel;
 
         public Shell(
             ShellViewModel shellViewModel, 
             IEventAggregator eventAggregator, 
-            IMainMenuApplicationService mainMenuApplicationService)
+            IMainMenuApplicationService mainMenuApplicationService,
+            ILayoutDataFactory layoutDataFactory)
         {
             this.mainMenuApplicationService = mainMenuApplicationService;
+            this.layoutDataFactory = layoutDataFactory;
             this.eventAggregator = eventAggregator;
             this.shellViewModel = shellViewModel;
             DataContext = shellViewModel;
@@ -170,13 +174,12 @@ namespace RestBox
 
             var currentSelectedTab = dockingManager.Layout.ActiveContent;
 
-            eventAggregator.GetEvent<DocumentChangedEvent>().Publish(new LayoutData
-                                                                         {
-                                                                             ContentId = currentSelectedTab.ContentId,
-                                                                             Content = currentSelectedTab.Content,
-                                                                             IsActive = currentSelectedTab.IsActive,
-                                                                             IsSelected = currentSelectedTab.IsSelected
-                                                                         });
+            eventAggregator.GetEvent<DocumentChangedEvent>().Publish(
+                layoutDataFactory.Create(
+                currentSelectedTab.ContentId,
+                currentSelectedTab.Content, 
+                currentSelectedTab.IsActive,
+                currentSelectedTab.IsSelected));
         }
 
         private void SetCloseSolutionState()

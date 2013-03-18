@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using RestBox.Domain.Services;
@@ -8,12 +9,22 @@ namespace RestBox.ApplicationServices
 {
     public class FileService : IFileService
     {
-        private readonly IJsonSerializer jsonSerializer;
+        #region Declarations
+        
+        private readonly IJsonSerializer jsonSerializer; 
 
+        #endregion
+
+        #region Constructor
+        
         public FileService(IJsonSerializer jsonSerializer)
         {
             this.jsonSerializer = jsonSerializer;
-        }
+        } 
+
+        #endregion
+
+        #region Public Methods
 
         public void SaveFile(string filePath, string contents)
         {
@@ -32,11 +43,11 @@ namespace RestBox.ApplicationServices
         {
             using (var fileStream = new FileStream(filePath, FileMode.Open))
             {
-                    using (var reader = new StreamReader(fileStream))
-                    {
-                        var fileContent = reader.ReadToEnd();
-                        return jsonSerializer.FromJsonString<T>(fileContent);
-                    }
+                using (var reader = new StreamReader(fileStream))
+                {
+                    var fileContent = reader.ReadToEnd();
+                    return jsonSerializer.FromJsonString<T>(fileContent);
+                }
             }
         }
 
@@ -52,7 +63,7 @@ namespace RestBox.ApplicationServices
 
         public void MoveFile(string sourceFilePath, string destinationFilePath)
         {
-            if(!FileExists(sourceFilePath))
+            if (!FileExists(sourceFilePath))
             {
                 throw new Exception(string.Format("Cannot move file {0}", sourceFilePath));
             }
@@ -81,5 +92,17 @@ namespace RestBox.ApplicationServices
             var relativePath = pathDifference.OriginalString;
             return relativePath.Replace("%20", " ");
         }
+
+        public void OpenFileInWindowsExplorer(string relativeFilePath)
+        {
+            var filePath = GetFilePath(Solution.Current.FilePath, relativeFilePath).Replace('/', '\\');
+            if (!FileExists(filePath))
+            {
+                return;
+            }
+            Process.Start("explorer.exe", string.Format("/select,\"{0}\"", filePath));
+        } 
+
+        #endregion
     }
 }

@@ -17,13 +17,23 @@ namespace RestBox.ApplicationServices
 {
     public class HttpRequestService : IHttpRequestService
     {
-        private readonly IFileService fileService;
+        #region Declarations
+
+        private readonly IFileService fileService; 
+
+        #endregion
+
+        #region Constructor
 
         public HttpRequestService(IFileService fileService)
         {
             this.fileService = fileService;
-        }
+        } 
 
+        #endregion
+
+        #region Public Methods
+        
         public void ExecuteRequest(HttpRequestViewModel httpRequestViewModel, List<RequestEnvironmentSetting> requestEnvironmentSettings)
         {
             HttpResponseMessage httpResponseMessage;
@@ -54,7 +64,7 @@ namespace RestBox.ApplicationServices
                     completedTime = DateTime.Now;
 
 
-                    httpRequestViewModel.ResponseStatusCode = (int) httpResponseMessage.StatusCode;
+                    httpRequestViewModel.ResponseStatusCode = (int)httpResponseMessage.StatusCode;
                     httpRequestViewModel.ResponseReasonPhrase = httpResponseMessage.ReasonPhrase;
                     httpRequestViewModel.ResponseContentType = GetContentType(httpResponseMessage);
                     httpRequestViewModel.ResponseBody = SetContent(httpResponseMessage);
@@ -83,6 +93,10 @@ namespace RestBox.ApplicationServices
             }
         }
 
+        #endregion
+
+        #region Helpers
+
         private string GetBestErrorMessage(Exception ex)
         {
             var message = ex.ToString();
@@ -98,7 +112,7 @@ namespace RestBox.ApplicationServices
 
         private string ReplaceTokensTokens(string value, List<RequestEnvironmentSetting> requestEnvironmentSettings)
         {
-            if(value == null || requestEnvironmentSettings == null || requestEnvironmentSettings.Count == 0)
+            if (value == null || requestEnvironmentSettings == null || requestEnvironmentSettings.Count == 0)
             {
                 return value;
             }
@@ -141,13 +155,13 @@ namespace RestBox.ApplicationServices
 
                     var firstPart = value.Substring(0, match.Index);
                     var secondPart = value.Substring(endOfWordIndex + argumentsGroup.Length, value.Length - endOfWordIndex - argumentsGroup.Length);
-                              
+
                     var argBuilder = new StringBuilder();
                     var cacheDurationBuilder = new StringBuilder();
                     bool includeArgs = false;
-                    foreach(var arg in argumentsGroup.Reverse())
+                    foreach (var arg in argumentsGroup.Reverse())
                     {
-                        if(!includeArgs)
+                        if (!includeArgs)
                         {
                             cacheDurationBuilder.Append(arg);
                         }
@@ -157,7 +171,7 @@ namespace RestBox.ApplicationServices
                             includeArgs = true;
                         }
 
-                        if(includeArgs)
+                        if (includeArgs)
                         {
                             argBuilder.Append(arg);
                         }
@@ -182,7 +196,7 @@ namespace RestBox.ApplicationServices
                     args = args.Replace("(\"", string.Empty).Replace("\",", string.Empty);
 
                     var cacheValue = HttpRequestExtensionCacheService.GetCacheValue(fileName, args);
-                    if(cacheValue != null)
+                    if (cacheValue != null)
                     {
                         value = firstPart + cacheValue + secondPart;
                         continue;
@@ -197,7 +211,7 @@ namespace RestBox.ApplicationServices
                             {
                                 var output = streamreader.ReadLine();
                                 value = firstPart + output + secondPart;
-                                if(cacheDuration != "0")
+                                if (cacheDuration != "0")
                                 {
                                     HttpRequestExtensionCacheService.AddCacheItem(fileName, args, int.Parse(cacheDuration), output);
                                 }
@@ -357,7 +371,8 @@ namespace RestBox.ApplicationServices
             }
 
             return sb.ToString();
-        }
+        } 
 
+        #endregion
     }
 }

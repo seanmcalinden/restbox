@@ -47,6 +47,8 @@
                     <Separator />
                     <MenuItem Header="Remove" Command="{Binding RemoveEnvironmentCommand}"  />
                     <MenuItem Header="Delete" Command="{Binding DeleteEnvironmentCommand}"  />
+                    <Separator />
+                    <MenuItem Header="Open folder in windows explorer" Command="{Binding OpenFolderInWindowsExplorer}"  />
                 </ContextMenu>
             </DataGrid.ContextMenu>
             <DataGrid.Columns>

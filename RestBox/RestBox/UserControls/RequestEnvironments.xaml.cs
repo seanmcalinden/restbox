@@ -15,10 +15,16 @@ namespace RestBox.UserControls
     /// </summary>
     public partial class RequestEnvironments : UserControl
     {
+        #region Declarations
+        
         private readonly RequestEnvironmentsViewModel requestEnvironmentsViewModel;
         private readonly IFileService fileService;
-        private readonly IEventAggregator eventAggregator;
+        private readonly IEventAggregator eventAggregator; 
 
+        #endregion
+
+        #region Constructor
+     
         public RequestEnvironments(IEventAggregator eventAggregator, RequestEnvironmentsViewModel requestEnvironmentsViewModel, IFileService fileService)
         {
             this.requestEnvironmentsViewModel = requestEnvironmentsViewModel;
@@ -27,7 +33,11 @@ namespace RestBox.UserControls
             DataContext = requestEnvironmentsViewModel;
             InitializeComponent();
             eventAggregator.GetEvent<SelectEnvironmentItemEvent>().Subscribe(SelectEnvironmentItem);
-        }
+        } 
+
+        #endregion
+
+        #region Helpers
 
         private void SelectEnvironmentItem(string id)
         {
@@ -39,7 +49,6 @@ namespace RestBox.UserControls
                     break;
                 }
             }
-            
         }
 
         private void DoubleClickedItem(object sender, MouseButtonEventArgs e)
@@ -88,6 +97,8 @@ namespace RestBox.UserControls
                                                                             Id = selectedItem.Id,
                                                                             Title = selectedItem.Name
                                                                         });
-        }
+        } 
+
+        #endregion
     }
 }

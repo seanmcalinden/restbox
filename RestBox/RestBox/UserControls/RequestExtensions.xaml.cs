@@ -8,10 +8,14 @@ namespace RestBox.UserControls
     /// </summary>
     public partial class RequestExtensions : UserControl
     {
+        #region Constructor
+
         public RequestExtensions(RequestExtensionsViewModel requestExtensionsViewModel)
         {
             DataContext = requestExtensionsViewModel;
             InitializeComponent();
-        }
+        } 
+
+        #endregion
     }
 }

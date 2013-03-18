@@ -81,14 +81,6 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\RestBox.Domain.Services\RestBox.Domain.Services.csproj">
-      <Project>{59580005-0DF5-4F97-A65E-DD1130F82234}</Project>
-      <Name>RestBox.Domain.Services</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\RestBox.Domain\RestBox.Domain.csproj">
-      <Project>{92119812-2ABD-449D-B9C6-1FEC89A30E30}</Project>
-      <Name>RestBox.Domain</Name>
-    </ProjectReference>
     <ProjectReference Include="..\RestBox\RestBox.csproj">
       <Project>{86050378-4684-44B8-9FFD-236E13D22DD3}</Project>
       <Name>RestBox</Name>
