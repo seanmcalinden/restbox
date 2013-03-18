@@ -2,7 +2,7 @@
 
 namespace RestBox.Events
 {
-    public class IsHttpRequestDirtyEvent : CompositePresentationEvent<bool>
+    public class OpenHttpRequestEvent : CompositePresentationEvent<string>
     {
     }
 }

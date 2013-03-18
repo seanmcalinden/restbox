@@ -22,6 +22,8 @@ namespace RestBox.Installers
                     Component.For<IMainMenuApplicationService>().ImplementedBy<MainMenuApplicationService>().LifeStyle.Singleton,
                     Component.For<HttpRequest>().ImplementedBy<HttpRequest>().LifeStyle.Transient,
                     Component.For<HttpRequestViewModel>().ImplementedBy<HttpRequestViewModel>().LifeStyle.Transient,
+                    Component.For<HttpRequestFiles>().ImplementedBy<HttpRequestFiles>().LifeStyle.Singleton,
+                    Component.For<HttpRequestFilesViewModel>().ImplementedBy<HttpRequestFilesViewModel>().LifeStyle.Singleton,
                     Component.For<IHttpRequestService>().ImplementedBy<HttpRequestService>().LifeStyle.Transient,
                     Component.For<IFileService>().ImplementedBy<FileService>().LifeStyle.Transient,
                     Component.For<IIntellisenseService>().ImplementedBy<IntellisenseService>().LifeStyle.Singleton,

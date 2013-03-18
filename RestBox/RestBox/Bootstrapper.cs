@@ -18,7 +18,7 @@ namespace RestBox
             var serviceLocator = ServiceLocator.Current;
 
             var instance = serviceLocator.GetInstance<Shell>();
-            serviceLocator.GetInstance<IMainMenuApplicationService>().CreateInitialMenuItems(instance.DataContext as ShellViewModel);
+            serviceLocator.GetInstance<IMainMenuApplicationService>().CreateInitialMenuItems();
             
             return instance;
         }

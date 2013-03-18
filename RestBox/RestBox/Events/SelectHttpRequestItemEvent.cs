@@ -2,7 +2,7 @@
 
 namespace RestBox.Events
 {
-    public class NewEnvironmentEvent : CompositePresentationEvent<string>
+    public class SelectHttpRequestItemEvent : CompositePresentationEvent<string>
     {
     }
 }

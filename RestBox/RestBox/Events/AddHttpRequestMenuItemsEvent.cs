@@ -3,7 +3,7 @@ using RestBox.ViewModels;
 
 namespace RestBox.Events
 {
-    public class MakeRequestEvent : CompositePresentationEvent<HttpRequestViewModel>
+    public class AddHttpRequestMenuItemsEvent : CompositePresentationEvent<HttpRequestViewModel>
     {
     }
 }

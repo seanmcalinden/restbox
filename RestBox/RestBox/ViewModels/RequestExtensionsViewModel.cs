@@ -1,35 +1,27 @@
 ﻿using System;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
-using AvalonDock.Layout;
 using Microsoft.Practices.Prism.Commands;
 using Microsoft.Practices.Prism.Events;
-using Microsoft.Practices.ServiceLocation;
 using Microsoft.Win32;
 using RestBox.ApplicationServices;
 using RestBox.Domain.Entities;
 using RestBox.Events;
-using RestBox.UserControls;
 
 namespace RestBox.ViewModels
 {
     public class RequestExtensionsViewModel : ViewModelBase<RequestEnvironmentsViewModel>
     {
-        private readonly IEventAggregator eventAggregator;
         private readonly IFileService fileService;
         private readonly IIntellisenseService intellisenseService;
-        private readonly IMainMenuApplicationService mainMenuApplicationService;
 
         public RequestExtensionsViewModel(IEventAggregator eventAggregator, IFileService fileService, IIntellisenseService intellisenseService)
         {
-            this.eventAggregator = eventAggregator;
             this.fileService = fileService;
             this.intellisenseService = intellisenseService;
-            this.mainMenuApplicationService = mainMenuApplicationService;
             RequestExtensionFiles = new ObservableCollection<RequestExtensionViewFile>();
             SolutionLoadedVisibility = Visibility.Hidden;
             eventAggregator.GetEvent<NewSolutionEvent>().Subscribe(SolutionLoadedEvent);

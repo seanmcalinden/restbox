@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.Practices.Prism.Events;
 using Newtonsoft.Json;
+using RestBox.Events;
 using RestBox.ViewModels;
 
 namespace RestBox.ApplicationServices
@@ -12,12 +14,19 @@ namespace RestBox.ApplicationServices
         private readonly List<IntellisenseItem> environmentIntellisenseItems;
         private readonly List<IntellisenseItem> requestExtensionsIntellisenseItems;
 
-        public IntellisenseService()
+        public IntellisenseService(IEventAggregator eventAggregator)
         {
             var intellisenseJson = File.ReadAllText("Intellisense.json");
             intellisenseItems = JsonConvert.DeserializeObject<List<IntellisenseItem>>(intellisenseJson);
             environmentIntellisenseItems = new List<IntellisenseItem>();
             requestExtensionsIntellisenseItems = new List<IntellisenseItem>();
+            eventAggregator.GetEvent<CloseSolutionEvent>().Subscribe(SolutionClosedEvent);
+        }
+
+        private void SolutionClosedEvent(bool obj)
+        {
+            environmentIntellisenseItems.Clear();
+            requestExtensionsIntellisenseItems.Clear();
         }
 
         public void AddEnvironmentIntellisenseItem(string key, string value)

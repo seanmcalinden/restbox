@@ -23,14 +23,12 @@ namespace RestBox.ViewModels
         private readonly IEventAggregator eventAggregator;
         private readonly IFileService fileService;
         private readonly IIntellisenseService intellisenseService;
-        private readonly IMainMenuApplicationService mainMenuApplicationService;
 
         public RequestEnvironmentsViewModel(IEventAggregator eventAggregator, IFileService fileService, IIntellisenseService intellisenseService)
         {
             this.eventAggregator = eventAggregator;
             this.fileService = fileService;
             this.intellisenseService = intellisenseService;
-            this.mainMenuApplicationService = mainMenuApplicationService;
             RequestEnvironmentFiles = new ObservableCollection<RequestEnvironmentViewFile>();
             SolutionLoadedVisibility = Visibility.Hidden;
             eventAggregator.GetEvent<NewSolutionEvent>().Subscribe(SolutionLoadedEvent);
@@ -38,7 +36,20 @@ namespace RestBox.ViewModels
             eventAggregator.GetEvent<CloseSolutionEvent>().Subscribe(SolutionClosedEvent);
             eventAggregator.GetEvent<UpdateEnvironmentItemEvent>().Subscribe(UpdateEnvironmentItem);
             eventAggregator.GetEvent<CloseEnvironmentItemEvent>().Subscribe(CloseEnvironmentItem);
+            eventAggregator.GetEvent<DocumentChangedEvent>().Subscribe(DocumentChanged);
 
+        }
+
+        private void DocumentChanged(LayoutData layoutData)
+        {
+            if (layoutData != null && layoutData.Content is RequestEnvironmentSettings)
+            {
+                if (layoutData.IsSelected)
+                {
+                    eventAggregator.GetEvent<SelectEnvironmentItemEvent>().Publish(layoutData.ContentId);
+                    eventAggregator.GetEvent<AddRequestEnvironmentMenuItemsEvent>().Publish((RequestEnvironmentSettingsViewModel)((RequestEnvironmentSettings)layoutData.Content).DataContext);
+                }
+            }
         }
 
         private void CloseEnvironmentItem(string id)
@@ -113,8 +124,66 @@ namespace RestBox.ViewModels
         {
             if(selectedRequestEnvironmentFile != null)
             {
-                eventAggregator.GetEvent<SelectLayoutDocumentEvent>().Publish(SelectedRequestEnvironmentFile);
+                SelectLayoutDocument(selectedRequestEnvironmentFile);
             }
+        }
+
+        private void SelectLayoutDocument(RequestEnvironmentViewFile requestEnvironmentViewFile)
+        {
+            var fileMissing = false;
+
+            RequestEnvironmentSettings requestEnvironmentSettings;
+            if (requestEnvironmentViewFile.Name != NewEnvironmentTitle)
+            {
+                if (
+                    !fileService.FileExists(fileService.GetFilePath(Solution.Current.FilePath,
+                                                                    requestEnvironmentViewFile.RelativeFilePath)))
+                {
+                    requestEnvironmentViewFile.Icon = "warning";
+                    fileMissing = true;
+                }
+                else
+                {
+                    requestEnvironmentViewFile.Icon = string.Empty;
+                }
+
+
+                if (fileMissing)
+                {
+                    return;
+                }
+                var requestEnvironmentSettingFile =
+                    fileService.Load<RequestEnvironmentSettingFile>(fileService.GetFilePath(Solution.Current.FilePath,
+                                                                                            requestEnvironmentViewFile.
+                                                                                                RelativeFilePath));
+
+                requestEnvironmentSettings = ServiceLocator.Current.GetInstance<RequestEnvironmentSettings>();
+                requestEnvironmentSettings.FilePath = requestEnvironmentViewFile.RelativeFilePath;
+                var viewModel = requestEnvironmentSettings.DataContext as RequestEnvironmentSettingsViewModel;
+
+                foreach (var requestEnvironmentSetting in requestEnvironmentSettingFile.RequestEnvironmentSettings)
+                {
+                    viewModel.Settings.Add(requestEnvironmentSetting);
+                }
+            }
+            else
+            {
+                requestEnvironmentSettings = ServiceLocator.Current.GetInstance<RequestEnvironmentSettings>();
+            }
+            var layoutDocument = new LayoutDocument
+                                     {
+                                         Title = requestEnvironmentViewFile.Name,
+                                         ContentId = requestEnvironmentViewFile.Id,
+                                         Content = requestEnvironmentSettings,
+                                         IsSelected = true,
+                                         CanFloat = true
+                                     };
+
+            eventAggregator.GetEvent<AddLayoutDocumentEvent>().Publish(layoutDocument);
+            eventAggregator.GetEvent<AddRequestEnvironmentMenuItemsEvent>().Publish(
+                (RequestEnvironmentSettingsViewModel) ((RequestEnvironmentSettings) layoutDocument.Content).DataContext);
+
+            layoutDocument.Closing += EnvironmentDocumentOnClosing;
         }
 
         public ICommand NewEnvironmentCommand
@@ -226,14 +295,40 @@ namespace RestBox.ViewModels
             }
 
             var id = Guid.NewGuid().ToString();
-            var requestEnvironmentViewFile = new RequestEnvironmentViewFile()
+            var requestEnvironmentViewFile = new RequestEnvironmentViewFile
             {
                 Id = id,
                 Name = NewEnvironmentTitle,
                 RelativeFilePath = SelectedRequestEnvironmentFile.RelativeFilePath
             };
             RequestEnvironmentFiles.Add(requestEnvironmentViewFile);
-            eventAggregator.GetEvent<CloneEnvironmentEvent>().Publish(requestEnvironmentViewFile);
+
+            var requestEnvironmentSettings =
+                 fileService.Load<RequestEnvironmentSettingFile>(fileService.GetFilePath(Solution.Current.FilePath,
+                                                                   requestEnvironmentViewFile.RelativeFilePath));
+
+            var environmentSettings = ServiceLocator.Current.GetInstance<RequestEnvironmentSettings>();
+            environmentSettings.FilePath = null;
+
+            var viewModel = environmentSettings.DataContext as RequestEnvironmentSettingsViewModel;
+
+            foreach (var requestEnvironmentSettingsItem in requestEnvironmentSettings.RequestEnvironmentSettings)
+            {
+                viewModel.Settings.Add(requestEnvironmentSettingsItem);
+            }
+
+            var newRequestEnvironmentDocument = new LayoutDocument
+            {
+                ContentId = requestEnvironmentViewFile.Id,
+                Content = environmentSettings,
+                Title = NewEnvironmentTitle,
+                IsSelected = true,
+                CanFloat = true
+            };
+            eventAggregator.GetEvent<AddLayoutDocumentEvent>().Publish(newRequestEnvironmentDocument);
+            eventAggregator.GetEvent<AddRequestEnvironmentMenuItemsEvent>().Publish((RequestEnvironmentSettingsViewModel)((RequestEnvironmentSettings)newRequestEnvironmentDocument.Content).DataContext);
+
+            newRequestEnvironmentDocument.Closing += EnvironmentDocumentOnClosing;
         }
 
         private void CreateNewEnvironment()
@@ -257,7 +352,8 @@ namespace RestBox.ViewModels
             newEnvironmentDocument.IsActiveChanged += SelectDataGridItem;
             newEnvironmentDocument.Closing += EnvironmentDocumentOnClosing;
 
-            eventAggregator.GetEvent<AddEnvironmentLayoutDocumentEvent>().Publish(newEnvironmentDocument);
+            eventAggregator.GetEvent<AddLayoutDocumentEvent>().Publish(newEnvironmentDocument);
+            eventAggregator.GetEvent<AddRequestEnvironmentMenuItemsEvent>().Publish((RequestEnvironmentSettingsViewModel)((RequestEnvironmentSettings)newEnvironmentDocument.Content).DataContext);
         }
 
         private void AddExistingEnvironment()

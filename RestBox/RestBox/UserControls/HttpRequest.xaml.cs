@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Net;
 using System.Windows;
 using System.Windows.Controls;
@@ -16,12 +15,12 @@ namespace RestBox.UserControls
     /// <summary>
     /// Interaction logic for HttpRequest.xaml
     /// </summary>
-    public partial class HttpRequest : UserControl
+    public partial class HttpRequest
     {
         private readonly HttpRequestViewModel httpRequestViewModel;
         private readonly IIntellisenseService intellisenseService;
         private readonly IEventAggregator eventAggregator;
-        private bool isLoading;
+        private readonly bool isLoading;
 
         public HttpRequest(HttpRequestViewModel httpRequestViewModel, IIntellisenseService intellisenseService, IEventAggregator eventAggregator)
         {
@@ -89,7 +88,7 @@ namespace RestBox.UserControls
             if (!httpRequestViewModel.IsDirty)
             {
                 httpRequestViewModel.IsDirty = true;
-                eventAggregator.GetEvent<IsHttpRequestDirtyEvent>().Publish(true);
+                eventAggregator.GetEvent<IsDirtyEvent>().Publish(true);
             }
         }
 
@@ -105,12 +104,13 @@ namespace RestBox.UserControls
                 && e.Key != Key.Down
                 && e.Key != Key.Up
                 && e.Key != Key.Left
-                && e.Key != Key.Right)
+                && e.Key != Key.Right
+                && e.Key != Key.F5)
             {
                 if (!httpRequestViewModel.IsDirty)
                 {
                     httpRequestViewModel.IsDirty = true;
-                    eventAggregator.GetEvent<IsHttpRequestDirtyEvent>().Publish(true);
+                    eventAggregator.GetEvent<IsDirtyEvent>().Publish(true);
                 }
             }
 
@@ -167,7 +167,7 @@ namespace RestBox.UserControls
                 if (!httpRequestViewModel.IsDirty)
                 {
                     httpRequestViewModel.IsDirty = true;
-                    eventAggregator.GetEvent<IsHttpRequestDirtyEvent>().Publish(true);
+                    eventAggregator.GetEvent<IsDirtyEvent>().Publish(true);
                 }
             }
 
@@ -228,7 +228,7 @@ namespace RestBox.UserControls
                 if (!httpRequestViewModel.IsDirty)
                 {
                     httpRequestViewModel.IsDirty = true;
-                    eventAggregator.GetEvent<IsHttpRequestDirtyEvent>().Publish(true);
+                    eventAggregator.GetEvent<IsDirtyEvent>().Publish(true);
                 }
             }
 
@@ -276,7 +276,22 @@ namespace RestBox.UserControls
             IntellisensePopup.PlacementTarget = CurrentTextBox;
             IntellisensePopup.PlacementRectangle = placementRect;
             IntellisensePopup.IsOpen = true;
+            //IntellisensePopup.PreviewKeyDown += IntellisensePopupOnPreviewKeyDown;
             CurrentTextBox.PreviewKeyDown += CurrentTextBoxOnPreviewKeyDown;
+        }
+
+        private void IntellisensePopupOnPreviewKeyDown(object sender, KeyEventArgs keyEventArgs)
+        {
+            switch (keyEventArgs.Key)
+            {
+                case Key.Down:
+                case Key.Up:
+                    IntellisenseItems.Focus();
+                    break;
+                default:
+                    CurrentTextBox.Focus();
+                    break;
+            }
         }
 
         private void CurrentTextBoxOnPreviewKeyDown(object sender, KeyEventArgs keyEventArgs)
@@ -378,20 +393,20 @@ namespace RestBox.UserControls
             public TextPointer EndPosition;
         }
 
-        List<TextHighlightTag> environmentTags = new List<TextHighlightTag>();
-        List<TextHighlightTag> environmentSettings = new List<TextHighlightTag>();
-        List<TextHighlightTag> missingEnvironmentTags = new List<TextHighlightTag>();
-        List<TextHighlightTag> extensionTags = new List<TextHighlightTag>();
-        List<TextHighlightTag> requestExtensionTags = new List<TextHighlightTag>();
-        List<TextHighlightTag> missingRequestExtensionTags = new List<TextHighlightTag>();
-        List<TextHighlightTag> headerTags = new List<TextHighlightTag>();
+        readonly List<TextHighlightTag> environmentTags = new List<TextHighlightTag>();
+        readonly List<TextHighlightTag> environmentSettings = new List<TextHighlightTag>();
+        readonly List<TextHighlightTag> missingEnvironmentTags = new List<TextHighlightTag>();
+        readonly List<TextHighlightTag> extensionTags = new List<TextHighlightTag>();
+        readonly List<TextHighlightTag> requestExtensionTags = new List<TextHighlightTag>();
+        readonly List<TextHighlightTag> missingRequestExtensionTags = new List<TextHighlightTag>();
+        readonly List<TextHighlightTag> headerTags = new List<TextHighlightTag>();
         private void FormatHeaders()
         {
-            RequestHeaders.TextChanged -= this.HeadersTextChanged;
+            RequestHeaders.TextChanged -= HeadersTextChanged;
 
             for (int i = 0; i < environmentTags.Count; i++)
             {
-                TextRange range = new TextRange(environmentTags[i].StartPosition, environmentTags[i].EndPosition);
+                var range = new TextRange(environmentTags[i].StartPosition, environmentTags[i].EndPosition);
                 range.ApplyPropertyValue(TextElement.ForegroundProperty, new SolidColorBrush(Colors.Teal));
                 range.ApplyPropertyValue(TextElement.FontWeightProperty, FontWeights.Bold);
             }
@@ -399,7 +414,7 @@ namespace RestBox.UserControls
 
             for (int i = 0; i < environmentSettings.Count; i++)
             {
-                TextRange range = new TextRange(environmentSettings[i].StartPosition, environmentSettings[i].EndPosition);
+                var range = new TextRange(environmentSettings[i].StartPosition, environmentSettings[i].EndPosition);
                 range.ApplyPropertyValue(TextElement.ForegroundProperty, new SolidColorBrush(Colors.Blue));
                 range.ApplyPropertyValue(TextElement.FontWeightProperty, FontWeights.Bold);
             }
@@ -407,7 +422,7 @@ namespace RestBox.UserControls
 
             for (int i = 0; i < missingEnvironmentTags.Count; i++)
             {
-                TextRange range = new TextRange(missingEnvironmentTags[i].StartPosition, missingEnvironmentTags[i].EndPosition);
+                var range = new TextRange(missingEnvironmentTags[i].StartPosition, missingEnvironmentTags[i].EndPosition);
                 range.ApplyPropertyValue(TextElement.ForegroundProperty, new SolidColorBrush(Colors.Red));
                 range.ApplyPropertyValue(TextElement.FontWeightProperty, FontWeights.Bold);
             }
@@ -415,7 +430,7 @@ namespace RestBox.UserControls
 
             for (int i = 0; i < extensionTags.Count; i++)
             {
-                TextRange range = new TextRange(extensionTags[i].StartPosition, extensionTags[i].EndPosition);
+                var range = new TextRange(extensionTags[i].StartPosition, extensionTags[i].EndPosition);
                 range.ApplyPropertyValue(TextElement.ForegroundProperty, new SolidColorBrush(Colors.CadetBlue));
                 range.ApplyPropertyValue(TextElement.FontWeightProperty, FontWeights.Bold);
             }
@@ -423,7 +438,7 @@ namespace RestBox.UserControls
 
             for (int i = 0; i < requestExtensionTags.Count; i++)
             {
-                TextRange range = new TextRange(requestExtensionTags[i].StartPosition, requestExtensionTags[i].EndPosition);
+                var range = new TextRange(requestExtensionTags[i].StartPosition, requestExtensionTags[i].EndPosition);
                 range.ApplyPropertyValue(TextElement.ForegroundProperty, new SolidColorBrush(Colors.Brown));
                 range.ApplyPropertyValue(TextElement.FontWeightProperty, FontWeights.Bold);
             }
@@ -431,7 +446,7 @@ namespace RestBox.UserControls
 
             for (int i = 0; i < missingRequestExtensionTags.Count; i++)
             {
-                TextRange range = new TextRange(missingRequestExtensionTags[i].StartPosition, missingRequestExtensionTags[i].EndPosition);
+                var range = new TextRange(missingRequestExtensionTags[i].StartPosition, missingRequestExtensionTags[i].EndPosition);
                 range.ApplyPropertyValue(TextElement.ForegroundProperty, new SolidColorBrush(Colors.Red));
                 range.ApplyPropertyValue(TextElement.FontWeightProperty, FontWeights.Bold);
             }
@@ -439,22 +454,22 @@ namespace RestBox.UserControls
 
             for (int i = 0; i < headerTags.Count; i++)
             {
-                TextRange range = new TextRange(headerTags[i].StartPosition, headerTags[i].EndPosition);
+                var range = new TextRange(headerTags[i].StartPosition, headerTags[i].EndPosition);
                 range.ApplyPropertyValue(TextElement.ForegroundProperty, new SolidColorBrush(Colors.Green));
                 range.ApplyPropertyValue(TextElement.FontWeightProperty, FontWeights.Bold);
             }
             headerTags.Clear();
 
-            RequestHeaders.TextChanged += this.HeadersTextChanged;
+            RequestHeaders.TextChanged += HeadersTextChanged;
         }
 
         private void FormatUrl()
         {
-            RequestUrl.TextChanged -= this.UrlTextChanged;
+            RequestUrl.TextChanged -= UrlTextChanged;
 
             for (int i = 0; i < environmentTags.Count; i++)
             {
-                TextRange range = new TextRange(environmentTags[i].StartPosition, environmentTags[i].EndPosition);
+                var range = new TextRange(environmentTags[i].StartPosition, environmentTags[i].EndPosition);
                 range.ApplyPropertyValue(TextElement.ForegroundProperty, new SolidColorBrush(Colors.Teal));
                 range.ApplyPropertyValue(TextElement.FontWeightProperty, FontWeights.Bold);
             }
@@ -462,7 +477,7 @@ namespace RestBox.UserControls
 
             for (int i = 0; i < environmentSettings.Count; i++)
             {
-                TextRange range = new TextRange(environmentSettings[i].StartPosition, environmentSettings[i].EndPosition);
+                var range = new TextRange(environmentSettings[i].StartPosition, environmentSettings[i].EndPosition);
                 range.ApplyPropertyValue(TextElement.ForegroundProperty, new SolidColorBrush(Colors.Blue));
                 range.ApplyPropertyValue(TextElement.FontWeightProperty, FontWeights.Bold);
             }
@@ -470,7 +485,7 @@ namespace RestBox.UserControls
 
             for (int i = 0; i < missingEnvironmentTags.Count; i++)
             {
-                TextRange range = new TextRange(missingEnvironmentTags[i].StartPosition, missingEnvironmentTags[i].EndPosition);
+                var range = new TextRange(missingEnvironmentTags[i].StartPosition, missingEnvironmentTags[i].EndPosition);
                 range.ApplyPropertyValue(TextElement.ForegroundProperty, new SolidColorBrush(Colors.Red));
                 range.ApplyPropertyValue(TextElement.FontWeightProperty, FontWeights.Bold);
             }
@@ -478,7 +493,7 @@ namespace RestBox.UserControls
 
             for (int i = 0; i < extensionTags.Count; i++)
             {
-                TextRange range = new TextRange(extensionTags[i].StartPosition, extensionTags[i].EndPosition);
+                var range = new TextRange(extensionTags[i].StartPosition, extensionTags[i].EndPosition);
                 range.ApplyPropertyValue(TextElement.ForegroundProperty, new SolidColorBrush(Colors.CadetBlue));
                 range.ApplyPropertyValue(TextElement.FontWeightProperty, FontWeights.Bold);
             }
@@ -486,7 +501,7 @@ namespace RestBox.UserControls
 
             for (int i = 0; i < requestExtensionTags.Count; i++)
             {
-                TextRange range = new TextRange(requestExtensionTags[i].StartPosition, requestExtensionTags[i].EndPosition);
+                var range = new TextRange(requestExtensionTags[i].StartPosition, requestExtensionTags[i].EndPosition);
                 range.ApplyPropertyValue(TextElement.ForegroundProperty, new SolidColorBrush(Colors.Brown));
                 range.ApplyPropertyValue(TextElement.FontWeightProperty, FontWeights.Bold);
             }
@@ -494,22 +509,22 @@ namespace RestBox.UserControls
 
             for (int i = 0; i < missingRequestExtensionTags.Count; i++)
             {
-                TextRange range = new TextRange(missingRequestExtensionTags[i].StartPosition, missingRequestExtensionTags[i].EndPosition);
+                var range = new TextRange(missingRequestExtensionTags[i].StartPosition, missingRequestExtensionTags[i].EndPosition);
                 range.ApplyPropertyValue(TextElement.ForegroundProperty, new SolidColorBrush(Colors.Red));
                 range.ApplyPropertyValue(TextElement.FontWeightProperty, FontWeights.Bold);
             }
             missingRequestExtensionTags.Clear();
 
-            RequestUrl.TextChanged += this.UrlTextChanged;
+            RequestUrl.TextChanged += UrlTextChanged;
         }
 
         private void FormatBody()
         {
-            RequestBody.TextChanged -= this.BodyTextChanged;
+            RequestBody.TextChanged -= BodyTextChanged;
 
             for (int i = 0; i < environmentTags.Count; i++)
             {
-                TextRange range = new TextRange(environmentTags[i].StartPosition, environmentTags[i].EndPosition);
+                var range = new TextRange(environmentTags[i].StartPosition, environmentTags[i].EndPosition);
                 range.ApplyPropertyValue(TextElement.ForegroundProperty, new SolidColorBrush(Colors.Teal));
                 range.ApplyPropertyValue(TextElement.FontWeightProperty, FontWeights.Bold);
             }
@@ -517,7 +532,7 @@ namespace RestBox.UserControls
 
             for (int i = 0; i < environmentSettings.Count; i++)
             {
-                TextRange range = new TextRange(environmentSettings[i].StartPosition, environmentSettings[i].EndPosition);
+                var range = new TextRange(environmentSettings[i].StartPosition, environmentSettings[i].EndPosition);
                 range.ApplyPropertyValue(TextElement.ForegroundProperty, new SolidColorBrush(Colors.Blue));
                 range.ApplyPropertyValue(TextElement.FontWeightProperty, FontWeights.Bold);
             }
@@ -525,7 +540,7 @@ namespace RestBox.UserControls
 
             for (int i = 0; i < missingEnvironmentTags.Count; i++)
             {
-                TextRange range = new TextRange(missingEnvironmentTags[i].StartPosition, missingEnvironmentTags[i].EndPosition);
+                var range = new TextRange(missingEnvironmentTags[i].StartPosition, missingEnvironmentTags[i].EndPosition);
                 range.ApplyPropertyValue(TextElement.ForegroundProperty, new SolidColorBrush(Colors.Red));
                 range.ApplyPropertyValue(TextElement.FontWeightProperty, FontWeights.Bold);
             }
@@ -533,7 +548,7 @@ namespace RestBox.UserControls
 
             for (int i = 0; i < extensionTags.Count; i++)
             {
-                TextRange range = new TextRange(extensionTags[i].StartPosition, extensionTags[i].EndPosition);
+                var range = new TextRange(extensionTags[i].StartPosition, extensionTags[i].EndPosition);
                 range.ApplyPropertyValue(TextElement.ForegroundProperty, new SolidColorBrush(Colors.CadetBlue));
                 range.ApplyPropertyValue(TextElement.FontWeightProperty, FontWeights.Bold);
             }
@@ -541,7 +556,7 @@ namespace RestBox.UserControls
 
             for (int i = 0; i < requestExtensionTags.Count; i++)
             {
-                TextRange range = new TextRange(requestExtensionTags[i].StartPosition, requestExtensionTags[i].EndPosition);
+                var range = new TextRange(requestExtensionTags[i].StartPosition, requestExtensionTags[i].EndPosition);
                 range.ApplyPropertyValue(TextElement.ForegroundProperty, new SolidColorBrush(Colors.Brown));
                 range.ApplyPropertyValue(TextElement.FontWeightProperty, FontWeights.Bold);
             }
@@ -549,13 +564,13 @@ namespace RestBox.UserControls
 
             for (int i = 0; i < missingRequestExtensionTags.Count; i++)
             {
-                TextRange range = new TextRange(missingRequestExtensionTags[i].StartPosition, missingRequestExtensionTags[i].EndPosition);
+                var range = new TextRange(missingRequestExtensionTags[i].StartPosition, missingRequestExtensionTags[i].EndPosition);
                 range.ApplyPropertyValue(TextElement.ForegroundProperty, new SolidColorBrush(Colors.Red));
                 range.ApplyPropertyValue(TextElement.FontWeightProperty, FontWeights.Bold);
             }
             missingRequestExtensionTags.Clear();
 
-            RequestBody.TextChanged += this.BodyTextChanged;
+            RequestBody.TextChanged += BodyTextChanged;
         }
 
         private void CheckHeaderWordsInRun(Run run)
@@ -563,14 +578,13 @@ namespace RestBox.UserControls
             string text = run.Text;
 
             int sIndex = 0;
-            int eIndex = 0;
             for (int i = 0; i < text.Length; i++)
             {
                 if(text[i] == ':')
                 {
                     if (i > 0)
                     {
-                        eIndex = i - 1;
+                        int eIndex = i - 1;
                         string word = text.Substring(sIndex, eIndex - sIndex + 1);
                         var tag = new TextHighlightTag();
                         tag.StartPosition = run.ContentStart.GetPositionAtOffset(sIndex, LogicalDirection.Forward);
@@ -625,25 +639,22 @@ namespace RestBox.UserControls
                                     }
                                     break;
                                 }
-                                else
+                                if (j == text.Length)
                                 {
-                                    if (j == text.Length)
+                                    var tag = new TextHighlightTag();
+                                    tag.StartPosition = run.ContentStart.GetPositionAtOffset(i,
+                                                                                             LogicalDirection
+                                                                                                 .Forward);
+                                    tag.EndPosition = run.ContentStart.GetPositionAtOffset(i + (j - i),
+                                                                                           LogicalDirection.
+                                                                                               Backward);
+                                    if (word == "env.")
                                     {
-                                        var tag = new TextHighlightTag();
-                                        tag.StartPosition = run.ContentStart.GetPositionAtOffset(i,
-                                                                                                         LogicalDirection
-                                                                                                             .Forward);
-                                        tag.EndPosition = run.ContentStart.GetPositionAtOffset(i + (j - i),
-                                                                                                       LogicalDirection.
-                                                                                                           Backward);
-                                        if (word == "env.")
-                                        {
-                                            missingEnvironmentTags.Add(tag);
-                                        }
-                                        else
-                                        {
-                                            missingRequestExtensionTags.Add(tag);
-                                        }
+                                        missingEnvironmentTags.Add(tag);
+                                    }
+                                    else
+                                    {
+                                        missingRequestExtensionTags.Add(tag);
                                     }
                                 }
                             }
@@ -656,10 +667,8 @@ namespace RestBox.UserControls
 
         private void CheckUrlWordsInRun(Run run)
         {
-            string text = run.Text;
+            var text = run.Text;
 
-            int sIndex = 0;
-            int eIndex = 0;
             for (int i = 0; i < text.Length; i++)
             {
                 if (i > 0 && text[i - 1] == '.')
@@ -710,31 +719,30 @@ namespace RestBox.UserControls
                                     
                                     break;
                                 }
-                                else
+                                if (j == text.Length)
                                 {
-                                    if (j == text.Length)
-                                    {
-                                        var tag = new TextHighlightTag();
-                                        tag.StartPosition = run.ContentStart.GetPositionAtOffset(i,
+                                    var tag = new TextHighlightTag
+                                                  {
+                                                      StartPosition = run.ContentStart.GetPositionAtOffset(i,
+                                                                                                           LogicalDirection
+                                                                                                               .Forward),
+                                                      EndPosition = run.ContentStart.GetPositionAtOffset(i + (j - i),
                                                                                                          LogicalDirection
-                                                                                                             .Forward);
-                                        tag.EndPosition = run.ContentStart.GetPositionAtOffset(i + (j - i),
-                                                                                                       LogicalDirection.
-                                                                                                           Backward);
-                                        if (word == "env.")
-                                        {
-                                            missingEnvironmentTags.Add(tag);
-                                        }
-                                        else
-                                        {
-                                            missingRequestExtensionTags.Add(tag);
-                                        }
+                                                                                                             .
+                                                                                                             Backward)
+                                                  };
+                                    if (word == "env.")
+                                    {
+                                        missingEnvironmentTags.Add(tag);
+                                    }
+                                    else
+                                    {
+                                        missingRequestExtensionTags.Add(tag);
                                     }
                                 }
                             }
                         }
                     }
-                    sIndex = i + 1;
                 }
             }
         }

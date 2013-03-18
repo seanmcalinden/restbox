@@ -2,15 +2,12 @@
 using System.IO;
 using System.Linq;
 using System.Windows.Controls;
-using AvalonDock.Layout;
 using Microsoft.Practices.Prism.Commands;
 using Microsoft.Practices.Prism.Events;
 using Microsoft.Practices.ServiceLocation;
 using Microsoft.Win32;
-using RestBox.Domain.Entities;
 using RestBox.Domain.Services;
 using RestBox.Events;
-using RestBox.UserControls;
 using RestBox.ViewModels;
 
 namespace RestBox.ApplicationServices
@@ -31,8 +28,9 @@ namespace RestBox.ApplicationServices
             this.eventAggregator = eventAggregator;
         }
 
-        public void CreateInitialMenuItems(ShellViewModel shellViewModel)
+        public void CreateInitialMenuItems()
         {
+            var shellViewModel = ServiceLocator.Current.GetInstance<ShellViewModel>();
             shellViewModel.MenuItems.Clear();
             var fileMenu = new MenuItem();
             fileMenu.Header = "_File";
@@ -63,7 +61,7 @@ namespace RestBox.ApplicationServices
             var closeSolution = new MenuItem();
             closeSolution.Command = new DelegateCommand(CloseSolution);
             closeSolution.Header = "_Close Solution";
-            closeSolution.IsEnabled = false;
+            closeSolution.IsEnabled = true;
 
             var exitMenu = new MenuItem();
             exitMenu.Command = shellViewModel.ExitApplicationCommand;
@@ -89,8 +87,9 @@ namespace RestBox.ApplicationServices
             parent.Items.Insert(position, new Separator());
         }
 
-        public void InsertTopLevelMenuItem(ShellViewModel shellViewModel, MenuItem menuItem, int position)
+        public void InsertTopLevelMenuItem(MenuItem menuItem, int position)
         {
+            var shellViewModel = ServiceLocator.Current.GetInstance<ShellViewModel>();
             shellViewModel.MenuItems.Insert(position, menuItem);
         }
 
@@ -106,6 +105,12 @@ namespace RestBox.ApplicationServices
 
         public MenuItem Get(MenuItem parent, string headerText)
         {
+            if(parent == null)
+            {
+                var shellViewModel = ServiceLocator.Current.GetInstance<ShellViewModel>();
+                return shellViewModel.MenuItems.FirstOrDefault(x => x.Header.ToString() == headerText);
+            }
+
             foreach (var item in parent.Items)
             {
                 if (item is MenuItem && ((MenuItem)item).Header.ToString() == headerText)
@@ -137,7 +142,7 @@ namespace RestBox.ApplicationServices
 
         private void CreateNewRequest()
         {
-            eventAggregator.GetEvent<NewHttpRequestEvent>().Publish("StandaloneHttpRequest");
+            eventAggregator.GetEvent<NewHttpRequestEvent>().Publish("StandaloneHttpRequest" + Guid.NewGuid().ToString());
         }
 
         private void OpenRequest()
@@ -149,26 +154,7 @@ namespace RestBox.ApplicationServices
                                      };
             if (openFileDialog.ShowDialog() == true)
             {
-                var httpRequest = fileService.Load<HttpRequestItemFile>(openFileDialog.FileName);
-                var httpRequestControl = ServiceLocator.Current.GetInstance<HttpRequest>();
-                httpRequestControl.FilePath = openFileDialog.FileName;
-                var viewModel = httpRequestControl.DataContext as HttpRequestViewModel;
-
-                viewModel.RequestUrl = httpRequest.Url;
-                viewModel.RequestVerb = viewModel.RequestVerbs.First(x => x.Content.ToString() == httpRequest.Verb);
-                viewModel.RequestHeaders = httpRequest.Headers;
-                viewModel.RequestBody = httpRequest.Body;
-
-                var layoutDocument = new LayoutDocument
-                {
-                    Title = Path.GetFileNameWithoutExtension(openFileDialog.FileName),
-                    ContentId = "StandaloneHttpRequest",
-                    Content = httpRequestControl,
-                    IsSelected = true,
-                    CanFloat = true
-                };
-
-                eventAggregator.GetEvent<AddLayoutDocumentEvent>().Publish(layoutDocument);
+                eventAggregator.GetEvent<OpenHttpRequestEvent>().Publish(openFileDialog.FileName);
             }
         }
 

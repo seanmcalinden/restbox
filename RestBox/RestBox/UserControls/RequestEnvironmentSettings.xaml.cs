@@ -1,8 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Windows.Controls;
+﻿using System.Windows.Controls;
 using System.Windows.Input;
 using Microsoft.Practices.Prism.Events;
-using RestBox.ApplicationServices;
 using RestBox.Events;
 using RestBox.ViewModels;
 
@@ -11,7 +9,7 @@ namespace RestBox.UserControls
     /// <summary>
     /// Interaction logic for RequestEnvironmentSettings.xaml
     /// </summary>
-    public partial class RequestEnvironmentSettings : UserControl
+    public partial class RequestEnvironmentSettings
     {
         private readonly IEventAggregator eventAggregator;
 
@@ -39,7 +37,7 @@ namespace RestBox.UserControls
         private void SettingsChangedEvent(object sender, SelectedCellsChangedEventArgs e)
         {
             ((RequestEnvironmentSettingsViewModel) DataContext).IsDirty = true;
-            eventAggregator.GetEvent<IsRequestEnvironmentDirtyEvent>().Publish(this);
+            eventAggregator.GetEvent<IsDirtyEvent>().Publish(true);
         }
     }
 }

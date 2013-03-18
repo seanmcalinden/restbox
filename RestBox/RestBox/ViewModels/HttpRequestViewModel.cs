@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -17,10 +16,13 @@ using System.Xml;
 using Microsoft.Practices.Prism.Commands;
 using Microsoft.Practices.Prism.Events;
 using Microsoft.Practices.ServiceLocation;
+using Microsoft.Win32;
 using Newtonsoft.Json;
 using RestBox.ApplicationServices;
 using RestBox.Domain.Entities;
+using RestBox.Domain.Services;
 using RestBox.Events;
+using RestBox.UserControls;
 
 namespace RestBox.ViewModels
 {
@@ -29,22 +31,30 @@ namespace RestBox.ViewModels
         private readonly IHttpRequestService httpRequestService;
         private readonly IEventAggregator eventAggregator;
         private readonly IFileService fileService;
+        private readonly IMainMenuApplicationService mainMenuApplicationService;
+        private readonly IJsonSerializer jsonSerializer;
+        private readonly KeyGesture saveKeyGesture;
+        private readonly KeyGesture runHttpRequestKeyGesture;
 
-        public HttpRequestViewModel(IHttpRequestService httpRequestService, IEventAggregator eventAggregator, IFileService fileService)
+        public HttpRequestViewModel(IHttpRequestService httpRequestService, IEventAggregator eventAggregator,
+                                    IFileService fileService, IMainMenuApplicationService mainMenuApplicationService,
+                                    IJsonSerializer jsonSerializer)
         {
             this.httpRequestService = httpRequestService;
             this.eventAggregator = eventAggregator;
             this.fileService = fileService;
+            this.mainMenuApplicationService = mainMenuApplicationService;
+            this.jsonSerializer = jsonSerializer;
             RequestVerbs = new ObservableCollection<ComboBoxItem>
-                        {
-                            new ComboBoxItem {Content = "GET", IsSelected = true},
-                            new ComboBoxItem {Content = "POST"},
-                            new ComboBoxItem {Content = "PUT"},
-                            new ComboBoxItem {Content = "DELETE"},
-                            new ComboBoxItem {Content = "OPTIONS"},
-                            new ComboBoxItem {Content = "HEAD"},
-                            new ComboBoxItem {Content = "TRACE"}
-                        };
+                               {
+                                   new ComboBoxItem {Content = "GET", IsSelected = true},
+                                   new ComboBoxItem {Content = "POST"},
+                                   new ComboBoxItem {Content = "PUT"},
+                                   new ComboBoxItem {Content = "DELETE"},
+                                   new ComboBoxItem {Content = "OPTIONS"},
+                                   new ComboBoxItem {Content = "HEAD"},
+                                   new ComboBoxItem {Content = "TRACE"}
+                               };
             RequestVerb = RequestVerbs[0];
             ResponseTabVisibility = Visibility.Collapsed;
             HeaderResponseTabVisibility = Visibility.Collapsed;
@@ -55,15 +65,63 @@ namespace RestBox.ViewModels
             ResponseInfoVisibility = Visibility.Hidden;
             ProgressBarVisibility = Visibility.Hidden;
             IntellisenseItems = new ObservableCollection<string>();
-            eventAggregator.GetEvent<MakeRequestEvent>().Subscribe(MakeRequest);
             RequestUriColor = Brushes.White;
             RequestHeadersColor = Brushes.White;
             RequestBodyColor = Brushes.White;
+            saveKeyGesture = new KeyGesture(Key.S, ModifierKeys.Control);
+            runHttpRequestKeyGesture = new KeyGesture(Key.F5);
+            eventAggregator.GetEvent<AddHttpRequestMenuItemsEvent>().Subscribe(AddHttpRequestMenuItems);
         }
 
-        private void MakeRequest(HttpRequestViewModel httpRequestViewModel)
+        private void AddHttpRequestMenuItems(HttpRequestViewModel httpRequestViewModel)
         {
-            if (httpRequestViewModel == this)
+            if (httpRequestViewModel != this)
+            {
+                return;
+            }
+
+            eventAggregator.GetEvent<RemoveInputBindingEvent>().Publish(true);
+
+            mainMenuApplicationService.CreateInitialMenuItems();
+            var fileMenu = mainMenuApplicationService.Get(null, "_File");
+            var saveHttpRequest = new MenuItem {Header = "Save Http Request", InputGestureText = "Ctrl+S"};
+            var saveHttpRequestAs = new MenuItem {Header = "Save Http Request As..."};
+
+            saveHttpRequest.Command = new DelegateCommand(SetupSaveRequest);
+            saveHttpRequestAs.Command = new DelegateCommand(SetupSaveRequestAs);
+
+            mainMenuApplicationService.InsertSeparator(fileMenu, 4);
+            mainMenuApplicationService.InsertMenuItem(fileMenu, saveHttpRequest, 5);
+            mainMenuApplicationService.InsertMenuItem(fileMenu, saveHttpRequestAs, 6);
+
+            var httpRequestMenu = new MenuItem {Header = "_Http Requests"};
+            var runHttpRequest = new MenuItem {Header = "_Run", InputGestureText = "F5", Command = MakeRequestCommand};
+
+            eventAggregator.GetEvent<AddInputBindingEvent>().Publish(new KeyBindingData { KeyGesture = saveKeyGesture, Command = saveHttpRequest.Command });
+            eventAggregator.GetEvent<AddInputBindingEvent>().Publish(new KeyBindingData { KeyGesture = runHttpRequestKeyGesture, Command = MakeRequestCommand });
+
+            mainMenuApplicationService.InsertTopLevelMenuItem(httpRequestMenu, 1);
+            mainMenuApplicationService.InsertMenuItem(httpRequestMenu, runHttpRequest, 0);
+        }
+
+        public ICommand MakeRequestCommand
+        {
+            get { return new DelegateCommand(SetupRequest); }
+        }
+
+        private void SetupRequest()
+        {
+            eventAggregator.GetEvent<GetLayoutDataEvent>().Publish(new LayoutDataRequest
+                                                                       {
+                                                                           Action = MakeRequest,
+                                                                           UserControlType = typeof(HttpRequest),
+                                                                           DataContext = this
+                                                                       });
+        }
+
+        private void MakeRequest(string contentId, object httpRequest)
+        {
+            if (((HttpRequest) httpRequest).DataContext == this)
             {
                 ExecuteRequest();
             }
@@ -75,12 +133,13 @@ namespace RestBox.ViewModels
         public bool IsDirty { get; set; }
 
         private string requestUrl;
+
         public string RequestUrl
         {
             get { return requestUrl; }
             set
             {
-                requestUrl = value; 
+                requestUrl = value;
                 eventAggregator.GetEvent<UpdateRequestUrlEvent>().Publish(this);
                 OnPropertyChanged(x => x.RequestUrl);
             }
@@ -102,12 +161,13 @@ namespace RestBox.ViewModels
         }
 
         private ComboBoxItem requestVerb;
+
         public ComboBoxItem RequestVerb
         {
             get { return requestVerb; }
             set
             {
-                requestVerb = value; 
+                requestVerb = value;
                 OnPropertyChanged(x => x.RequestVerb);
                 RequestVerbString = value.Content.ToString();
             }
@@ -128,6 +188,7 @@ namespace RestBox.ViewModels
         }
 
         private string requestBody;
+
         public string RequestBody
         {
             get { return requestBody; }
@@ -135,29 +196,44 @@ namespace RestBox.ViewModels
             {
                 requestBody = value;
                 eventAggregator.GetEvent<UpdateRequestBodyEvent>().Publish(this);
-                OnPropertyChanged(x => x.RequestBody); 
+                OnPropertyChanged(x => x.RequestBody);
             }
         }
-        
+
         private SolidColorBrush requestUriColor;
+
         public SolidColorBrush RequestUriColor
         {
             get { return requestUriColor; }
-            set { requestUriColor = value; OnPropertyChanged(x => x.RequestUriColor); }
+            set
+            {
+                requestUriColor = value;
+                OnPropertyChanged(x => x.RequestUriColor);
+            }
         }
 
         private SolidColorBrush requestHeadersColor;
+
         public SolidColorBrush RequestHeadersColor
         {
             get { return requestHeadersColor; }
-            set { requestHeadersColor = value; OnPropertyChanged(x => x.RequestHeadersColor); }
+            set
+            {
+                requestHeadersColor = value;
+                OnPropertyChanged(x => x.RequestHeadersColor);
+            }
         }
 
         private SolidColorBrush requestBodyColor;
+
         public SolidColorBrush RequestBodyColor
         {
             get { return requestBodyColor; }
-            set { requestBodyColor = value; OnPropertyChanged(x => x.RequestBodyColor); }
+            set
+            {
+                requestBodyColor = value;
+                OnPropertyChanged(x => x.RequestBodyColor);
+            }
         }
 
         public int ResponseStatusCode { get; set; }
@@ -171,164 +247,268 @@ namespace RestBox.ViewModels
         public string RequestTime { get; set; }
 
         private string headerResponse;
+
         public string HeaderResponse
         {
             get { return headerResponse; }
-            set { headerResponse = value; OnPropertyChanged(x => x.HeaderResponse); }
+            set
+            {
+                headerResponse = value;
+                OnPropertyChanged(x => x.HeaderResponse);
+            }
         }
 
 
         private string imageResponse;
+
         public string ImageResponse
         {
             get { return imageResponse; }
-            set { imageResponse = value; OnPropertyChanged(x => x.ImageResponse); }
+            set
+            {
+                imageResponse = value;
+                OnPropertyChanged(x => x.ImageResponse);
+            }
         }
 
         private string jsonResponse;
+
         public string JsonResponse
         {
             get { return jsonResponse; }
-            set { jsonResponse = value; OnPropertyChanged(x => x.JsonResponse); }
+            set
+            {
+                jsonResponse = value;
+                OnPropertyChanged(x => x.JsonResponse);
+            }
         }
 
         private string xmlResponse;
+
         public string XmlResponse
         {
             get { return xmlResponse; }
-            set { xmlResponse = value; OnPropertyChanged(x => x.XmlResponse); }
+            set
+            {
+                xmlResponse = value;
+                OnPropertyChanged(x => x.XmlResponse);
+            }
         }
 
         private string rawResponse;
+
         public string RawResponse
         {
             get { return rawResponse; }
-            set { rawResponse = value; OnPropertyChanged(x => x.RawResponse); }
+            set
+            {
+                rawResponse = value;
+                OnPropertyChanged(x => x.RawResponse);
+            }
         }
 
         private string responseInfo;
+
         public string ResponseInfo
         {
             get { return responseInfo; }
-            set { responseInfo = value; OnPropertyChanged(x => x.ResponseInfo); }
+            set
+            {
+                responseInfo = value;
+                OnPropertyChanged(x => x.ResponseInfo);
+            }
         }
 
         private BitmapImage imageSource;
+
         public BitmapImage ImageSource
         {
             get { return imageSource; }
-            set { imageSource = value; OnPropertyChanged(x => x.ImageSource); }
+            set
+            {
+                imageSource = value;
+                OnPropertyChanged(x => x.ImageSource);
+            }
         }
 
         private Visibility responseTabVisibility;
+
         public Visibility ResponseTabVisibility
         {
             get { return responseTabVisibility; }
-            set { responseTabVisibility = value; OnPropertyChanged(x => x.ResponseTabVisibility); }
+            set
+            {
+                responseTabVisibility = value;
+                OnPropertyChanged(x => x.ResponseTabVisibility);
+            }
         }
 
         private bool responseTabSelected;
+
         public bool ResponseTabSelected
         {
             get { return responseTabSelected; }
-            set { responseTabSelected = value; OnPropertyChanged(x => x.ResponseTabSelected); }
+            set
+            {
+                responseTabSelected = value;
+                OnPropertyChanged(x => x.ResponseTabSelected);
+            }
         }
 
         private Visibility responseInfoVisibility;
+
         public Visibility ResponseInfoVisibility
         {
             get { return responseInfoVisibility; }
-            set { responseInfoVisibility = value; OnPropertyChanged(x => x.ResponseInfoVisibility); }
+            set
+            {
+                responseInfoVisibility = value;
+                OnPropertyChanged(x => x.ResponseInfoVisibility);
+            }
         }
 
         private Visibility headerResponseTabVisibility;
+
         public Visibility HeaderResponseTabVisibility
         {
             get { return headerResponseTabVisibility; }
-            set { headerResponseTabVisibility = value; OnPropertyChanged(x => x.HeaderResponseTabVisibility); }
+            set
+            {
+                headerResponseTabVisibility = value;
+                OnPropertyChanged(x => x.HeaderResponseTabVisibility);
+            }
         }
 
         private Visibility jsonResponseTabVisibility;
+
         public Visibility JsonResponseTabVisibility
         {
             get { return jsonResponseTabVisibility; }
-            set { jsonResponseTabVisibility = value; OnPropertyChanged(x => x.JsonResponseTabVisibility); }
+            set
+            {
+                jsonResponseTabVisibility = value;
+                OnPropertyChanged(x => x.JsonResponseTabVisibility);
+            }
         }
 
         private bool jsonResponseTabSelected;
+
         public bool JsonResponseTabSelected
         {
             get { return jsonResponseTabSelected; }
-            set { jsonResponseTabSelected = value; OnPropertyChanged(x => x.JsonResponseTabSelected); }
+            set
+            {
+                jsonResponseTabSelected = value;
+                OnPropertyChanged(x => x.JsonResponseTabSelected);
+            }
         }
 
         private Visibility xmlResponseTabVisibility;
+
         public Visibility XmlResponseTabVisibility
         {
             get { return xmlResponseTabVisibility; }
-            set { xmlResponseTabVisibility = value; OnPropertyChanged(x => x.XmlResponseTabVisibility); }
+            set
+            {
+                xmlResponseTabVisibility = value;
+                OnPropertyChanged(x => x.XmlResponseTabVisibility);
+            }
         }
 
         private bool xmlResponseTabSelected;
+
         public bool XmlResponseTabSelected
         {
             get { return xmlResponseTabSelected; }
-            set { xmlResponseTabSelected = value; OnPropertyChanged(x => x.XmlResponseTabSelected); }
+            set
+            {
+                xmlResponseTabSelected = value;
+                OnPropertyChanged(x => x.XmlResponseTabSelected);
+            }
         }
 
         private Visibility rawResponseTabVisibility;
+
         public Visibility RawResponseTabVisibility
         {
             get { return rawResponseTabVisibility; }
-            set { rawResponseTabVisibility = value; OnPropertyChanged(x => x.RawResponseTabVisibility); }
+            set
+            {
+                rawResponseTabVisibility = value;
+                OnPropertyChanged(x => x.RawResponseTabVisibility);
+            }
         }
 
         private bool rawResponseTabSelected;
+
         public bool RawResponseTabSelected
         {
             get { return rawResponseTabSelected; }
-            set { rawResponseTabSelected = value; OnPropertyChanged(x => x.RawResponseTabSelected); }
+            set
+            {
+                rawResponseTabSelected = value;
+                OnPropertyChanged(x => x.RawResponseTabSelected);
+            }
         }
 
         private Visibility imageResponseTabVisibility;
+
         public Visibility ImageResponseTabVisibility
         {
             get { return imageResponseTabVisibility; }
-            set { imageResponseTabVisibility = value; OnPropertyChanged(x => x.ImageResponseTabVisibility); }
+            set
+            {
+                imageResponseTabVisibility = value;
+                OnPropertyChanged(x => x.ImageResponseTabVisibility);
+            }
         }
 
         private bool imageResponseTabSelected;
+
         public bool ImageResponseTabSelected
         {
             get { return imageResponseTabSelected; }
-            set { imageResponseTabSelected = value; OnPropertyChanged(x => x.ImageResponseTabSelected); }
+            set
+            {
+                imageResponseTabSelected = value;
+                OnPropertyChanged(x => x.ImageResponseTabSelected);
+            }
         }
 
         private string requestErrorMessage;
+
         public string RequestErrorMessage
         {
             get { return requestErrorMessage; }
-            set { requestErrorMessage = value; OnPropertyChanged(x => x.RequestErrorMessage); }
+            set
+            {
+                requestErrorMessage = value;
+                OnPropertyChanged(x => x.RequestErrorMessage);
+            }
         }
 
         private Visibility progressBarVisibility;
+
         public Visibility ProgressBarVisibility
         {
             get { return progressBarVisibility; }
-            set { 
-                progressBarVisibility = value; 
-                OnPropertyChanged(x => x.ProgressBarVisibility); 
+            set
+            {
+                progressBarVisibility = value;
+                OnPropertyChanged(x => x.ProgressBarVisibility);
             }
         }
 
         private bool isProgressBarEnabled;
+
         public bool IsProgressBarEnabled
         {
             get { return isProgressBarEnabled; }
-            set { 
-                isProgressBarEnabled = value; 
-                OnPropertyChanged(x => x.IsProgressBarEnabled); 
-                if(value)
+            set
+            {
+                isProgressBarEnabled = value;
+                OnPropertyChanged(x => x.IsProgressBarEnabled);
+                if (value)
                 {
                     ProgressBarVisibility = Visibility.Visible;
                 }
@@ -341,10 +521,7 @@ namespace RestBox.ViewModels
 
         public ICommand ExecuteHttpRequestCommand
         {
-            get
-            {
-                return new DelegateCommand(ExecuteRequest);
-            }
+            get { return new DelegateCommand(ExecuteRequest); }
         }
 
         private void ExecuteRequest()
@@ -352,7 +529,7 @@ namespace RestBox.ViewModels
             try
             {
                 bool isValidRequest = true;
-                if(string.IsNullOrWhiteSpace(RequestUrl))
+                if (string.IsNullOrWhiteSpace(RequestUrl))
                 {
                     RequestUriColor = Brushes.Pink;
                     isValidRequest = false;
@@ -361,7 +538,8 @@ namespace RestBox.ViewModels
                 {
                     RequestUriColor = Brushes.White;
                 }
-                if ((RequestVerbString == "POST" || RequestVerbString == "PUT") && string.IsNullOrWhiteSpace(RequestBody))
+                if ((RequestVerbString == "POST" || RequestVerbString == "PUT") &&
+                    string.IsNullOrWhiteSpace(RequestBody))
                 {
                     RequestBodyColor = Brushes.MistyRose;
                 }
@@ -370,21 +548,22 @@ namespace RestBox.ViewModels
                     RequestBodyColor = Brushes.White;
                 }
 
-                if(!isValidRequest)
+                if (!isValidRequest)
                 {
                     return;
                 }
-               
+
 
                 IsProgressBarEnabled = true;
                 RequestErrorMessage = null;
                 var requestEnvironment = ServiceLocator.Current.GetInstance<RequestEnvironmentsViewModel>();
                 var requestEnvironmentSettings = new List<RequestEnvironmentSetting>();
-                if(requestEnvironment.SelectedRequestEnvironment != null)
+                if (requestEnvironment.SelectedRequestEnvironment != null)
                 {
                     var requestEnvironmentSettingFile =
-                    fileService.Load<RequestEnvironmentSettingFile>(fileService.GetFilePath(Solution.Current.FilePath,
-                                                                      requestEnvironment.SelectedRequestEnvironment.RelativeFilePath));
+                        fileService.Load<RequestEnvironmentSettingFile>(
+                            fileService.GetFilePath(Solution.Current.FilePath,
+                                                    requestEnvironment.SelectedRequestEnvironment.RelativeFilePath));
 
                     requestEnvironmentSettings = requestEnvironmentSettingFile.RequestEnvironmentSettings;
                 }
@@ -396,7 +575,7 @@ namespace RestBox.ViewModels
                 IsProgressBarEnabled = false;
             }
         }
-        
+
         private string ReplaceEnvironmentTokens(string value, List<RequestEnvironmentSetting> requestEnvironmentSettings)
         {
             if (requestEnvironmentSettings == null || requestEnvironmentSettings.Count == 0)
@@ -414,7 +593,8 @@ namespace RestBox.ViewModels
         public void ShowRequestError(string errorMessage)
         {
             IsProgressBarEnabled = false;
-            eventAggregator.GetEvent<ShowErrorEvent>().Publish(new KeyValuePair<string, string>("Request Error", errorMessage));
+            eventAggregator.GetEvent<ShowErrorEvent>().Publish(new KeyValuePair<string, string>("Request Error",
+                                                                                                errorMessage));
         }
 
         public void DisplayHttpResponse(Uri requestUri, List<RequestEnvironmentSetting> requestEnvironmentSettings)
@@ -488,8 +668,10 @@ namespace RestBox.ViewModels
                     bitmapImage.StreamSource = memoryStream;
                     bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
                     bitmapImage.EndInit();
-                    bitmapImage.DecodePixelWidth = int.Parse(Math.Round(bitmapImage.Width, 0).ToString(CultureInfo.InvariantCulture));
-                    bitmapImage.DecodePixelHeight = int.Parse(Math.Round(bitmapImage.Height, 0).ToString(CultureInfo.InvariantCulture));
+                    bitmapImage.DecodePixelWidth =
+                        int.Parse(Math.Round(bitmapImage.Width, 0).ToString(CultureInfo.InvariantCulture));
+                    bitmapImage.DecodePixelHeight =
+                        int.Parse(Math.Round(bitmapImage.Height, 0).ToString(CultureInfo.InvariantCulture));
                     ImageSource = bitmapImage;
                     ImageResponseTabVisibility = Visibility.Visible;
                     ImageResponseTabSelected = true;
@@ -518,7 +700,7 @@ namespace RestBox.ViewModels
             sb.AppendLine("Response Received: " + ResponseReceived);
             return sb.ToString();
         }
-        
+
         public string GetFormattedJson(string json)
         {
             dynamic parsedJson = JsonConvert.DeserializeObject(json);
@@ -562,6 +744,159 @@ namespace RestBox.ViewModels
             }
 
             return message;
+        }
+
+        private void SetupSaveRequestAs()
+        {
+            eventAggregator.GetEvent<GetLayoutDataEvent>().Publish(new LayoutDataRequest
+                                                                       {
+                                                                           Action = SaveRequestAs,
+                                                                           UserControlType = typeof(HttpRequest),
+                                                                           DataContext = this
+                                                                       });
+        }
+
+        private void SetupSaveRequest()
+        {
+            eventAggregator.GetEvent<GetLayoutDataEvent>().Publish(new LayoutDataRequest
+            {
+                Action = SaveRequest,
+                UserControlType = typeof(HttpRequest),
+                DataContext = this
+            });
+        }
+
+        private void SaveRequestAs(string id, object httpRequestContent)
+        {
+            if (((HttpRequest) httpRequestContent).DataContext != this)
+            {
+                return;
+            }
+
+            var httpRequest = httpRequestContent as HttpRequest;
+
+            var httpRequestViewModel = httpRequest.DataContext as HttpRequestViewModel;
+
+            var saveFileDialog = new SaveFileDialog
+                                     {
+                                         Filter = "Rest Box HttpRequest (*.rhrq)|*.rhrq",
+                                         FileName = Path.GetFileName(httpRequest.FilePath) ?? "Untitled",
+                                         Title = "Save Http Request As..."
+                                     };
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                var title = Path.GetFileNameWithoutExtension(saveFileDialog.FileName);
+                var httpRequestFile = new HttpRequestItemFile
+                                          {
+                                              Url = httpRequestViewModel.RequestUrl,
+                                              Verb = httpRequestViewModel.RequestVerb.Content.ToString(),
+                                              Headers = httpRequestViewModel.RequestHeaders,
+                                              Body = httpRequestViewModel.RequestBody
+                                          };
+
+                if (!id.StartsWith("StandaloneHttpRequest"))
+                {
+                    var relativePath = fileService.GetRelativePath(new Uri(Solution.Current.FilePath),
+                                                                   saveFileDialog.FileName);
+
+
+
+                    var requestExists = Solution.Current.HttpRequestFiles.Any(x => x.Id == id);
+                    if (!requestExists)
+                    {
+                        Solution.Current.HttpRequestFiles.Add(
+                            new HttpRequestFile {Id = id, RelativeFilePath = relativePath, Name = title});
+                    }
+                    else
+                    {
+                        var existingHttpRequestFile =
+                            Solution.Current.HttpRequestFiles.First(x => x.Id == id);
+                        existingHttpRequestFile.Name = title;
+                        existingHttpRequestFile.RelativeFilePath = relativePath;
+                    }
+
+                    fileService.SaveSolution();
+
+                    fileService.SaveFile(saveFileDialog.FileName, jsonSerializer.ToJsonString(httpRequestFile));
+
+                    httpRequest.FilePath = relativePath;
+                    eventAggregator.GetEvent<UpdateTabTitleEvent>().Publish(new TabHeader
+                                                                                {
+                                                                                    Id = id,
+                                                                                    Title = title
+                                                                                });
+                    eventAggregator.GetEvent<UpdateHttpRequestFileItemEvent>().Publish(new HttpRequestFile
+                                                                                           {
+                                                                                               Id = id,
+                                                                                               Name = title,
+                                                                                               RelativeFilePath =
+                                                                                                   relativePath
+                                                                                           });
+                }
+                else
+                {
+                    httpRequest.FilePath = saveFileDialog.FileName;
+                    eventAggregator.GetEvent<UpdateTabTitleEvent>().Publish(new TabHeader
+                                                                                {
+                                                                                    Id = id,
+                                                                                    Title = title
+                                                                                });
+                    fileService.SaveFile(saveFileDialog.FileName, jsonSerializer.ToJsonString(httpRequestFile));
+                }
+            }
+            Keyboard.ClearFocus();
+            eventAggregator.GetEvent<IsDirtyEvent>().Publish(false);
+            IsDirty = false;
+        }
+
+        private void SaveRequest(string id, object httpRequestContent)
+        {
+            if(!(httpRequestContent is HttpRequest))
+            {
+                return;
+            }
+
+            if (((HttpRequest) httpRequestContent).DataContext != this)
+            {
+                return;
+            }
+
+
+            var httpRequest = httpRequestContent as HttpRequest;
+
+            var httpRequestViewModel = httpRequest.DataContext as HttpRequestViewModel;
+
+            if (string.IsNullOrWhiteSpace(httpRequest.FilePath))
+            {
+                SaveRequestAs(id, httpRequestContent);
+                return;
+            }
+
+            var httpRequestFile = new HttpRequestItemFile
+                                      {
+                                          Url = httpRequestViewModel.RequestUrl,
+                                          Verb = httpRequestViewModel.RequestVerb.Content.ToString(),
+                                          Headers = httpRequestViewModel.RequestHeaders,
+                                          Body = httpRequestViewModel.RequestBody
+                                      };
+
+            string filePath;
+
+            if (!id.StartsWith("StandaloneHttpRequest"))
+            {
+                filePath = fileService.GetFilePath(Solution.Current.FilePath, httpRequest.FilePath);
+            }
+            else
+            {
+                filePath = httpRequest.FilePath;
+            }
+
+            fileService.SaveFile(filePath, jsonSerializer.ToJsonString(httpRequestFile));
+
+            eventAggregator.GetEvent<IsDirtyEvent>().Publish(false);
+            Keyboard.ClearFocus();
+            httpRequestViewModel.IsDirty = false;
         }
     }
 }

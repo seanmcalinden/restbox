@@ -123,19 +123,21 @@
     <Compile Include="Events\CloseSolutionEvent.cs" />
     <Compile Include="Events\AddEnvironmentLayoutDocumentEvent.cs" />
     <Compile Include="Events\CloseEnvironmentItemEvent.cs" />
-    <Compile Include="Events\CloneEnvironmentEvent.cs" />
     <Compile Include="Events\AddLayoutDocumentEvent.cs" />
+    <Compile Include="Events\AddHttpRequestMenuItemsEvent.cs" />
+    <Compile Include="Events\AddRequestEnvironmentMenuItemsEvent.cs" />
+    <Compile Include="Events\DocumentChangedEvent.cs" />
+    <Compile Include="Events\GetLayoutDataEvent.cs" />
+    <Compile Include="Events\UpdateHttpRequestFileItemEvent.cs" />
+    <Compile Include="Events\SelectHttpRequestItemEvent.cs" />
+    <Compile Include="Events\OpenHttpRequestEvent.cs" />
     <Compile Include="Events\ShowErrorEvent.cs" />
     <Compile Include="Events\UpdateRequestBodyEvent.cs" />
     <Compile Include="Events\UpdateRequestHeadersEvent.cs" />
-    <Compile Include="Events\IsRequestEnvironmentDirtyEvent.cs" />
     <Compile Include="Events\UpdateRequestUrlEvent.cs" />
     <Compile Include="Events\UpdateTabTitleEvent.cs" />
     <Compile Include="Events\UpdateEnvironmentItemEvent.cs" />
-    <Compile Include="Events\SelectLayoutDocumentEvent.cs" />
-    <Compile Include="Events\IsHttpRequestDirtyEvent.cs" />
-    <Compile Include="Events\MakeRequestEvent.cs" />
-    <Compile Include="Events\NewEnvironmentEvent.cs" />
+    <Compile Include="Events\IsDirtyEvent.cs" />
     <Compile Include="Events\NewHttpRequestEvent.cs" />
     <Compile Include="Events\NewSolutionEvent.cs" />
     <Compile Include="Events\OpenSolutionEvent.cs" />
@@ -152,6 +154,9 @@
     <Compile Include="UserControls\HttpRequest.xaml.cs">
       <DependentUpon>HttpRequest.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UserControls\HttpRequestFiles.xaml.cs">
+      <DependentUpon>HttpRequestFiles.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UserControls\RequestEnvironments.xaml.cs">
       <DependentUpon>RequestEnvironments.xaml</DependentUpon>
     </Compile>
@@ -161,6 +166,8 @@
     <Compile Include="UserControls\RequestExtensions.xaml.cs">
       <DependentUpon>RequestExtensions.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ViewModels\HttpRequestFilesViewModel.cs" />
+    <Compile Include="ViewModels\LayoutData.cs" />
     <Compile Include="ViewModels\RequestExtensionViewFile.cs" />
     <Compile Include="ViewModels\RequestExtensionsViewModel.cs" />
     <Compile Include="ViewModels\RequestEnvironmentSettingFile.cs" />
@@ -249,6 +256,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="UserControls\HttpRequest.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\HttpRequestFiles.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
