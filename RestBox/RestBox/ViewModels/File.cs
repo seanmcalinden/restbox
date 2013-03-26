@@ -2,8 +2,15 @@
 
 namespace RestBox.ViewModels
 {
-    public class RequestExtensionViewFile : ViewModelBase<RequestExtensionViewFile>
+    public class File : ViewModelBase<File>
     {
+        private string id;
+        public string Id
+        {
+            get { return id; }
+            set { id = value; OnPropertyChanged(x => x.Id); }
+        }
+
         private string name;
         public string Name
         {
@@ -18,11 +25,11 @@ namespace RestBox.ViewModels
             set { relativeFilePath = value; OnPropertyChanged(x => x.RelativeFilePath); }
         }
 
-        private string icon;
-        public string Icon
+        private string groups;
+        public string Groups
         {
-            get { return icon; }
-            set { icon = value; OnPropertyChanged("Icon"); }
+            get { return groups; }
+            set { groups = value; OnPropertyChanged(x => x.Groups); }
         }
     }
 }

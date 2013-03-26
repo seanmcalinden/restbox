@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -43,6 +44,7 @@ namespace RestBox
             HttpRequestFilesLayout.Content = ServiceLocator.Current.GetInstance<HttpRequestFiles>();
             EnvironmentsLayout.Content = ServiceLocator.Current.GetInstance<RequestEnvironments>();
             RequestExtensions.Content = ServiceLocator.Current.GetInstance<RequestExtensions>();
+            SequenceFiles.Content = ServiceLocator.Current.GetInstance<HttpRequestSequenceFiles>();            
             
             eventAggregator.GetEvent<AddInputBindingEvent>().Subscribe(AddInputBinding);
             eventAggregator.GetEvent<RemoveInputBindingEvent>().Subscribe(RemoveInputBindings);
@@ -117,7 +119,7 @@ namespace RestBox
         private void IsDirtyHandler(bool isDirty)
         {
             var selectedDocument = dockingManager.Layout.ActiveContent;
-            if (selectedDocument == null)
+            if (selectedDocument == null || !(selectedDocument is LayoutDocument))
             {
                 return;
             }
@@ -215,6 +217,11 @@ namespace RestBox
         private void RemoveInputBindings(bool obj)
         {
             InputBindings.Clear();
+        }
+
+        private void SequenceTitleChanged(object sender, PropertyChangedEventArgs e)
+        {
+            //throw new NotImplementedException();
         }
     }
 }

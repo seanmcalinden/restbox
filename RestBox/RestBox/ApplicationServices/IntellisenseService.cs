@@ -5,6 +5,7 @@ using Microsoft.Practices.Prism.Events;
 using Newtonsoft.Json;
 using RestBox.Events;
 using RestBox.ViewModels;
+using File = System.IO.File;
 
 namespace RestBox.ApplicationServices
 {

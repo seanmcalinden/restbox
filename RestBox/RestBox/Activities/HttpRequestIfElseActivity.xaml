@@ -1,0 +1,43 @@
+﻿<sap:ActivityDesigner x:Class="RestBox.Activities.HttpRequestIfElseActivity"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:sap="clr-namespace:System.Activities.Presentation;assembly=System.Activities.Presentation"
+    xmlns:sapv="clr-namespace:System.Activities.Presentation.View;assembly=System.Activities.Presentation">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="23"></RowDefinition>
+            <RowDefinition Height="23"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+        </Grid.RowDefinitions>
+        
+        <Label Grid.Row="0" Padding="0" Content="Specify condition on last response:"></Label>
+        
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="150"></ColumnDefinition>
+                <ColumnDefinition Width="150"></ColumnDefinition>
+                <ColumnDefinition MinWidth="100" Width="*"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <ComboBox Grid.Column="0" ItemsSource="{Binding ModelItem.ResponseSections}" SelectedIndex="{Binding ModelItem.SelectedResponseSectionIndex, Mode=TwoWay}">
+            </ComboBox>
+            <ComboBox Grid.Column="1" ItemsSource="{Binding ModelItem.ResponseSections}" SelectedIndex="{Binding ModelItem.SelectedOperatorIndex, Mode=TwoWay}">
+            </ComboBox>
+            <TextBox Grid.Column="2" Text="{Binding ModelItem.ConditionValue}"></TextBox>
+        </Grid>
+        
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"></ColumnDefinition>
+                <ColumnDefinition Width="*"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="23"></RowDefinition>
+                <RowDefinition Height="*"></RowDefinition>
+            </Grid.RowDefinitions>
+            <Label Content="True" Grid.Column="0" Grid.Row="0" HorizontalAlignment="Center"></Label>
+            <Label Content="False" Grid.Column="1" Grid.Row="0" HorizontalAlignment="Center"></Label>
+            <sap:WorkflowItemPresenter Grid.Column="0" Grid.Row="1" Item="{Binding ModelItem.ConditionTrueActivity.Handler}" HintText="Drop activity" Margin="3" VerticalAlignment="Top" />
+            <sap:WorkflowItemPresenter Grid.Column="1" Grid.Row="1" Item="{Binding ModelItem.ConditionFalseActivity.Handler}" HintText="Drop activity" Margin="3" VerticalAlignment="Top" />
+        </Grid>
+    </Grid>
+</sap:ActivityDesigner>

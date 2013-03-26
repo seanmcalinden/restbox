@@ -2,9 +2,11 @@
 using Castle.MicroKernel.Registration;
 using Castle.MicroKernel.SubSystems.Configuration;
 using Castle.Windsor;
+using RestBox.Activities;
 using RestBox.ApplicationServices;
 using RestBox.Domain.Services;
 using RestBox.Factories;
+using RestBox.Mappers;
 using RestBox.UserControls;
 using RestBox.ViewModels;
 
@@ -31,14 +33,26 @@ namespace RestBox.Installers
                     Component.For<IFileService>().ImplementedBy<FileService>().LifeStyle.Transient,
                     Component.For<IIntellisenseService>().ImplementedBy<IntellisenseService>().LifeStyle.Singleton,
 
+                    Component.For<HttpRequestSequenceFiles>().ImplementedBy<HttpRequestSequenceFiles>().LifeStyle.Singleton,
+                    Component.For<HttpRequestSequence>().ImplementedBy<HttpRequestSequence>().LifeStyle.Transient,
+                    Component.For<HttpRequestSequenceFilesViewModel>().ImplementedBy<HttpRequestSequenceFilesViewModel>().LifeStyle.Singleton,
+                    Component.For<HttpRequestSequenceViewModel>().ImplementedBy<HttpRequestSequenceViewModel>().LifeStyle.Transient,
+
                     Component.For<RequestEnvironments>().ImplementedBy<RequestEnvironments>().LifeStyle.Singleton,
                     Component.For<RequestEnvironmentSettings>().ImplementedBy<RequestEnvironmentSettings>().LifeStyle.Transient,
-                    Component.For<RequestEnvironmentsViewModel>().ImplementedBy<RequestEnvironmentsViewModel>().LifeStyle.Singleton,
+                    Component.For<RequestEnvironmentsFilesViewModel>().ImplementedBy<RequestEnvironmentsFilesViewModel>().LifeStyle.Singleton,
                     Component.For<RequestEnvironmentSettingsViewModel>().ImplementedBy<RequestEnvironmentSettingsViewModel>().LifeStyle.Transient,
 
                     Component.For<RequestExtensions>().ImplementedBy<RequestExtensions>().LifeStyle.Singleton,
-                    Component.For<RequestExtensionsViewModel>().ImplementedBy<RequestExtensionsViewModel>().LifeStyle.Singleton,
-                    Component.For<IJsonSerializer>().ImplementedBy<JsonSerializer>().LifeStyle.Transient);
+                    Component.For<RequestExtensionFilesViewModel>().ImplementedBy<RequestExtensionFilesViewModel>().LifeStyle.Singleton,
+                    Component.For<IJsonSerializer>().ImplementedBy<JsonSerializer>().LifeStyle.Transient,
+
+                    Component.For<IMapper<HttpRequestItemFile, HttpRequestViewModel>>().ImplementedBy<MapHttpRequestItemFileToHttpRequestViewModel>(),
+                    Component.For<IMapper<RequestEnvironmentSettingFile, RequestEnvironmentSettingsViewModel>>().ImplementedBy<MapRequestEnvironmentFileToRequestEnvironmentSettingsViewModel>(),
+
+                    Component.For<HttpRequestActivityModel>().ImplementedBy<HttpRequestActivityModel>().LifeStyle.Transient);
+
+
         }
     }
 }

@@ -1,0 +1,26 @@
+﻿<sap:ActivityDesigner x:Class="RestBox.Activities.HttpRequestActivity"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:sap="clr-namespace:System.Activities.Presentation;assembly=System.Activities.Presentation"
+    xmlns:sapv="clr-namespace:System.Activities.Presentation.View;assembly=System.Activities.Presentation"
+                      xmlns:model="clr-namespace:System.Activities.Presentation.Model;assembly=System.Activities.Presentation">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="23"></RowDefinition>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <ComboBox x:Name="HttpRequestsList" Grid.Column="0" ItemsSource="{Binding Path=ModelItem.HttpRequests, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged }" SelectedIndex="{Binding Path=ModelItem.SelectedHttpRequestIndex}">
+            <ComboBox.ItemTemplate>
+                <DataTemplate>
+                    <Label Margin="0" Padding="0" Content="{Binding Name}" />
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
+        </ComboBox>
+        </Grid>
+
+    </Grid>
+</sap:ActivityDesigner>

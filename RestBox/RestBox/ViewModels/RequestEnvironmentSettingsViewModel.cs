@@ -179,7 +179,7 @@ namespace RestBox.ViewModels
                 if (!requestExists)
                 {
                     Solution.Current.RequestEnvironmentFiles.Add(
-                        new RequestEnvironmentFile { Id = id, RelativeFilePath = relativePath, Name = title });
+                        new File { Id = id, RelativeFilePath = relativePath, Name = title });
                 }
                 else
                 {
@@ -197,7 +197,7 @@ namespace RestBox.ViewModels
                 fileService.SaveFile(saveFileDialog.FileName, jsonSerializer.ToJsonString(requestEnvironmentFile));
 
                 environmentSettings.FilePath = relativePath;
-                eventAggregator.GetEvent<UpdateEnvironmentItemEvent>().Publish(new RequestEnvironmentFile
+                eventAggregator.GetEvent<UpdateEnvironmentItemEvent>().Publish(new File
                 {
                     Id = id,
                     Name = title,

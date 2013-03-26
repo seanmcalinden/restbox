@@ -15,7 +15,7 @@ namespace RestBox.UserControls
     /// <summary>
     /// Interaction logic for HttpRequest.xaml
     /// </summary>
-    public partial class HttpRequest
+    public partial class HttpRequest : ITabUserControlBase
     {
         #region Declarations
         

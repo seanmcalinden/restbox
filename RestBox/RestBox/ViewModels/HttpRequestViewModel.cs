@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -561,18 +560,24 @@ namespace RestBox.ViewModels
 
                 IsProgressBarEnabled = true;
                 RequestErrorMessage = null;
-                var requestEnvironment = ServiceLocator.Current.GetInstance<RequestEnvironmentsViewModel>();
+                var requestEnvironment = ServiceLocator.Current.GetInstance<RequestEnvironmentsFilesViewModel>();
                 var requestEnvironmentSettings = new List<RequestEnvironmentSetting>();
-                if (requestEnvironment.SelectedRequestEnvironment != null)
+                if (requestEnvironment.Selected != null)
                 {
                     var requestEnvironmentSettingFile =
                         fileService.Load<RequestEnvironmentSettingFile>(
                             fileService.GetFilePath(Solution.Current.FilePath,
-                                                    requestEnvironment.SelectedRequestEnvironment.RelativeFilePath));
+                                                    requestEnvironment.Selected.RelativeFilePath));
 
                     requestEnvironmentSettings = requestEnvironmentSettingFile.RequestEnvironmentSettings;
                 }
-                Task.Factory.StartNew(() => httpRequestService.ExecuteRequest(this, requestEnvironmentSettings));
+                httpRequestService.BeginExecuteRequest(new HttpRequestItem
+                    {
+                        Url = RequestUrl,
+                        Body = RequestBody,
+                        Headers = RequestHeaders,
+                        Verb = RequestVerbString
+                    }, requestEnvironmentSettings, DisplayHttpResponse, ShowRequestError);
             }
             catch (Exception ex)
             {
@@ -630,7 +635,7 @@ namespace RestBox.ViewModels
                     Body = httpRequestViewModel.RequestBody
                 };
 
-                if (!id.StartsWith("StandaloneHttpRequest"))
+                if (!id.StartsWith("StandaloneNewItem"))
                 {
                     var relativePath = fileService.GetRelativePath(new Uri(Solution.Current.FilePath),
                                                                    saveFileDialog.FileName);
@@ -641,7 +646,7 @@ namespace RestBox.ViewModels
                     if (!requestExists)
                     {
                         Solution.Current.HttpRequestFiles.Add(
-                            new HttpRequestFile { Id = id, RelativeFilePath = relativePath, Name = title });
+                            new File { Id = id, RelativeFilePath = relativePath, Name = title });
                     }
                     else
                     {
@@ -661,7 +666,7 @@ namespace RestBox.ViewModels
                         Id = id,
                         Title = title
                     });
-                    eventAggregator.GetEvent<UpdateHttpRequestFileItemEvent>().Publish(new HttpRequestFile
+                    eventAggregator.GetEvent<UpdateHttpRequestFileItemEvent>().Publish(new File
                     {
                         Id = id,
                         Name = title,
@@ -718,7 +723,7 @@ namespace RestBox.ViewModels
 
             string filePath;
 
-            if (!id.StartsWith("StandaloneHttpRequest"))
+            if (!id.StartsWith("StandaloneNewItem"))
             {
                 filePath = fileService.GetFilePath(Solution.Current.FilePath, httpRequest.FilePath);
             }
@@ -760,7 +765,36 @@ namespace RestBox.ViewModels
                                                                                                 errorMessage));
         }
 
-        public void DisplayHttpResponse(Uri requestUri, List<RequestEnvironmentSetting> requestEnvironmentSettings)
+        public void DisplayHttpResponse(Uri requestUri, List<RequestEnvironmentSetting> requestEnvironmentSettings, HttpResponseItem httpResponseItem)
+        {
+            RequestUrl = httpResponseItem.CallingRequest.Url;
+            RequestVerb = RequestVerbs.First(x => x.Content.ToString().ToLower() == httpResponseItem.CallingRequest.Verb.ToLower());
+            RequestHeaders = httpResponseItem.CallingRequest.Headers;
+            RequestBody = httpResponseItem.CallingRequest.Body;
+
+            ResponseContentType = httpResponseItem.ContentType;
+            ResponseHeaders = httpResponseItem.Headers;
+            ResponseBody = httpResponseItem.Body;
+            ResponseStatusCode = httpResponseItem.StatusCode;
+            ResponseReasonPhrase = httpResponseItem.ReasonPhrase;
+            RequestStart = httpResponseItem.RequestStart.ToShortDateString() + " " + httpResponseItem.RequestStart.ToLongTimeString();
+            ResponseReceived = httpResponseItem.ResponseReceived.ToShortDateString() + " " + httpResponseItem.ResponseReceived.ToLongTimeString();
+            RequestTime = httpResponseItem.TotalRequestSeconds.ToString(CultureInfo.InvariantCulture) + " secs";
+            DisplayHttpResponse(requestUri, requestEnvironmentSettings);
+
+        }
+
+        public string RemoveScriptTags(string content)
+        {
+            var regex = new Regex(@"<script[^>]*>.*?<\/script>", RegexOptions.Singleline);
+            return regex.Replace(content, string.Empty);
+        }
+
+        #endregion
+
+        #region Helpers
+
+        private void DisplayHttpResponse(Uri requestUri, List<RequestEnvironmentSetting> requestEnvironmentSettings)
         {
             IsProgressBarEnabled = false;
             if (ResponseHeaders == null)
@@ -847,16 +881,6 @@ namespace RestBox.ViewModels
             RawResponseTabSelected = true;
         }
 
-        public string RemoveScriptTags(string content)
-        {
-            var regex = new Regex(@"<script[^>]*>.*?<\/script>", RegexOptions.Singleline);
-            return regex.Replace(content, string.Empty);
-        }
-
-        #endregion
-
-        #region Helpers
-
         private string ReplaceEnvironmentTokens(string value, List<RequestEnvironmentSetting> requestEnvironmentSettings)
         {
             if (requestEnvironmentSettings == null || requestEnvironmentSettings.Count == 0)
@@ -866,7 +890,7 @@ namespace RestBox.ViewModels
 
             foreach (var requestEnvironmentSetting in requestEnvironmentSettings)
             {
-                value = value.Replace("env." + requestEnvironmentSetting.Setting, requestEnvironmentSetting.SettingValue);
+                value = Regex.Replace(value, "env." + requestEnvironmentSetting.Setting, requestEnvironmentSetting.SettingValue, RegexOptions.IgnoreCase);
             }
             return value;
         }

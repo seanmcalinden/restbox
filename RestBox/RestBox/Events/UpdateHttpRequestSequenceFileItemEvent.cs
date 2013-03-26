@@ -3,7 +3,7 @@ using RestBox.ViewModels;
 
 namespace RestBox.Events
 {
-    public class UpdateEnvironmentItemEvent : CompositePresentationEvent<File>
+    public class UpdateHttpRequestSequenceFileItemEvent : CompositePresentationEvent<File>
     {
     }
 }

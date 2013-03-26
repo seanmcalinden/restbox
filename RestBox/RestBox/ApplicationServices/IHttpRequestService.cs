@@ -1,11 +1,19 @@
-﻿using System.Collections.Generic;
-using System.Net.Http;
+﻿using System;
+using System.Collections.Generic;
 using RestBox.ViewModels;
 
 namespace RestBox.ApplicationServices
 {
     public interface IHttpRequestService
     {
-        void ExecuteRequest(HttpRequestViewModel httpRequestSessionViewModel, List<RequestEnvironmentSetting> requestEnvironmentSettings);
+        void BeginExecuteRequest(
+            HttpRequestItem httpRequestItem,
+            List<RequestEnvironmentSetting> requestEnvironmentSettings,
+            Action<Uri, List<RequestEnvironmentSetting>, HttpResponseItem> onSuccess,
+            Action<string> onError);
+
+        void ExecuteRequest(HttpRequestItem httpRequestItem, List<RequestEnvironmentSetting> requestEnvironmentSettings,
+                            Action<Uri, List<RequestEnvironmentSetting>, HttpResponseItem> onSuccess,
+                            Action<string> onError, bool callMainThread = false);
     }
 }

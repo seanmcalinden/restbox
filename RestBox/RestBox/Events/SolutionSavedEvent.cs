@@ -2,7 +2,7 @@
 
 namespace RestBox.Events
 {
-    public class NewHttpRequestEvent : CompositePresentationEvent<string>
+    public class SolutionSavedEvent : CompositePresentationEvent<bool>
     {
     }
 }

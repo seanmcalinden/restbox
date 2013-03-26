@@ -13,11 +13,11 @@ namespace RestBox.UserControls
     /// <summary>
     /// Interaction logic for RequestEnvironments.xaml
     /// </summary>
-    public partial class RequestEnvironments : UserControl
+    public partial class RequestEnvironments
     {
         #region Declarations
         
-        private readonly RequestEnvironmentsViewModel requestEnvironmentsViewModel;
+        private readonly RequestEnvironmentsFilesViewModel requestEnvironmentsFilesViewModel;
         private readonly IFileService fileService;
         private readonly IEventAggregator eventAggregator; 
 
@@ -25,12 +25,12 @@ namespace RestBox.UserControls
 
         #region Constructor
      
-        public RequestEnvironments(IEventAggregator eventAggregator, RequestEnvironmentsViewModel requestEnvironmentsViewModel, IFileService fileService)
+        public RequestEnvironments(IEventAggregator eventAggregator, RequestEnvironmentsFilesViewModel requestEnvironmentsFilesViewModel, IFileService fileService)
         {
-            this.requestEnvironmentsViewModel = requestEnvironmentsViewModel;
+            this.requestEnvironmentsFilesViewModel = requestEnvironmentsFilesViewModel;
             this.fileService = fileService;
             this.eventAggregator = eventAggregator;
-            DataContext = requestEnvironmentsViewModel;
+            DataContext = requestEnvironmentsFilesViewModel;
             InitializeComponent();
             eventAggregator.GetEvent<SelectEnvironmentItemEvent>().Subscribe(SelectEnvironmentItem);
         } 
@@ -43,7 +43,7 @@ namespace RestBox.UserControls
         {
             for (var i = 0; i < EnvironmentsDataGrid.Items.Count; i++)
             {
-                if (((RequestEnvironmentViewFile)EnvironmentsDataGrid.Items[i]).Id == id)
+                if (((ViewFile)EnvironmentsDataGrid.Items[i]).Id == id)
                 {
                     EnvironmentsDataGrid.SelectedIndex = i;
                     break;
@@ -51,14 +51,19 @@ namespace RestBox.UserControls
             }
         }
 
-        private void DoubleClickedItem(object sender, MouseButtonEventArgs e)
+        private void UpdateGroupsEvent(object sender, TextChangedEventArgs e)
         {
-            requestEnvironmentsViewModel.DoubleClickedItem();
+            requestEnvironmentsFilesViewModel.UpdateGroups();
         }
 
-        private void RenameEnvironment(object sender, RoutedEventArgs e)
+        private void ActivateItem(object sender, MouseButtonEventArgs e)
         {
-            var selectedItem = EnvironmentsDataGrid.SelectedItem as RequestEnvironmentViewFile;
+            requestEnvironmentsFilesViewModel.ActivateItem();
+        }
+
+        private void Rename(object sender, RoutedEventArgs e)
+        {
+            var selectedItem = EnvironmentsDataGrid.SelectedItem as ViewFile;
             selectedItem.NameVisibility = Visibility.Visible;
             selectedItem.EditableNameVisibility = Visibility.Collapsed;
 
@@ -93,10 +98,11 @@ namespace RestBox.UserControls
             fileService.SaveSolution();
 
             eventAggregator.GetEvent<UpdateTabTitleEvent>().Publish(new TabHeader
-                                                                        {
-                                                                            Id = selectedItem.Id,
-                                                                            Title = selectedItem.Name
-                                                                        });
+            {
+                Id = selectedItem.Id,
+                Title = selectedItem.Name
+            });
+           requestEnvironmentsFilesViewModel.Rename();
         } 
 
         #endregion

@@ -11,60 +11,44 @@ using RestBox.ViewModels;
 namespace RestBox.UserControls
 {
     /// <summary>
-    /// Interaction logic for HttpRequestFiles.xaml
+    /// Interaction logic for HttpRequestSequenceFiles.xaml
     /// </summary>
-    public partial class HttpRequestFiles
+    public partial class HttpRequestSequenceFiles
     {
-        #region Declarations
-
+        private readonly HttpRequestSequenceFilesViewModel httpRequestSequenceFilesViewModel;
         private readonly IFileService fileService;
         private readonly IEventAggregator eventAggregator;
-        private readonly HttpRequestFilesViewModel httpRequestFilesViewModel; 
 
-        #endregion
-        
-        #region Constructor
-        
-        public HttpRequestFiles(HttpRequestFilesViewModel httpRequestFilesViewModel, IFileService fileService, IEventAggregator eventAggregator)
+        public HttpRequestSequenceFiles(HttpRequestSequenceFilesViewModel httpRequestSequenceFilesViewModel, IFileService fileService, IEventAggregator eventAggregator)
         {
+            this.httpRequestSequenceFilesViewModel = httpRequestSequenceFilesViewModel;
             this.fileService = fileService;
             this.eventAggregator = eventAggregator;
-            this.httpRequestFilesViewModel = httpRequestFilesViewModel;
-            DataContext = httpRequestFilesViewModel;
+            DataContext = httpRequestSequenceFilesViewModel;
             InitializeComponent();
-            eventAggregator.GetEvent<SelectHttpRequestItemEvent>().Subscribe(SelectHttpRequestItem);
-        } 
+            eventAggregator.GetEvent<SelectHttpRequestSequenceItemEvent>().Subscribe(SelectHttpRequestSequenceFileItem);
+        }
 
-        #endregion
-
-        #region Event Handlers
-
-        private void SelectHttpRequestItem(string id)
+        private void SelectHttpRequestSequenceFileItem(string id)
         {
-            if (id == null)
+            for (var i = 0; i < HttpRequestSequenceFilesDataGrid.Items.Count; i++)
             {
-                HttpRequestFilesDataGrid.SelectedItem = null;
-            }
-
-            var counter = 0;
-            foreach (var httpRequestFile in httpRequestFilesViewModel.ViewFiles)
-            {
-                if (httpRequestFile.Id == id)
+                if (((ViewFile)HttpRequestSequenceFilesDataGrid.Items[i]).Id == id)
                 {
-                    HttpRequestFilesDataGrid.SelectedIndex = counter;
+                    HttpRequestSequenceFilesDataGrid.SelectedIndex = i;
+                    break;
                 }
-                counter++;
             }
         }
 
         private void UpdateGroupsEvent(object sender, TextChangedEventArgs e)
         {
-            httpRequestFilesViewModel.UpdateGroups();
+            httpRequestSequenceFilesViewModel.UpdateGroups();
         }
 
         private void Rename(object sender, RoutedEventArgs e)
         {
-            var selectedItem = HttpRequestFilesDataGrid.SelectedItem as ViewFile;
+            var selectedItem = HttpRequestSequenceFilesDataGrid.SelectedItem as ViewFile;
             selectedItem.NameVisibility = Visibility.Visible;
             selectedItem.EditableNameVisibility = Visibility.Collapsed;
 
@@ -78,7 +62,7 @@ namespace RestBox.UserControls
             {
                 if (i == relativePathParts.Length - 1)
                 {
-                    sb.Append(selectedItem.Name + ".rhrq");
+                    sb.Append(selectedItem.Name + ".rseq");
                     break;
                 }
                 sb.Append(relativePathParts[i] + "/");
@@ -92,24 +76,23 @@ namespace RestBox.UserControls
 
             selectedItem.RelativeFilePath = newRelativePath;
 
-            var solutionItem = Solution.Current.HttpRequestFiles.First(x => x.Id == selectedItem.Id);
+            var solutionItem = Solution.Current.HttpRequestSequenceFiles.First(x => x.Id == selectedItem.Id);
             solutionItem.Name = selectedItem.Name;
             solutionItem.RelativeFilePath = newRelativePath;
 
             fileService.SaveSolution();
 
             eventAggregator.GetEvent<UpdateTabTitleEvent>().Publish(new TabHeader
-                                                                        {
-                                                                            Id = selectedItem.Id,
-                                                                            Title = selectedItem.Name
-                                                                        });
+            {
+                Id = selectedItem.Id,
+                Title = selectedItem.Name
+            });
         }
 
         private void ActivateItem(object sender, MouseButtonEventArgs e)
         {
-            httpRequestFilesViewModel.ActivateItem();
+            httpRequestSequenceFilesViewModel.ActivateItem();
         } 
 
-        #endregion
     }
 }

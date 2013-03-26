@@ -2,8 +2,11 @@
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using Microsoft.Practices.Prism.Events;
 using RestBox.Domain.Services;
+using RestBox.Events;
 using RestBox.ViewModels;
+using File = System.IO.File;
 
 namespace RestBox.ApplicationServices
 {
@@ -11,16 +14,18 @@ namespace RestBox.ApplicationServices
     {
         #region Declarations
         
-        private readonly IJsonSerializer jsonSerializer; 
+        private readonly IJsonSerializer jsonSerializer;
+        private readonly IEventAggregator eventAggregator;
 
         #endregion
 
         #region Constructor
         
-        public FileService(IJsonSerializer jsonSerializer)
+        public FileService(IJsonSerializer jsonSerializer, IEventAggregator eventAggregator)
         {
             this.jsonSerializer = jsonSerializer;
-        } 
+            this.eventAggregator = eventAggregator;
+        }
 
         #endregion
 
@@ -36,6 +41,7 @@ namespace RestBox.ApplicationServices
             if (Solution.Current.FilePath != null)
             {
                 SaveFile(Solution.Current.FilePath, jsonSerializer.ToJsonString(Solution.Current));
+                eventAggregator.GetEvent<SolutionSavedEvent>().Publish(true);
             }
         }
 

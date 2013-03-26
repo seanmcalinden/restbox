@@ -10,7 +10,7 @@ using RestBox.ApplicationServices;
 
 namespace RestBox.ViewModels
 {
-    public class RequestExtensionsViewModel : FileListViewModel<RequestExtensionsViewModel>
+    public class RequestExtensionFilesViewModel : FileListViewModel<RequestExtensionFilesViewModel>
     {
         #region Declarations
 
@@ -21,29 +21,29 @@ namespace RestBox.ViewModels
 
         #region Constructor
         
-        public RequestExtensionsViewModel(IEventAggregator eventAggregator, IFileService fileService, IIntellisenseService intellisenseService)
+        public RequestExtensionFilesViewModel(IEventAggregator eventAggregator, IFileService fileService, IIntellisenseService intellisenseService)
             : base(eventAggregator)
         {
             this.fileService = fileService;
             this.intellisenseService = intellisenseService;
-            RequestExtensionFiles = new ObservableCollection<RequestExtensionViewFile>();
+            RequestExtensionFiles = new ObservableCollection<ViewFile>();
         } 
 
         #endregion
 
         #region Properties
 
-        public ObservableCollection<RequestExtensionViewFile> RequestExtensionFiles { get; set; }
+        public ObservableCollection<ViewFile> RequestExtensionFiles { get; set; }
 
-        private RequestExtensionViewFile selectedRequestExtension;
-        public RequestExtensionViewFile SelectedRequestExtension
+        private ViewFile selectedRequestExtension;
+        public ViewFile SelectedRequestExtension
         {
             get { return selectedRequestExtension; }
             set { selectedRequestExtension = value; OnPropertyChanged(x => x.SelectedRequestExtension); }
         }
 
-        private RequestExtensionViewFile selectedRequestExtensionFile;
-        public RequestExtensionViewFile SelectedRequestExtensionFile
+        private ViewFile selectedRequestExtensionFile;
+        public ViewFile SelectedRequestExtensionFile
         {
             get { return selectedRequestExtensionFile; }
             set { selectedRequestExtensionFile = value; OnPropertyChanged(x => x.SelectedRequestExtensionFile); }
@@ -107,7 +107,7 @@ namespace RestBox.ViewModels
 
                 var relativeFile = fileService.GetRelativePath(new Uri(Solution.Current.FilePath),
                                                                openFileDialog.FileName);
-                var requestEnvironmentViewFile = new RequestExtensionViewFile
+                var requestEnvironmentViewFile = new ViewFile
                 {
                     RelativeFilePath = relativeFile,
                     Name = fileName
@@ -129,7 +129,7 @@ namespace RestBox.ViewModels
             RequestExtensionFiles.Clear();
             foreach (var requestExtensionFile in Solution.Current.RequestExtensionsFilePaths)
             {
-                var viewFile = new RequestExtensionViewFile
+                var viewFile = new ViewFile
                 {
                     Name = Path.GetFileNameWithoutExtension(requestExtensionFile),
                     RelativeFilePath = requestExtensionFile

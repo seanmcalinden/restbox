@@ -9,7 +9,7 @@ namespace RestBox.UserControls
     /// <summary>
     /// Interaction logic for RequestEnvironmentSettings.xaml
     /// </summary>
-    public partial class RequestEnvironmentSettings
+    public partial class RequestEnvironmentSettings : ITabUserControlBase
     {
         #region Declarations
         

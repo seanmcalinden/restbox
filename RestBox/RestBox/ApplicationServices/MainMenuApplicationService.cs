@@ -156,7 +156,8 @@ namespace RestBox.ApplicationServices
 
         private void CreateNewRequest()
         {
-            eventAggregator.GetEvent<NewHttpRequestEvent>().Publish("StandaloneHttpRequest" + Guid.NewGuid().ToString());
+            // TODO: Doesnt work
+            //eventAggregator.GetEvent<NewHttpRequestEvent>().Publish("StandaloneNewItem" + Guid.NewGuid().ToString());
         }
 
         private void OpenRequest()

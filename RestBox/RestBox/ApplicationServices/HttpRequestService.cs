@@ -8,9 +8,9 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
-using RestBox.Domain.Entities;
 using RestBox.ViewModels;
 
 namespace RestBox.ApplicationServices
@@ -33,70 +33,83 @@ namespace RestBox.ApplicationServices
         #endregion
 
         #region Public Methods
-        
-        public void ExecuteRequest(HttpRequestViewModel httpRequestViewModel, List<RequestEnvironmentSetting> requestEnvironmentSettings)
+
+        public void BeginExecuteRequest(
+            HttpRequestItem httpRequestItem, 
+            List<RequestEnvironmentSetting> requestEnvironmentSettings, 
+            Action<Uri, List<RequestEnvironmentSetting>, HttpResponseItem> onSuccess,
+            Action<string> onError)
         {
-            HttpResponseMessage httpResponseMessage;
-            DateTime startTime;
-            DateTime completedTime;
+            Task.Factory.StartNew(() => ExecuteRequest(httpRequestItem, requestEnvironmentSettings, onSuccess, onError, true));
+        }
+
+        public void ExecuteRequest(HttpRequestItem httpRequestItem, List<RequestEnvironmentSetting> requestEnvironmentSettings, Action<Uri, List<RequestEnvironmentSetting>, HttpResponseItem> onSuccess,
+                            Action<string> onError, bool callMainThread = false)
+        {
             var httpRequestMessage = new HttpRequestMessage();
             using (var client = new HttpClient())
             {
                 try
                 {
-                    httpResponseMessage = null;
-                    completedTime = DateTime.UtcNow;
-
-                    httpRequestMessage.RequestUri =
-                        new Uri(ReplaceTokensTokens(httpRequestViewModel.RequestUrl, requestEnvironmentSettings));
-                    httpRequestMessage.Method = GetHttpMethod(httpRequestViewModel.RequestVerbString);
+                    httpRequestMessage.RequestUri = new Uri(ReplaceTokensTokens(httpRequestItem.Url, requestEnvironmentSettings));
+                    httpRequestMessage.Method = GetHttpMethod(httpRequestItem.Verb);
                     var headerItems =
-                        GetHeaderItems(ReplaceTokensTokens(httpRequestViewModel.RequestHeaders,
+                        GetHeaderItems(ReplaceTokensTokens(httpRequestItem.Headers,
                                                            requestEnvironmentSettings));
-                    SetContentHeadersAndBody(httpRequestMessage, headerItems, httpRequestViewModel.RequestVerbString,
-                                             ReplaceTokensTokens(httpRequestViewModel.RequestBody,
+                    SetContentHeadersAndBody(httpRequestMessage, headerItems, httpRequestItem.Verb,
+                                             ReplaceTokensTokens(httpRequestItem.Body,
                                                                  requestEnvironmentSettings));
                     SetHeaders(httpRequestMessage, headerItems);
 
-                    startTime = DateTime.Now;
+                    DateTime startTime = DateTime.Now;
 
-                    httpResponseMessage = client.SendAsync(httpRequestMessage).Result;
-                    completedTime = DateTime.Now;
+                    HttpResponseMessage httpResponseMessage = client.SendAsync(httpRequestMessage).Result;
+                    DateTime completedTime = DateTime.Now;
 
+                    var httpResponseItem = new HttpResponseItem(
+                        (int)httpResponseMessage.StatusCode,
+                        httpResponseMessage.ReasonPhrase,
+                        GetResponseHeaders(httpResponseMessage),
+                        SetContent(httpResponseMessage),
+                        GetContentType(httpResponseMessage),
+                        startTime,
+                        completedTime,
+                        Math.Round((completedTime - startTime).TotalMinutes, 4),
+                        httpRequestItem
+                        );
 
-                    httpRequestViewModel.ResponseStatusCode = (int)httpResponseMessage.StatusCode;
-                    httpRequestViewModel.ResponseReasonPhrase = httpResponseMessage.ReasonPhrase;
-                    httpRequestViewModel.ResponseContentType = GetContentType(httpResponseMessage);
-                    httpRequestViewModel.ResponseBody = SetContent(httpResponseMessage);
-                    httpRequestViewModel.ResponseHeaders = GetResponseHeaders(httpResponseMessage);
-                    httpRequestViewModel.RequestStart = startTime.ToShortDateString() + " " +
-                                                        startTime.ToLongTimeString();
-                    httpRequestViewModel.ResponseReceived = completedTime.ToShortDateString() + " " +
-                                                            completedTime.ToLongTimeString();
-                    httpRequestViewModel.RequestTime =
-                        Math.Round((completedTime - startTime).TotalMinutes, 4).ToString(CultureInfo.InvariantCulture) +
-                        " secs";
-
-                    Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Normal,
-                                                               new Action<Uri, List<RequestEnvironmentSetting>>(
-                                                                   httpRequestViewModel.DisplayHttpResponse),
-                                                               httpRequestMessage.RequestUri, requestEnvironmentSettings);
+                    if (callMainThread)
+                    {
+                        Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Normal,
+                                                                   onSuccess, httpRequestMessage.RequestUri,
+                                                                   requestEnvironmentSettings, httpResponseItem);
+                    }
+                    else
+                    {
+                        onSuccess(httpRequestMessage.RequestUri, requestEnvironmentSettings, httpResponseItem);
+                    }
                 }
                 catch (Exception ex)
                 {
-                    Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Normal,
-                                                               new Action<string>(httpRequestViewModel.ShowRequestError),
-                                                               GetBestErrorMessage(ex));
+                    if (callMainThread)
+                    {
+                        Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Normal,
+                                                                   onError,
+                                                                   GetBestErrorMessage(ex));
+                    }
+                    else
+                    {
+                        onError(GetBestErrorMessage(ex));
+                    }
                     return;
                 }
-
             }
         }
 
         #endregion
 
         #region Helpers
-
+        
         private string GetBestErrorMessage(Exception ex)
         {
             var message = ex.ToString();

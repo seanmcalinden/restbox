@@ -1,11 +1,11 @@
 ﻿using System.Windows;
+using RestBox.Domain.Entities;
 
 namespace RestBox.ViewModels
 {
-    public class HttpRequestViewFile : HttpRequestFile
+    public class ViewFile : File
     {
-        public HttpRequestViewFile()
-            : base()
+        public ViewFile()
         {
             NameVisibility = Visibility.Visible;
             EditableNameVisibility = Visibility.Collapsed;     

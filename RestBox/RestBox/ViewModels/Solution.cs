@@ -14,9 +14,10 @@ namespace RestBox.ViewModels
         
         public Solution()
         {
-            HttpRequestFiles = new List<HttpRequestFile>();
-            RequestEnvironmentFiles = new List<RequestEnvironmentFile>();
+            HttpRequestFiles = new List<File>();
+            RequestEnvironmentFiles = new List<File>();
             RequestExtensionsFilePaths = new List<string>();
+            HttpRequestSequenceFiles = new List<File>();
         } 
 
         #endregion
@@ -25,8 +26,9 @@ namespace RestBox.ViewModels
         
         public string Name { get; set; }
         public string FilePath { get; set; }
-        public List<HttpRequestFile> HttpRequestFiles { get; set; }
-        public List<RequestEnvironmentFile> RequestEnvironmentFiles { get; set; }
+        public List<File> HttpRequestFiles { get; set; }
+        public List<File> RequestEnvironmentFiles { get; set; }
+        public List<File> HttpRequestSequenceFiles { get; set; }
         public List<string> RequestExtensionsFilePaths { get; set; }
         
         #endregion

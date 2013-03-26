@@ -43,6 +43,8 @@
                             </avalondock:LayoutAnchorable>
                             <avalondock:LayoutAnchorable x:Name="RequestExtensions" Title="Request Extensions" AutoHideWidth="300" ToolTip="Request Extensions" CanClose="False" CanHide="False">
                             </avalondock:LayoutAnchorable>
+                            <avalondock:LayoutAnchorable x:Name="SequenceFiles" Title="Sequences" AutoHideWidth="300" ToolTip="Sequences" CanClose="False" CanHide="False">
+                            </avalondock:LayoutAnchorable>
                         </avalondock:LayoutAnchorablePane>
                     </avalondock:LayoutAnchorablePaneGroup>
 

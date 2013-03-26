@@ -6,13 +6,13 @@ namespace RestBox.UserControls
     /// <summary>
     /// Interaction logic for RequestExtensions.xaml
     /// </summary>
-    public partial class RequestExtensions : UserControl
+    public partial class RequestExtensions
     {
         #region Constructor
 
-        public RequestExtensions(RequestExtensionsViewModel requestExtensionsViewModel)
+        public RequestExtensions(RequestExtensionFilesViewModel requestExtensionFilesViewModel)
         {
-            DataContext = requestExtensionsViewModel;
+            DataContext = requestExtensionFilesViewModel;
             InitializeComponent();
         } 
 

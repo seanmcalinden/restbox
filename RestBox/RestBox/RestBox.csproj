@@ -87,8 +87,15 @@
       <HintPath>..\packages\Prism.WindsorExtensions.4.0.0.0\lib\NET40\PrismContrib.WindsorExtensions.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Activities" />
+    <Reference Include="System.Activities.Core.Presentation" />
+    <Reference Include="System.Activities.Presentation" />
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="System.Workflow.Activities" />
+    <Reference Include="System.Workflow.ComponentModel" />
+    <Reference Include="System.Workflow.Runtime" />
+    <Reference Include="System.WorkflowServices" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -106,6 +113,14 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Activities\HttpRequestIfElseActivityModel.cs" />
+    <Compile Include="Activities\HttpRequestActivityModel.cs" />
+    <Compile Include="Activities\HttpRequestActivity.xaml.cs">
+      <DependentUpon>HttpRequestActivity.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Activities\HttpRequestIfElseActivity.xaml.cs">
+      <DependentUpon>HttpRequestIfElseActivity.xaml</DependentUpon>
+    </Compile>
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -123,13 +138,16 @@
     <Compile Include="ApplicationServices\MainMenuApplicationService.cs" />
     <Compile Include="Bootstrapper.cs" />
     <Compile Include="Events\AddInputBindingEvent.cs" />
-    <Compile Include="Events\CloneHttpRequestEvent.cs" />
     <Compile Include="Events\CloseSolutionEvent.cs" />
     <Compile Include="Events\AddEnvironmentLayoutDocumentEvent.cs" />
     <Compile Include="Events\CloseEnvironmentItemEvent.cs" />
     <Compile Include="Events\AddLayoutDocumentEvent.cs" />
     <Compile Include="Events\AddHttpRequestMenuItemsEvent.cs" />
     <Compile Include="Events\AddRequestEnvironmentMenuItemsEvent.cs" />
+    <Compile Include="Events\AddHttpRequestSequenceMenuItemsEvent.cs" />
+    <Compile Include="Events\SolutionSavedEvent.cs" />
+    <Compile Include="Events\UpdateHttpRequestSequenceFileItemEvent.cs" />
+    <Compile Include="Events\SelectHttpRequestSequenceItemEvent.cs" />
     <Compile Include="Events\DocumentChangedEvent.cs" />
     <Compile Include="Events\GetLayoutDataEvent.cs" />
     <Compile Include="Events\UpdateHttpRequestFileItemEvent.cs" />
@@ -142,7 +160,6 @@
     <Compile Include="Events\UpdateTabTitleEvent.cs" />
     <Compile Include="Events\UpdateEnvironmentItemEvent.cs" />
     <Compile Include="Events\IsDirtyEvent.cs" />
-    <Compile Include="Events\NewHttpRequestEvent.cs" />
     <Compile Include="Events\NewSolutionEvent.cs" />
     <Compile Include="Events\OpenSolutionEvent.cs" />
     <Compile Include="Events\RemoveInputBindingEvent.cs" />
@@ -154,6 +171,9 @@
     <Compile Include="Installers\ShellInstaller.cs" />
     <Compile Include="ApplicationServices\LayoutApplicationService.cs" />
     <Compile Include="ApplicationServices\ILayoutApplicationService.cs" />
+    <Compile Include="Mappers\IMapper.cs" />
+    <Compile Include="Mappers\MapRequestEnvironmentFileToRequestEnvironmentSettingsViewModel.cs" />
+    <Compile Include="Mappers\MapHttpRequestItemFileToHttpRequestViewModel.cs" />
     <Compile Include="Shell.xaml.cs">
       <DependentUpon>Shell.xaml</DependentUpon>
     </Compile>
@@ -163,34 +183,44 @@
     <Compile Include="UserControls\HttpRequestFiles.xaml.cs">
       <DependentUpon>HttpRequestFiles.xaml</DependentUpon>
     </Compile>
-    <Compile Include="UserControls\RequestEnvironments.xaml.cs">
-      <DependentUpon>RequestEnvironments.xaml</DependentUpon>
+    <Compile Include="UserControls\HttpRequestSequence.xaml.cs">
+      <DependentUpon>HttpRequestSequence.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UserControls\HttpRequestSequenceFiles.xaml.cs">
+      <DependentUpon>HttpRequestSequenceFiles.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UserControls\RequestEnvironmentsFiles.xaml.cs">
+      <DependentUpon>RequestEnvironmentsFiles.xaml</DependentUpon>
     </Compile>
     <Compile Include="UserControls\RequestEnvironmentSettings.xaml.cs">
       <DependentUpon>RequestEnvironmentSettings.xaml</DependentUpon>
     </Compile>
-    <Compile Include="UserControls\RequestExtensions.xaml.cs">
-      <DependentUpon>RequestExtensions.xaml</DependentUpon>
+    <Compile Include="UserControls\RequestExtensionsFiles.xaml.cs">
+      <DependentUpon>RequestExtensionsFiles.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UserControls\ITabUserControlBase.cs" />
+    <Compile Include="ViewModels\FileListViewModelBase.cs" />
+    <Compile Include="ViewModels\HttpRequestSequenceRequestViewModel.cs" />
+    <Compile Include="ViewModels\HttpRequestSequenceViewModel.cs" />
+    <Compile Include="ViewModels\HttpRequestSequenceFilesViewModel.cs" />
     <Compile Include="ViewModels\FileListViewModel.cs" />
     <Compile Include="ViewModels\HeaderItem.cs" />
     <Compile Include="ViewModels\HttpRequestFilesViewModel.cs" />
+    <Compile Include="ViewModels\HttpRequestItem.cs" />
+    <Compile Include="ViewModels\HttpResponseItem.cs" />
     <Compile Include="ViewModels\LayoutData.cs" />
     <Compile Include="ViewModels\MainMenuItem.cs" />
-    <Compile Include="ViewModels\RequestExtensionViewFile.cs" />
-    <Compile Include="ViewModels\RequestExtensionsViewModel.cs" />
+    <Compile Include="ViewModels\RequestExtensionFilesViewModel.cs" />
     <Compile Include="ViewModels\RequestEnvironmentSettingFile.cs" />
     <Compile Include="ViewModels\RequestEnvironmentSetting.cs" />
     <Compile Include="ViewModels\RequestEnvironmentSettingsViewModel.cs" />
-    <Compile Include="ViewModels\RequestEnvironmentViewFile.cs" />
-    <Compile Include="ViewModels\RequestEnvironmentFile.cs" />
-    <Compile Include="ViewModels\HttpRequestFile.cs" />
+    <Compile Include="ViewModels\ViewFile.cs" />
+    <Compile Include="ViewModels\File.cs" />
     <Compile Include="ViewModels\HttpRequestItemFile.cs" />
-    <Compile Include="ViewModels\HttpRequestViewFile.cs" />
     <Compile Include="ViewModels\HttpRequestViewModel.cs" />
     <Compile Include="ViewModels\IntellisenseItem.cs" />
     <Compile Include="ViewModels\KeyBindingData.cs" />
-    <Compile Include="ViewModels\RequestEnvironmentsViewModel.cs" />
+    <Compile Include="ViewModels\RequestEnvironmentsFilesViewModel.cs" />
     <Compile Include="ViewModels\ShellViewModel.cs" />
     <Compile Include="ViewModels\Solution.cs" />
     <Compile Include="ViewModels\TabHeader.cs" />
@@ -228,11 +258,20 @@
     <Resource Include="Images\environment-icon.png" />
     <Resource Include="Images\play-icon.png" />
     <Resource Include="Images\requestextension-icon.png" />
+    <Resource Include="Images\refresh-icon.png" />
     <Content Include="Intellisense.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <Page Include="Activities\HttpRequestActivity.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Activities\HttpRequestIfElseActivity.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Shell.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -273,7 +312,15 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="UserControls\RequestEnvironments.xaml">
+    <Page Include="UserControls\HttpRequestSequence.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\HttpRequestSequenceFiles.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\RequestEnvironmentsFiles.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -281,7 +328,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="UserControls\RequestExtensions.xaml">
+    <Page Include="UserControls\RequestExtensionsFiles.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -298,6 +345,7 @@
   <ItemGroup>
     <Resource Include="Images\remove-icon.png" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
