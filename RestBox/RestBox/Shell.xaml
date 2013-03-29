@@ -28,25 +28,20 @@
             </avalondock:DockingManager.DocumentContextMenu>
 
             <avalondock:LayoutRoot>
-                <avalondock:LayoutPanel x:Name="MainLayoutPanel" Orientation="Horizontal">
-                    <avalondock:LayoutDocumentPane x:Name="DocumentsPane">
-                    </avalondock:LayoutDocumentPane>
-
-                    <avalondock:LayoutAnchorablePaneGroup DockWidth="300">
-                        <avalondock:LayoutAnchorablePane>
-                            <avalondock:LayoutAnchorable x:Name="HttpRequestFilesLayout" Title="Http Requests" AutoHideWidth="300"  ToolTip="Http Requests" CanClose="False" CanHide="False">
-                           </avalondock:LayoutAnchorable>
-                            <avalondock:LayoutAnchorable x:Name="EnvironmentsLayout" Title="Environments" AutoHideWidth="300"  ToolTip="Environments" CanClose="False" CanHide="False">                                
+                <avalondock:LayoutRoot.RightSide>
+                    <avalondock:LayoutAnchorSide>
+                        <avalondock:LayoutAnchorGroup>
+                            <avalondock:LayoutAnchorable ContentId="HttpRequestFilesLayoutId" x:Name="HttpRequestFilesLayout" Title="Http Requests" AutoHideWidth="300" ToolTip="Http Requests" CanClose="False" CanHide="False">
                             </avalondock:LayoutAnchorable>
-                            <avalondock:LayoutAnchorable x:Name="RequestExtensions" Title="Request Extensions" AutoHideWidth="300" ToolTip="Request Extensions" CanClose="False" CanHide="False">
+                            <avalondock:LayoutAnchorable ContentId="EnvironmentsLayoutId" x:Name="EnvironmentsLayout" Title="Environments" AutoHideWidth="300"  ToolTip="Environments" CanClose="False" CanHide="False">
                             </avalondock:LayoutAnchorable>
-                            <avalondock:LayoutAnchorable x:Name="SequenceFiles" Title="Sequences" AutoHideWidth="300" ToolTip="Sequences" CanClose="False" CanHide="False">
+                            <avalondock:LayoutAnchorable ContentId="RequestExtensionsId" x:Name="RequestExtensions" Title="Request Extensions" AutoHideWidth="300" ToolTip="Request Extensions" CanClose="False" CanHide="False">
                             </avalondock:LayoutAnchorable>
-                        </avalondock:LayoutAnchorablePane>
-                    </avalondock:LayoutAnchorablePaneGroup>
-
-                </avalondock:LayoutPanel>
-                
+                            <avalondock:LayoutAnchorable ContentId="SequenceFilesId" x:Name="SequenceFiles" Title="Sequences" AutoHideWidth="300" ToolTip="Sequences" CanClose="False" CanHide="False">
+                            </avalondock:LayoutAnchorable>
+                        </avalondock:LayoutAnchorGroup>
+                    </avalondock:LayoutAnchorSide>
+                </avalondock:LayoutRoot.RightSide>
             </avalondock:LayoutRoot>
         </avalondock:DockingManager>
     </Grid>

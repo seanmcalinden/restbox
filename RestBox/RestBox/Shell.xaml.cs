@@ -26,6 +26,10 @@ namespace RestBox
         private readonly ILayoutApplicationService layoutApplicationService;
         private readonly IEventAggregator eventAggregator;
         private readonly ShellViewModel shellViewModel;
+        private LayoutAnchorable httpRequestFilesLayout;
+        private LayoutAnchorable environmentsLayout;
+        private LayoutAnchorable requestExtensions;
+        private LayoutAnchorable sequenceFiles;
 
         public Shell(
             ShellViewModel shellViewModel, 
@@ -44,18 +48,23 @@ namespace RestBox
             
             InitializeComponent();
 
-            //layoutApplicationService.Load(dockingManager);
+            layoutApplicationService.Load(dockingManager);
 
-            if (!(DocumentsPane.Children.Any(x => x.ContentId == "StartPage")))
-            {
-                CreateStartPage();
-            }
+            //if (!(DocumentsPane.Children.Any(x => x.ContentId == "StartPage")))
+            //{
+            //    CreateStartPage();
+            //}
 
-            HttpRequestFilesLayout.Content = ServiceLocator.Current.GetInstance<HttpRequestFiles>();
-            EnvironmentsLayout.Content = ServiceLocator.Current.GetInstance<RequestEnvironments>();
-            RequestExtensions.Content = ServiceLocator.Current.GetInstance<RequestExtensions>();
-            SequenceFiles.Content = ServiceLocator.Current.GetInstance<HttpRequestSequenceFiles>();            
-            
+            httpRequestFilesLayout = GetLayoutAnchorableById("HttpRequestFilesLayoutId");
+            environmentsLayout = GetLayoutAnchorableById("EnvironmentsLayoutId");
+            requestExtensions = GetLayoutAnchorableById("RequestExtensionsId");
+            sequenceFiles = GetLayoutAnchorableById("SequenceFilesId");
+
+            httpRequestFilesLayout.Content = ServiceLocator.Current.GetInstance<HttpRequestFiles>();
+            environmentsLayout.Content = ServiceLocator.Current.GetInstance<RequestEnvironments>();
+            requestExtensions.Content = ServiceLocator.Current.GetInstance<RequestExtensions>();
+            sequenceFiles.Content = ServiceLocator.Current.GetInstance<HttpRequestSequenceFiles>();   
+         
             eventAggregator.GetEvent<AddInputBindingEvent>().Subscribe(AddInputBinding);
             eventAggregator.GetEvent<RemoveInputBindingEvent>().Subscribe(RemoveInputBindings);
             eventAggregator.GetEvent<RemoveTabEvent>().Subscribe(RemoveTabById);
@@ -72,18 +81,18 @@ namespace RestBox
             eventAggregator.GetEvent<UpdateViewMenuItemChecksEvent>().Subscribe(UpdateViewMenuChecks);
 
             eventAggregator.GetEvent<SaveAllEvent>().Subscribe(SaveAllHandler);
-            this.Closing += OnClosing;
+            Closing += OnClosing;
         }
 
         private void CreateStartPage()
         {
-            var startPage = new LayoutDocument
-                {
-                    Title = "Start Page",
-                    ContentId = "StartPage"
-                };
-            startPage.IsActiveChanged += DocumentIsActiveChanged;
-            DocumentsPane.Children.Add(startPage);
+            //var startPage = new LayoutDocument
+            //    {
+            //        Title = "Start Page",
+            //        ContentId = "StartPage"
+            //    };
+            //startPage.IsActiveChanged += DocumentIsActiveChanged;
+            //DocumentsPane.Children.Add(startPage);
         }
 
         private void OnClosing(object sender, CancelEventArgs cancelEventArgs)
@@ -101,7 +110,7 @@ namespace RestBox
             }
 
             CreateStartPage();
-            //layoutApplicationService.Save(dockingManager);
+            layoutApplicationService.Save(dockingManager);
         }
 
         private void SaveAllHandler(bool obj)
@@ -127,22 +136,22 @@ namespace RestBox
         {
             var viewMenu = shellViewModel.MenuItems.First(x => x.Header.ToString() == "_View");
 
-            if (HttpRequestFilesLayout.IsVisible)
+            if (httpRequestFilesLayout.IsVisible)
             {
                 ((MenuItem)viewMenu.Items[0]).IsChecked = true;
             }
 
-            if (EnvironmentsLayout.IsVisible)
+            if (environmentsLayout.IsVisible)
             {
                 ((MenuItem)viewMenu.Items[1]).IsChecked = true;
             }
 
-            if (RequestExtensions.IsVisible)
+            if (requestExtensions.IsVisible)
             {
                 ((MenuItem)viewMenu.Items[2]).IsChecked = true;
             }
 
-            if (SequenceFiles.IsVisible)
+            if (sequenceFiles.IsVisible)
             {
                 ((MenuItem)viewMenu.Items[3]).IsChecked = true;
             }
@@ -155,50 +164,50 @@ namespace RestBox
             switch (layoutType)
             {
                 case LayoutType.HttpRequests :
-                    if (HttpRequestFilesLayout.IsVisible)
+                    if (httpRequestFilesLayout.IsVisible)
                     {
-                        HttpRequestFilesLayout.IsVisible = false;
+                        httpRequestFilesLayout.IsVisible = false;
                         ((MenuItem) viewMenu.Items[0]).IsChecked = false;
                     }
                     else
                     {
-                        HttpRequestFilesLayout.IsVisible = true;
+                        httpRequestFilesLayout.IsVisible = true;
                         ((MenuItem)viewMenu.Items[0]).IsChecked = true;
                     }
                     break;
                 case LayoutType.Environments:
-                    if (EnvironmentsLayout.IsVisible)
+                    if (environmentsLayout.IsVisible)
                     {
-                        EnvironmentsLayout.IsVisible = false;
+                        environmentsLayout.IsVisible = false;
                         ((MenuItem)viewMenu.Items[1]).IsChecked = false;
                     }
                     else
                     {
-                        EnvironmentsLayout.IsVisible = true;
+                        environmentsLayout.IsVisible = true;
                         ((MenuItem)viewMenu.Items[1]).IsChecked = true;
                     }
                     break;
                 case LayoutType.RequestExtensions:
-                    if (RequestExtensions.IsVisible)
+                    if (requestExtensions.IsVisible)
                     {
-                        RequestExtensions.IsVisible = false;
+                        requestExtensions.IsVisible = false;
                         ((MenuItem)viewMenu.Items[2]).IsChecked = false;
                     }
                     else
                     {
-                        RequestExtensions.IsVisible = true;
+                        requestExtensions.IsVisible = true;
                         ((MenuItem)viewMenu.Items[2]).IsChecked = true;
                     }
                     break;
                 case LayoutType.Sequences:
-                    if (SequenceFiles.IsVisible)
+                    if (sequenceFiles.IsVisible)
                     {
-                        SequenceFiles.IsVisible = false;
+                        sequenceFiles.IsVisible = false;
                         ((MenuItem)viewMenu.Items[3]).IsChecked = false;
                     }
                     else
                     {
-                        SequenceFiles.IsVisible = true;
+                        sequenceFiles.IsVisible = true;
                         ((MenuItem)viewMenu.Items[3]).IsChecked = true;
                     }
                     break;
@@ -235,6 +244,11 @@ namespace RestBox
             }
         }
 
+        private LayoutAnchorable GetLayoutAnchorableById(string contentId)
+        {
+            return dockingManager.Layout.Descendents().OfType<LayoutAnchorable>().FirstOrDefault(d => d.ContentId == contentId);
+        }
+
         private LayoutDocument GetDocumentById(string contentId)
         {
             return dockingManager.Layout.Descendents().OfType<LayoutDocument>().FirstOrDefault(d => d.ContentId == contentId);
@@ -247,6 +261,29 @@ namespace RestBox
 
         private void AddLayoutDocument(LayoutDocument layoutDocument)
         {
+            var existingLayoutDocumentPane = dockingManager.Layout.RootPanel.Children.FirstOrDefault(x => x.GetType() == typeof (LayoutDocumentPane));
+
+            if (existingLayoutDocumentPane != null)
+            {
+                 dockingManager.Layout.RootPanel.Children.Remove(existingLayoutDocumentPane);
+            }
+
+            var layoutPanel = dockingManager.Layout.RootPanel.Descendents().OfType<LayoutPanel>().FirstOrDefault();
+
+            if (layoutPanel == null)
+            {
+                layoutPanel = new LayoutPanel(new LayoutDocumentPane());
+                dockingManager.Layout.RootPanel.Children.Add(layoutPanel);
+            }
+
+            var layoutDocumentPane = layoutPanel.Descendents().OfType<LayoutDocumentPane>().FirstOrDefault();
+
+            if (layoutDocumentPane == null)
+            {
+                layoutDocumentPane = new LayoutDocumentPane();
+                layoutPanel.Children.Add(layoutDocumentPane);
+            }
+
             var correspondingTab = GetDocumentById(layoutDocument.ContentId);
             if (correspondingTab != null)
             {
@@ -255,7 +292,7 @@ namespace RestBox
             }
             else
             {
-                DocumentsPane.Children.Add(layoutDocument);
+                layoutDocumentPane.Children.Add(layoutDocument);
                 layoutDocument.IsSelected = true;
                 layoutDocument.IsActive = true;
                 layoutDocument.IsActiveChanged += DocumentIsActiveChanged;
