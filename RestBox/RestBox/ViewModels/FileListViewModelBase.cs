@@ -41,6 +41,7 @@ namespace RestBox.ViewModels
         private readonly string openFileFilter;
         private ViewFile viewFileToOpen;
         private const string Warning = "warning";
+        private const string StandaloneNewItemPrefix = "StandaloneNewItem";
 
         #endregion
 
@@ -180,6 +181,8 @@ namespace RestBox.ViewModels
                 var activity = ActivityXamlServices.Load(fileName);
                 httpRequestSequenceViewModel.WorkflowDesigner.Load(activity);
                 httpRequestSequenceViewModel.MainSequence = activity;
+                var modelService = httpRequestSequenceViewModel.WorkflowDesigner.Context.Services.GetService<ModelService>();
+                modelService.ModelChanged += (itemUserControl as HttpRequestSequence).ModelChanged;
             }
 
             var layoutDocument = new LayoutDocument
@@ -270,7 +273,7 @@ namespace RestBox.ViewModels
         protected void RaiseDocumentChanged(
             LayoutData layoutData)
         {
-            if (layoutData != null && layoutData.Content.GetType() == typeof(TUserControl))
+            if (layoutData != null && layoutData.Content != null && layoutData.Content.GetType() == typeof(TUserControl))
             {
                 if (layoutData.IsSelected)
                 {
@@ -334,10 +337,14 @@ namespace RestBox.ViewModels
             };
             ViewFiles.Add(newViewFile);
 
+            var userControl = ServiceLocator.Current.GetInstance<TUserControl>();
+
+            ((ISave) userControl.DataContext).IsDirty = true;
+
             var newItemDocument = new LayoutDocument
             {
                 ContentId = id,
-                Content = ServiceLocator.Current.GetInstance<TUserControl>(),
+                Content = userControl,
                 Title = newItemTitle,
                 IsSelected = true,
                 CanFloat = true
@@ -347,6 +354,8 @@ namespace RestBox.ViewModels
             {
                 var viewModel = ((UserControl)newItemDocument.Content).DataContext as HttpRequestSequenceViewModel;
                 viewModel.WorkflowDesigner.Load(viewModel.MainSequence);
+                var modelService = ((HttpRequestSequenceViewModel)userControl.DataContext).WorkflowDesigner.Context.Services.GetService<ModelService>();
+                modelService.ModelChanged += (userControl as HttpRequestSequence).ModelChanged;
             }
 
             eventAggregator.GetEvent<AddLayoutDocumentEvent>().Publish(newItemDocument);
@@ -508,7 +517,7 @@ namespace RestBox.ViewModels
         private void DocumentClosing(object sender, CancelEventArgs cancelEventArgs)
         {
             var layoutDocument = ((LayoutDocument)sender);
-            if (layoutDocument.Title == newItemTitle && !layoutDocument.ContentId.StartsWith("StandaloneNewItem"))
+            if (layoutDocument.Title == newItemTitle)
             {
                 var viewFile = ViewFiles.First(x => x.Id == layoutDocument.ContentId);
                 ViewFiles.Remove(viewFile);

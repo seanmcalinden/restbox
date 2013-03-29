@@ -18,7 +18,7 @@ using RestBox.UserControls;
 
 namespace RestBox.ViewModels
 {
-    public class HttpRequestSequenceViewModel : ViewModelBase<HttpRequestSequenceViewModel>
+    public class HttpRequestSequenceViewModel : ViewModelBase<HttpRequestSequenceViewModel>, ISave
     {
 
         #region Declarations
@@ -27,7 +27,7 @@ namespace RestBox.ViewModels
         private readonly IMainMenuApplicationService mainMenuApplicationService;
         private readonly IFileService fileService;
         private readonly KeyGesture saveKeyGesture;
-        private readonly KeyGesture runHttpRequestKeyGesture;
+        private readonly KeyGesture runSequenceKeyGesture;
         private WorkflowApplication workflowApplication;
 
         #endregion
@@ -40,7 +40,7 @@ namespace RestBox.ViewModels
             this.mainMenuApplicationService = mainMenuApplicationService;
             this.fileService = fileService;
             saveKeyGesture = new KeyGesture(Key.S, ModifierKeys.Control);
-            runHttpRequestKeyGesture = new KeyGesture(Key.F5);
+            runSequenceKeyGesture = new KeyGesture(Key.F5);
             eventAggregator.GetEvent<AddHttpRequestSequenceMenuItemsEvent>().Subscribe(AddHttpRequestSequenceMenuItems);
             Responses = new ObservableCollection<HttpResponseItem>();
             ProgressBarVisibility = Visibility.Hidden;
@@ -69,35 +69,24 @@ namespace RestBox.ViewModels
             saveHttpRequest.Command = new DelegateCommand(SetupSaveRequest);
             saveHttpRequestAs.Command = new DelegateCommand(SetupSaveRequestAs);
 
-            mainMenuApplicationService.InsertSeparator(fileMenu, 4);
-            mainMenuApplicationService.InsertMenuItem(fileMenu, saveHttpRequest, 5);
-            mainMenuApplicationService.InsertMenuItem(fileMenu, saveHttpRequestAs, 6);
+            mainMenuApplicationService.InsertMenuItem(fileMenu, saveHttpRequest, 3);
+            mainMenuApplicationService.InsertMenuItem(fileMenu, saveHttpRequestAs, 4);
 
-            var httpRequestMenu = new MenuItem { Header = "_Http Request Sequences" };
-            var runHttpRequest = new MenuItem { Header = "_Run", InputGestureText = "F5", Command = RunSequenceCommand };
+            var sequenceMenuItem = new MenuItem { Header = "_Http Request Sequences" };
+            var runSequence = new MenuItem { Header = "_Run", InputGestureText = "F5", Command = ExecuteHttpSequenceCommand };
 
             eventAggregator.GetEvent<AddInputBindingEvent>().Publish(new KeyBindingData { KeyGesture = saveKeyGesture, Command = saveHttpRequest.Command });
-            eventAggregator.GetEvent<AddInputBindingEvent>().Publish(new KeyBindingData { KeyGesture = runHttpRequestKeyGesture, Command = RunSequenceCommand });
+            eventAggregator.GetEvent<AddInputBindingEvent>().Publish(new KeyBindingData { KeyGesture = runSequenceKeyGesture, Command = ExecuteHttpSequenceCommand });
 
-            mainMenuApplicationService.InsertTopLevelMenuItem(httpRequestMenu, 1);
-            mainMenuApplicationService.InsertMenuItem(httpRequestMenu, runHttpRequest, 0);
-        }
-
-        public ICommand RunSequenceCommand
-        {
-            get { return new DelegateCommand(RunSequence); }
-        }
-
-        private void RunSequence()
-        {
-           // throw new NotImplementedException();
+            mainMenuApplicationService.InsertTopLevelMenuItem(sequenceMenuItem, 2);
+            mainMenuApplicationService.InsertMenuItem(sequenceMenuItem, runSequence, 0);
         }
 
         private void SetupSaveRequestAs()
         {
             eventAggregator.GetEvent<GetLayoutDataEvent>().Publish(new LayoutDataRequest
             {
-                Action = SaveRequestAs,
+                Action = SaveAs,
                 UserControlType = typeof(HttpRequestSequence),
                 DataContext = this
             });
@@ -107,22 +96,20 @@ namespace RestBox.ViewModels
         {
             eventAggregator.GetEvent<GetLayoutDataEvent>().Publish(new LayoutDataRequest
             {
-                Action = SaveRequest,
+                Action = Save,
                 UserControlType = typeof(HttpRequestSequence),
                 DataContext = this
             });
         }
 
-        private void SaveRequestAs(string id, object httpRequestSequenceContent)
+        public void SaveAs(string id, object content)
         {
-            if (((HttpRequestSequence)httpRequestSequenceContent).DataContext != this)
+            if (((HttpRequestSequence)content).DataContext != this)
             {
                 return;
             }
 
-            var httpRequestSequence = httpRequestSequenceContent as HttpRequestSequence;
-
-            var httpRequestSequenceViewModel = httpRequestSequence.DataContext as HttpRequestSequenceViewModel;
+            var httpRequestSequence = content as HttpRequestSequence;
 
             var saveFileDialog = new SaveFileDialog
             {
@@ -170,33 +157,33 @@ namespace RestBox.ViewModels
                         RelativeFilePath =
                             relativePath
                     });
+                    Keyboard.ClearFocus();
+                    eventAggregator.GetEvent<IsDirtyEvent>().Publish(false);
+                    IsDirty = false;
 
             }
-            Keyboard.ClearFocus();
-            eventAggregator.GetEvent<IsDirtyEvent>().Publish(false);
-            IsDirty = false;
         }
 
-        private void SaveRequest(string id, object httpRequestSequenceContent)
+        public void Save(string id, object content)
         {
-            if (!(httpRequestSequenceContent is HttpRequestSequence))
+            if (!(content is HttpRequestSequence))
             {
                 return;
             }
 
-            if (((HttpRequestSequence)httpRequestSequenceContent).DataContext != this)
+            if (((HttpRequestSequence)content).DataContext != this)
             {
                 return;
             }
 
 
-            var httpRequestSequence = httpRequestSequenceContent as HttpRequestSequence;
+            var httpRequestSequence = content as HttpRequestSequence;
 
             var httpRequestSequenceViewModel = httpRequestSequence.DataContext as HttpRequestSequenceViewModel;
 
             if (string.IsNullOrWhiteSpace(httpRequestSequence.FilePath))
             {
-                SaveRequestAs(id, httpRequestSequenceContent);
+                SaveAs(id, content);
                 return;
             }
 
@@ -343,6 +330,7 @@ namespace RestBox.ViewModels
         private void UnloadWorkflowApplication()
         {
             workflowApplication.Unload();
+            workflowApplication = null;
         }
 
         #endregion

@@ -1,7 +1,7 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
 using System.Windows.Controls;
+using System.Windows.Input;
 using Microsoft.Practices.Prism.Commands;
 using Microsoft.Practices.Prism.Events;
 using Microsoft.Practices.ServiceLocation;
@@ -18,7 +18,13 @@ namespace RestBox.ApplicationServices
         
         private readonly IFileService fileService;
         private readonly IJsonSerializer jsonSerializer;
-        private readonly IEventAggregator eventAggregator; 
+        private readonly IEventAggregator eventAggregator;
+        private readonly KeyGesture saveAllKeyGesture;
+
+        private MenuItem HttpRequestsMenu;
+        private MenuItem EnvironmentsMenu;
+        private MenuItem RequestExtensionsMenu;
+        private MenuItem SequencesMenu;
 
         #endregion
 
@@ -32,6 +38,7 @@ namespace RestBox.ApplicationServices
             this.fileService = fileService;
             this.jsonSerializer = jsonSerializer;
             this.eventAggregator = eventAggregator;
+            saveAllKeyGesture = new KeyGesture(Key.S, ModifierKeys.Control | ModifierKeys.Shift);
         } 
 
         #endregion
@@ -51,6 +58,11 @@ namespace RestBox.ApplicationServices
             var openMenu = new MenuItem();
             openMenu.Header = "_Open";
 
+            var saveAllMenu = new MenuItem();
+            saveAllMenu.Header = "Save A_ll";
+            saveAllMenu.Command = new DelegateCommand(SaveAllCommand);
+            saveAllMenu.InputGestureText = "Ctrl+Shift+S";
+            eventAggregator.GetEvent<AddInputBindingEvent>().Publish(new KeyBindingData { KeyGesture = saveAllKeyGesture, Command = saveAllMenu.Command });
 
             var newSolution = new MenuItem();
             newSolution.Command = new DelegateCommand(CreateNewSolution);
@@ -85,11 +97,64 @@ namespace RestBox.ApplicationServices
             fileMenu.Items.Add(newMenu);
             fileMenu.Items.Add(openMenu);
             fileMenu.Items.Add(new Separator());
+            fileMenu.Items.Add(saveAllMenu);
+            fileMenu.Items.Add(new Separator());
             fileMenu.Items.Add(closeSolution);
             fileMenu.Items.Add(new Separator());
             fileMenu.Items.Add(exitMenu);
 
+            var viewMenu = new MenuItem();
+            viewMenu.Header = "_View";
+
+            HttpRequestsMenu = new MenuItem();
+            HttpRequestsMenu.Command = new DelegateCommand(ShowHttpRequestsLayout);
+            HttpRequestsMenu.Header = "_Http Requests";
+            
+            EnvironmentsMenu = new MenuItem();
+            EnvironmentsMenu.Command = new DelegateCommand(ShowEvironmentsLayout);
+            EnvironmentsMenu.Header = "_Environments";
+
+            RequestExtensionsMenu = new MenuItem();
+            RequestExtensionsMenu.Command = new DelegateCommand(ShowRequestExtensionsLayout);
+            RequestExtensionsMenu.Header = "_Request Extensions";
+
+            SequencesMenu = new MenuItem();
+            SequencesMenu.Command = new DelegateCommand(ShowSequencesLayout);
+            SequencesMenu.Header = "_Sequences";
+
+            viewMenu.Items.Add(HttpRequestsMenu);
+            viewMenu.Items.Add(EnvironmentsMenu);
+            viewMenu.Items.Add(RequestExtensionsMenu);
+            viewMenu.Items.Add(SequencesMenu);
+
             shellViewModel.MenuItems.Add(fileMenu);
+            shellViewModel.MenuItems.Add(viewMenu);
+            eventAggregator.GetEvent<UpdateViewMenuItemChecksEvent>().Publish(true);
+        }
+
+        private void SaveAllCommand()
+        {
+            eventAggregator.GetEvent<SaveAllEvent>().Publish(true);
+        }
+
+        private void ShowSequencesLayout()
+        {
+            eventAggregator.GetEvent<ShowLayoutEvent>().Publish(LayoutType.Sequences);
+        }
+
+        private void ShowRequestExtensionsLayout()
+        {
+            eventAggregator.GetEvent<ShowLayoutEvent>().Publish(LayoutType.RequestExtensions);
+        }
+
+        private void ShowEvironmentsLayout()
+        {
+            eventAggregator.GetEvent<ShowLayoutEvent>().Publish(LayoutType.Environments);
+        }
+
+        private void ShowHttpRequestsLayout()
+        {
+            eventAggregator.GetEvent<ShowLayoutEvent>().Publish(LayoutType.HttpRequests);
         }
 
         public void InsertSeparator(MenuItem parent, int position)

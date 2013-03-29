@@ -23,6 +23,7 @@ namespace RestBox
     {
         private readonly IMainMenuApplicationService mainMenuApplicationService;
         private readonly ILayoutDataFactory layoutDataFactory;
+        private readonly ILayoutApplicationService layoutApplicationService;
         private readonly IEventAggregator eventAggregator;
         private readonly ShellViewModel shellViewModel;
 
@@ -30,16 +31,25 @@ namespace RestBox
             ShellViewModel shellViewModel, 
             IEventAggregator eventAggregator, 
             IMainMenuApplicationService mainMenuApplicationService,
-            ILayoutDataFactory layoutDataFactory)
+            ILayoutDataFactory layoutDataFactory,
+            ILayoutApplicationService layoutApplicationService)
         {
             this.mainMenuApplicationService = mainMenuApplicationService;
             this.layoutDataFactory = layoutDataFactory;
+            this.layoutApplicationService = layoutApplicationService;
             this.eventAggregator = eventAggregator;
             this.shellViewModel = shellViewModel;
             DataContext = shellViewModel;
             shellViewModel.ApplicationTitle = "REST Box";
             
             InitializeComponent();
+
+            //layoutApplicationService.Load(dockingManager);
+
+            if (!(DocumentsPane.Children.Any(x => x.ContentId == "StartPage")))
+            {
+                CreateStartPage();
+            }
 
             HttpRequestFilesLayout.Content = ServiceLocator.Current.GetInstance<HttpRequestFiles>();
             EnvironmentsLayout.Content = ServiceLocator.Current.GetInstance<RequestEnvironments>();
@@ -57,6 +67,142 @@ namespace RestBox
 
             eventAggregator.GetEvent<ShowErrorEvent>().Subscribe(ShowError);
             eventAggregator.GetEvent<CloseSolutionEvent>().Subscribe(CloseSolution);
+
+            eventAggregator.GetEvent<ShowLayoutEvent>().Subscribe(ShowLayout);
+            eventAggregator.GetEvent<UpdateViewMenuItemChecksEvent>().Subscribe(UpdateViewMenuChecks);
+
+            eventAggregator.GetEvent<SaveAllEvent>().Subscribe(SaveAllHandler);
+            this.Closing += OnClosing;
+        }
+
+        private void CreateStartPage()
+        {
+            var startPage = new LayoutDocument
+                {
+                    Title = "Start Page",
+                    ContentId = "StartPage"
+                };
+            startPage.IsActiveChanged += DocumentIsActiveChanged;
+            DocumentsPane.Children.Add(startPage);
+        }
+
+        private void OnClosing(object sender, CancelEventArgs cancelEventArgs)
+        {
+            var documents = GetDocuments();
+            foreach (var layoutDocument in documents)
+            {
+                if (layoutDocument.Content is UserControl)
+                {
+                    if (((UserControl)layoutDocument.Content).DataContext is ISave)
+                    {
+                       layoutDocument.Close();
+                    }
+                }
+            }
+
+            CreateStartPage();
+            //layoutApplicationService.Save(dockingManager);
+        }
+
+        private void SaveAllHandler(bool obj)
+        {
+            var documents = GetDocuments();
+            foreach (var layoutDocument in documents)
+            {
+                if (layoutDocument.Content is UserControl)
+                {
+                    if (((UserControl) layoutDocument.Content).DataContext is ISave)
+                    {
+                        var control = ((ISave) ((UserControl) layoutDocument.Content).DataContext);
+                        if (control.IsDirty)
+                        {
+                            control.Save(layoutDocument.ContentId, layoutDocument.Content);
+                        }
+                    }
+                }
+            }
+        }
+
+        private void UpdateViewMenuChecks(bool obj)
+        {
+            var viewMenu = shellViewModel.MenuItems.First(x => x.Header.ToString() == "_View");
+
+            if (HttpRequestFilesLayout.IsVisible)
+            {
+                ((MenuItem)viewMenu.Items[0]).IsChecked = true;
+            }
+
+            if (EnvironmentsLayout.IsVisible)
+            {
+                ((MenuItem)viewMenu.Items[1]).IsChecked = true;
+            }
+
+            if (RequestExtensions.IsVisible)
+            {
+                ((MenuItem)viewMenu.Items[2]).IsChecked = true;
+            }
+
+            if (SequenceFiles.IsVisible)
+            {
+                ((MenuItem)viewMenu.Items[3]).IsChecked = true;
+            }
+        }
+
+        private void ShowLayout(LayoutType layoutType)
+        {
+            var viewMenu = shellViewModel.MenuItems.First(x => x.Header.ToString() == "_View");
+
+            switch (layoutType)
+            {
+                case LayoutType.HttpRequests :
+                    if (HttpRequestFilesLayout.IsVisible)
+                    {
+                        HttpRequestFilesLayout.IsVisible = false;
+                        ((MenuItem) viewMenu.Items[0]).IsChecked = false;
+                    }
+                    else
+                    {
+                        HttpRequestFilesLayout.IsVisible = true;
+                        ((MenuItem)viewMenu.Items[0]).IsChecked = true;
+                    }
+                    break;
+                case LayoutType.Environments:
+                    if (EnvironmentsLayout.IsVisible)
+                    {
+                        EnvironmentsLayout.IsVisible = false;
+                        ((MenuItem)viewMenu.Items[1]).IsChecked = false;
+                    }
+                    else
+                    {
+                        EnvironmentsLayout.IsVisible = true;
+                        ((MenuItem)viewMenu.Items[1]).IsChecked = true;
+                    }
+                    break;
+                case LayoutType.RequestExtensions:
+                    if (RequestExtensions.IsVisible)
+                    {
+                        RequestExtensions.IsVisible = false;
+                        ((MenuItem)viewMenu.Items[2]).IsChecked = false;
+                    }
+                    else
+                    {
+                        RequestExtensions.IsVisible = true;
+                        ((MenuItem)viewMenu.Items[2]).IsChecked = true;
+                    }
+                    break;
+                case LayoutType.Sequences:
+                    if (SequenceFiles.IsVisible)
+                    {
+                        SequenceFiles.IsVisible = false;
+                        ((MenuItem)viewMenu.Items[3]).IsChecked = false;
+                    }
+                    else
+                    {
+                        SequenceFiles.IsVisible = true;
+                        ((MenuItem)viewMenu.Items[3]).IsChecked = true;
+                    }
+                    break;
+            }
         }
 
         private void GetLayoutContent(LayoutDataRequest layoutDataRequest)
@@ -133,16 +279,37 @@ namespace RestBox
                 return;
             }
 
+            ISave control = null;
+
+            var documents = GetDocuments();
+            foreach (var layoutDocument in documents)
+            {
+                if (layoutDocument.Content is UserControl)
+                {
+                    if (((UserControl)layoutDocument.Content).DataContext is ISave)
+                    {
+                        control = ((ISave)((UserControl)layoutDocument.Content).DataContext);
+                    }
+                }
+            }
+
+            if (control == null)
+            {
+                return;
+            }
+
             if (isDirty)
             {
                 if (!layoutContent.Title.EndsWith(" *"))
                 {
                     layoutContent.Title = layoutContent.Title + " *";
+                    control.IsDirty = true;
                 }
             }
             else
             {
                 layoutContent.Title = layoutContent.Title.Replace(" *", "");
+                control.IsDirty = false;
             }
         }
 
@@ -176,12 +343,16 @@ namespace RestBox
 
             var currentSelectedTab = dockingManager.Layout.ActiveContent;
 
-            eventAggregator.GetEvent<DocumentChangedEvent>().Publish(
-                layoutDataFactory.Create(
-                currentSelectedTab.ContentId,
-                currentSelectedTab.Content, 
-                currentSelectedTab.IsActive,
-                currentSelectedTab.IsSelected));
+            if (currentSelectedTab != null)
+            {
+
+                eventAggregator.GetEvent<DocumentChangedEvent>().Publish(
+                    layoutDataFactory.Create(
+                        currentSelectedTab.ContentId,
+                        currentSelectedTab.Content,
+                        currentSelectedTab.IsActive,
+                        currentSelectedTab.IsSelected));
+            }
         }
 
         private void SetCloseSolutionState()
@@ -217,11 +388,6 @@ namespace RestBox
         private void RemoveInputBindings(bool obj)
         {
             InputBindings.Clear();
-        }
-
-        private void SequenceTitleChanged(object sender, PropertyChangedEventArgs e)
-        {
-            //throw new NotImplementedException();
         }
     }
 }

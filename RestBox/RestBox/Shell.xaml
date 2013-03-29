@@ -28,11 +28,8 @@
             </avalondock:DockingManager.DocumentContextMenu>
 
             <avalondock:LayoutRoot>
-                <avalondock:LayoutPanel Orientation="Horizontal">
+                <avalondock:LayoutPanel x:Name="MainLayoutPanel" Orientation="Horizontal">
                     <avalondock:LayoutDocumentPane x:Name="DocumentsPane">
-                        <avalondock:LayoutDocument Title="Start Page" IsActiveChanged="DocumentIsActiveChanged">
-                            <TextBox x:Name="StartPageTextBox" Text="Do something with this page" />
-                        </avalondock:LayoutDocument>
                     </avalondock:LayoutDocumentPane>
 
                     <avalondock:LayoutAnchorablePaneGroup DockWidth="300">

@@ -13,16 +13,18 @@ using System.Threading;
 
 namespace RestBox.Activities
 {
-    [Designer(typeof(HttpRequestIfElseActivity))]
-    public class HttpRequestIfElseActivityModel : NativeActivity, IActivityTemplateFactory
+    [Designer(typeof(RetryUntilActivity))]
+    public class RetryUntilActivityModel : NativeActivity, IActivityTemplateFactory
     {
         private readonly IEventAggregator eventAggregator;
         public event PropertyChangedEventHandler PropertyChanged;
+        private int timesCalled;
 
-        public HttpRequestIfElseActivityModel()
+        public RetryUntilActivityModel()
         {
-            DisplayName = "Decision";
+            DisplayName = "Retry Until";
             eventAggregator = ServiceLocator.Current.GetInstance<IEventAggregator>();
+            MainActivity = new ActivityAction();
             ConditionTrueActivity = new ActivityAction();
             ConditionFalseActivity = new ActivityAction();
             ResponseSections = new ObservableCollection<string>();
@@ -43,6 +45,19 @@ namespace RestBox.Activities
             if (PropertyChanged != null)
             {
                 PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
+
+        private ActivityAction mainActivity;
+        [Browsable(false)]
+        public ActivityAction MainActivity
+        {
+            get { return mainActivity; }
+            set
+            {
+                mainActivity = value;
+                OnPropertyChanged("MainActivity");
+                eventAggregator.GetEvent<IsDirtyEvent>().Publish(true);
             }
         }
 
@@ -111,28 +126,33 @@ namespace RestBox.Activities
             }
         }
 
+        private int interval;
+        public int Interval
+        {
+            get { return interval; }
+            set
+            {
+                interval = value;
+                OnPropertyChanged("Interval");
+                eventAggregator.GetEvent<IsDirtyEvent>().Publish(true);
+            }
+        }
+
+        private int maxRetries;
+        public int MaxRetries
+        {
+            get { return maxRetries; }
+            set
+            {
+                maxRetries = value;
+                OnPropertyChanged("MaxRetries");
+                eventAggregator.GetEvent<IsDirtyEvent>().Publish(true);
+            }
+        }
+
         protected override void Execute(NativeActivityContext context)
         {
-            HttpRequestSequenceViewModel viewModel;
-            HttpRequestSequenceViewModel.RunningWorkflows.TryGetValue(context.WorkflowInstanceId, out viewModel);
-            Thread.Sleep(1000);//TODO: Hack as needs to wait for thread to update responses
-            var lastResponse = viewModel.Responses[viewModel.Responses.Count - 1];
-
-           switch (SelectedOperatorIndex)
-           {
-               case 0:
-                   Equals(context, lastResponse);
-                   break;
-               case 1:
-                   DoesNotEqual(context, lastResponse);
-                   break;
-               case 2:
-                   Includes(context, lastResponse);
-                   break;
-               case 3:
-                   DoesNotInclude(context, lastResponse);
-                   break;
-           }
+            RunMainActivity(context);
         }
 
         private void DoesNotInclude(NativeActivityContext context, HttpResponseItem lastResponse)
@@ -207,24 +227,64 @@ namespace RestBox.Activities
             }
             else
             {
-                ConditionFalse(context);
+                if (timesCalled < MaxRetries)
+                {
+                    Thread.Sleep(Interval);
+                    Execute(context);
+                }
+                else
+                {
+                    ConditionFalse(context);
+                }
+            }
+        }
+
+        private void RunMainActivity(NativeActivityContext context)
+        {
+            context.ScheduleAction(MainActivity, OnMainActivityCompleted);
+            timesCalled++;
+        }
+
+        private void OnMainActivityCompleted(NativeActivityContext context, ActivityInstance completedinstance)
+        {
+            HttpRequestSequenceViewModel viewModel;
+            HttpRequestSequenceViewModel.RunningWorkflows.TryGetValue(context.WorkflowInstanceId, out viewModel);
+            Thread.Sleep(1000);//TODO: Hack as needs to wait for thread to update responses
+            var lastResponse = viewModel.Responses[viewModel.Responses.Count - 1];
+
+            switch (SelectedOperatorIndex)
+            {
+                case 0:
+                    Equals(context, lastResponse);
+                    break;
+                case 1:
+                    DoesNotEqual(context, lastResponse);
+                    break;
+                case 2:
+                    Includes(context, lastResponse);
+                    break;
+                case 3:
+                    DoesNotInclude(context, lastResponse);
+                    break;
             }
         }
 
         private void ConditionTrue(NativeActivityContext context)
         {
+            timesCalled = 0;
             context.ScheduleAction(ConditionTrueActivity);
         }
 
         private void ConditionFalse(NativeActivityContext context)
         {
+            timesCalled = 0;
             context.ScheduleAction(ConditionFalseActivity);
         }
 
         [DebuggerNonUserCode]
         public Activity Create(System.Windows.DependencyObject target)
         {
-            return new HttpRequestIfElseActivityModel { ConditionTrueActivity = { Handler = new Sequence() }, ConditionFalseActivity = { Handler = new Sequence() } };
+            return new RetryUntilActivityModel {MainActivity = { Handler = new Sequence() }, ConditionTrueActivity = { Handler = new Sequence() }, ConditionFalseActivity = { Handler = new Sequence() } };
         }
     }
 }

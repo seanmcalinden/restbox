@@ -16,7 +16,7 @@ using RestBox.UserControls;
 
 namespace RestBox.ViewModels
 {
-    public class RequestEnvironmentSettingsViewModel : ViewModelBase<RequestEnvironmentSettingsViewModel>
+    public class RequestEnvironmentSettingsViewModel : ViewModelBase<RequestEnvironmentSettingsViewModel>, ISave
     {
         #region Declarations
 
@@ -83,9 +83,8 @@ namespace RestBox.ViewModels
             saveEnvironmentAs.Command = new DelegateCommand(SetupSaveRequestAs);
             eventAggregator.GetEvent<AddInputBindingEvent>().Publish(new KeyBindingData { KeyGesture = saveKeyGesture, Command = saveEnvironment.Command });
 
-            mainMenuApplicationService.InsertSeparator(fileMenu, 4);
-            mainMenuApplicationService.InsertMenuItem(fileMenu, saveEnvironment, 5);
-            mainMenuApplicationService.InsertMenuItem(fileMenu, saveEnvironmentAs, 6);
+            mainMenuApplicationService.InsertMenuItem(fileMenu, saveEnvironment, 3);
+            mainMenuApplicationService.InsertMenuItem(fileMenu, saveEnvironmentAs, 4);
         } 
 
         #endregion
@@ -96,7 +95,7 @@ namespace RestBox.ViewModels
         {
             eventAggregator.GetEvent<GetLayoutDataEvent>().Publish(new LayoutDataRequest
             {
-                Action = SaveEnvironmentFileAs,
+                Action = SaveAs,
                 UserControlType = typeof(RequestEnvironmentSettings),
                 DataContext = this
             });
@@ -106,24 +105,24 @@ namespace RestBox.ViewModels
         {
             eventAggregator.GetEvent<GetLayoutDataEvent>().Publish(new LayoutDataRequest
             {
-                Action = SaveEnvironmentFile,
+                Action = Save,
                 UserControlType = typeof(RequestEnvironmentSettings),
                 DataContext = this
             });
         }
 
-        private void SaveEnvironmentFile(string id, object requestEnvironmentSettingsContent)
+        public void Save(string id, object content)
         {
-            if (((RequestEnvironmentSettings)requestEnvironmentSettingsContent).DataContext != this)
+            if (((RequestEnvironmentSettings)content).DataContext != this)
             {
                 return;
             }
 
-            var environmentSettings = requestEnvironmentSettingsContent as RequestEnvironmentSettings;
+            var environmentSettings = content as RequestEnvironmentSettings;
 
             if (string.IsNullOrWhiteSpace(environmentSettings.FilePath))
             {
-                SaveEnvironmentFileAs(id, requestEnvironmentSettingsContent);
+                SaveAs(id, content);
                 return;
             }
 
@@ -151,14 +150,14 @@ namespace RestBox.ViewModels
             });
         }
 
-        private void SaveEnvironmentFileAs(string id, object requestEnvironmentSettingsContent)
+        public void SaveAs(string id, object content)
         {
-            if (((RequestEnvironmentSettings)requestEnvironmentSettingsContent).DataContext != this)
+            if (((RequestEnvironmentSettings)content).DataContext != this)
             {
                 return;
             }
 
-            var environmentSettings = requestEnvironmentSettingsContent as RequestEnvironmentSettings;
+            var environmentSettings = content as RequestEnvironmentSettings;
 
             var environmentSettingsViewModel = environmentSettings.DataContext as RequestEnvironmentSettingsViewModel;
 
@@ -207,15 +206,16 @@ namespace RestBox.ViewModels
                 {
                     intellisenseService.AddEnvironmentIntellisenseItem(requestEnvironmentSetting.Setting, requestEnvironmentSetting.SettingValue);
                 }
+
+                Keyboard.ClearFocus();
+                eventAggregator.GetEvent<IsDirtyEvent>().Publish(false);
+                environmentSettingsViewModel.IsDirty = false;
+                eventAggregator.GetEvent<UpdateTabTitleEvent>().Publish(new TabHeader
+                {
+                    Id = id,
+                    Title = title
+                });
             }
-            Keyboard.ClearFocus();
-            eventAggregator.GetEvent<IsDirtyEvent>().Publish(false);
-            environmentSettingsViewModel.IsDirty = false;
-            eventAggregator.GetEvent<UpdateTabTitleEvent>().Publish(new TabHeader
-            {
-                Id = id,
-                Title = title
-            });
         }
 
         #endregion

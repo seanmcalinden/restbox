@@ -148,7 +148,8 @@ namespace RestBox.UserControls
                 && e.Key != Key.Down
                 && e.Key != Key.Up
                 && e.Key != Key.Left
-                && e.Key != Key.Right)
+                && e.Key != Key.Right
+                && e.Key != Key.F5)
             {
                 if (!httpRequestViewModel.IsDirty)
                 {
@@ -209,7 +210,8 @@ namespace RestBox.UserControls
                 && e.Key != Key.Down
                 && e.Key != Key.Up
                 && e.Key != Key.Left
-                && e.Key != Key.Right)
+                && e.Key != Key.Right
+                && e.Key != Key.F5)
             {
                 if (!httpRequestViewModel.IsDirty)
                 {

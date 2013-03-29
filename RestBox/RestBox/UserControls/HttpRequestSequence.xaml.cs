@@ -30,7 +30,7 @@ namespace RestBox.UserControls
         private readonly IEventAggregator eventAggregator;
         private readonly IFileService fileService;
         private WorkflowDesigner workflowDesigner;
-        private readonly Sequence mainSequence;
+        private Sequence mainSequence;
 
         public HttpRequestSequence(HttpRequestSequenceViewModel httpRequestSequenceViewModel, IEventAggregator eventAggregator, IFileService fileService)
         {
@@ -40,26 +40,30 @@ namespace RestBox.UserControls
             this.fileService = fileService;
             httpRequestSequenceViewModel.MainSequence = mainSequence;
             DataContext = httpRequestSequenceViewModel;
-            InitializeComponent();
             RegisterMetadata();
+            InitializeComponent();
             AddDesigner();
             AddToolBox();
             //AddPropertyInspector(); 
             workflowDesigner.Context.Items.Subscribe<Selection>(SelectionChanged);
-            var ms = workflowDesigner.Context.Services.GetService<ModelService>();
-            if (ms != null)
+            var modelService = workflowDesigner.Context.Services.GetService<ModelService>();
+            if (modelService != null)
             {
-                ms.ModelChanged += ms_ModelChanged;
+                modelService.ModelChanged += ModelChanged;
             }
 
         }
 
-        private void ms_ModelChanged(object sender, ModelChangedEventArgs e)
+        public void ModelChanged(object sender, ModelChangedEventArgs e)
         {
-            if (e.ItemsAdded != null && e.ItemsAdded.Count<ModelItem>() == 1)
-            {
-                
-            }
+            //mainSequence = ((System.Activities.Presentation.Model.) (sender)).Root;
+
+
+                mainSequence = (e.ModelChangeInfo).Value.Root.GetCurrentValue() as Sequence;
+
+
+            //workflowDesigner.Context.Items.Load(mainSequence);
+
             //{
             //    ModelItem item = e.ItemsAdded.FirstOrDefault<ModelItem>();
             //    var test = item.GetCurrentValue() as HttpRequestActivity;
@@ -81,6 +85,25 @@ namespace RestBox.UserControls
             if (modelItem == null)
             {
                 return;
+            }
+
+            if (modelItem.ItemType == typeof(HttpRequestIfElseActivityModel) || modelItem.ItemType == typeof(RetryUntilActivityModel))
+            {
+                if (modelItem.Properties["Operators"].Collection.Count > 4)
+                {
+                    for (var i = modelItem.Properties["Operators"].Collection.Count - 1; i >= 4; i--)
+                    {
+                        modelItem.Properties["Operators"].Collection.RemoveAt(i);
+                    }
+                }
+
+                if (modelItem.Properties["ResponseSections"].Collection.Count > 3)
+                {
+                    for (var i = modelItem.Properties["ResponseSections"].Collection.Count - 1; i >= 3; i--)
+                    {
+                        modelItem.Properties["ResponseSections"].Collection.RemoveAt(i);
+                    }
+                }
             }
 
             var httpRequests = modelItem.Properties["HttpRequests"];
@@ -107,18 +130,6 @@ namespace RestBox.UserControls
                     }
                 }
             }
-
-
-            
-
-            //var sb = new StringBuilder(); 
-            //while (modelItem != null) 
-            //{ 
-            //    var displayName = modelItem.Properties["DisplayName"]; 
-            //    if (displayName != null) { if (sb.Length > 0)                
-            //        sb.Insert(0, " - "); 
-            //        sb.Insert(0, displayName.ComputedValue); } 
-            //    modelItem = modelItem.Parent; } 
         }
 
         private void RegisterMetadata()
@@ -172,10 +183,14 @@ namespace RestBox.UserControls
             var httpRequestIfElseActivity = new ToolboxItemWrapper("RestBox.Activities.HttpRequestIfElseActivityModel",
                 typeof(HttpRequestIfElseActivityModel).Assembly.FullName, null, "Decision");
 
+            var retryUntilActivity = new ToolboxItemWrapper("RestBox.Activities.RetryUntilActivityModel",
+                typeof(RetryUntilActivityModel).Assembly.FullName, null, "Retry Until");
+
             toolBoxCategory.Add(sequenceActivity);
             //toolBoxCategory.Add(ifActivity);
             toolBoxCategory.Add(httpRequestActivity);
             toolBoxCategory.Add(httpRequestIfElseActivity);
+            toolBoxCategory.Add(retryUntilActivity);
             //toolBoxCategory.Add(parallelActivity);
 
             toolBoxControl.Categories.Add(toolBoxCategory);

@@ -4,14 +4,16 @@
     xmlns:sap="clr-namespace:System.Activities.Presentation;assembly=System.Activities.Presentation"
     xmlns:sapv="clr-namespace:System.Activities.Presentation.View;assembly=System.Activities.Presentation"
                       xmlns:model="clr-namespace:System.Activities.Presentation.Model;assembly=System.Activities.Presentation">
-    <Grid>
+        <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="23"></RowDefinition>
+            <!--<RowDefinition Height="*"></RowDefinition>-->
         </Grid.RowDefinitions>
 
         <Grid Grid.Row="0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"></ColumnDefinition>
+                <!--<ColumnDefinition Width="23"></ColumnDefinition>-->
             </Grid.ColumnDefinitions>
             <ComboBox x:Name="HttpRequestsList" Grid.Column="0" ItemsSource="{Binding Path=ModelItem.HttpRequests, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged }" SelectedIndex="{Binding Path=ModelItem.SelectedHttpRequestIndex}">
             <ComboBox.ItemTemplate>
@@ -20,7 +22,29 @@
                 </DataTemplate>
             </ComboBox.ItemTemplate>
         </ComboBox>
+            <!--<Button Grid.Column="1"  ToolTip="Open code view"  Height="23" Width="23" Click="ShowCodeView">
+                <StackPanel>
+                    <Image Grid.Column="0">
+                        <Image.Style>
+                            <Style TargetType="Image">
+                                <Setter Property="Source" Value="../Images/code-icon.png" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Path=Icon}" Value="codeviewopen">
+                                        <Setter Property="Source" Value="../Images/up-arrow-icon.png" />
+                                        <Setter Property="ToolTip" Value="Close code view" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Image.Style>
+                    </Image>
+                </StackPanel>
+            </Button>-->
         </Grid>
-
+        <!--<Grid x:Name="CodeView" Grid.Row="1" Visibility="Collapsed">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="500"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <RichTextBox Grid.Column="0" Height="300"></RichTextBox>
+        </Grid>-->
     </Grid>
 </sap:ActivityDesigner>

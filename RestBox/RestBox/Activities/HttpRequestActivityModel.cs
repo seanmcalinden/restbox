@@ -50,6 +50,17 @@ namespace RestBox.Activities
             } 
         }
 
+        private string icon;
+        public string Icon
+        {
+            get { return icon; }
+            set
+            {
+                icon = value;
+                OnPropertyChanged("Icon");
+            }
+        }
+        
         protected override void Execute(NativeActivityContext context)
         {
             workflowInstanceId = context.WorkflowInstanceId;
@@ -74,7 +85,7 @@ namespace RestBox.Activities
                 Body = httpRequestItemFile.Body,
                 Headers = httpRequestItemFile.Headers,
                 Verb = httpRequestItemFile.Verb
-            }, requestEnvironmentSettings, DoSomething, HandleError);
+            }, requestEnvironmentSettings, HandleResponse, HandleError);
         }
 
         private void HandleError(string errorMessage)
@@ -92,7 +103,7 @@ namespace RestBox.Activities
                 }));
         }
 
-        private void DoSomething(Uri arg1, List<RequestEnvironmentSetting> arg2, HttpResponseItem httpResponseItem)
+        private void HandleResponse(Uri arg1, List<RequestEnvironmentSetting> arg2, HttpResponseItem httpResponseItem)
         {
             HttpRequestSequenceViewModel viewModel;
             HttpRequestSequenceViewModel.RunningWorkflows.TryGetValue(workflowInstanceId, out viewModel);

@@ -1,4 +1,6 @@
-﻿namespace RestBox.Activities
+﻿using System.Windows;
+
+namespace RestBox.Activities
 {
     // Interaction logic for HttpRequestActivity.xaml
     public partial class HttpRequestActivity
@@ -7,5 +9,10 @@
         {
             InitializeComponent();
         }
+
+        //private void ShowCodeView(object sender, RoutedEventArgs e)
+        //{
+        //    CodeView.Visibility = Visibility.Visible;
+        //}
     }
 }

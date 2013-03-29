@@ -25,7 +25,7 @@ using RestBox.UserControls;
 
 namespace RestBox.ViewModels
 {
-    public class HttpRequestViewModel : ViewModelBase<HttpRequestViewModel>
+    public class HttpRequestViewModel : ViewModelBase<HttpRequestViewModel>, ISave
     {
         #region Declarations
 
@@ -478,9 +478,8 @@ namespace RestBox.ViewModels
             saveHttpRequest.Command = new DelegateCommand(SetupSaveRequest);
             saveHttpRequestAs.Command = new DelegateCommand(SetupSaveRequestAs);
 
-            mainMenuApplicationService.InsertSeparator(fileMenu, 4);
-            mainMenuApplicationService.InsertMenuItem(fileMenu, saveHttpRequest, 5);
-            mainMenuApplicationService.InsertMenuItem(fileMenu, saveHttpRequestAs, 6);
+            mainMenuApplicationService.InsertMenuItem(fileMenu, saveHttpRequest, 3);
+            mainMenuApplicationService.InsertMenuItem(fileMenu, saveHttpRequestAs, 4);
 
             var httpRequestMenu = new MenuItem { Header = "_Http Requests" };
             var runHttpRequest = new MenuItem { Header = "_Run", InputGestureText = "F5", Command = MakeRequestCommand };
@@ -488,7 +487,7 @@ namespace RestBox.ViewModels
             eventAggregator.GetEvent<AddInputBindingEvent>().Publish(new KeyBindingData { KeyGesture = saveKeyGesture, Command = saveHttpRequest.Command });
             eventAggregator.GetEvent<AddInputBindingEvent>().Publish(new KeyBindingData { KeyGesture = runHttpRequestKeyGesture, Command = MakeRequestCommand });
 
-            mainMenuApplicationService.InsertTopLevelMenuItem(httpRequestMenu, 1);
+            mainMenuApplicationService.InsertTopLevelMenuItem(httpRequestMenu, 2);
             mainMenuApplicationService.InsertMenuItem(httpRequestMenu, runHttpRequest, 0);
         } 
 
@@ -590,7 +589,7 @@ namespace RestBox.ViewModels
         {
             eventAggregator.GetEvent<GetLayoutDataEvent>().Publish(new LayoutDataRequest
             {
-                Action = SaveRequestAs,
+                Action = SaveAs,
                 UserControlType = typeof(HttpRequest),
                 DataContext = this
             });
@@ -600,20 +599,20 @@ namespace RestBox.ViewModels
         {
             eventAggregator.GetEvent<GetLayoutDataEvent>().Publish(new LayoutDataRequest
             {
-                Action = SaveRequest,
+                Action = Save,
                 UserControlType = typeof(HttpRequest),
                 DataContext = this
             });
         }
 
-        private void SaveRequestAs(string id, object httpRequestContent)
+        public void SaveAs(string id, object content)
         {
-            if (((HttpRequest)httpRequestContent).DataContext != this)
+            if (((HttpRequest)content).DataContext != this)
             {
                 return;
             }
 
-            var httpRequest = httpRequestContent as HttpRequest;
+            var httpRequest = content as HttpRequest;
 
             var httpRequestViewModel = httpRequest.DataContext as HttpRequestViewModel;
 
@@ -635,13 +634,11 @@ namespace RestBox.ViewModels
                     Body = httpRequestViewModel.RequestBody
                 };
 
-                if (!id.StartsWith("StandaloneNewItem"))
-                {
-                    var relativePath = fileService.GetRelativePath(new Uri(Solution.Current.FilePath),
+                var relativePath = fileService.GetRelativePath(new Uri(Solution.Current.FilePath),
                                                                    saveFileDialog.FileName);
 
-
-
+                if (!id.StartsWith("StandaloneNewItem"))
+                {
                     var requestExists = Solution.Current.HttpRequestFiles.Any(x => x.Id == id);
                     if (!requestExists)
                     {
@@ -677,6 +674,13 @@ namespace RestBox.ViewModels
                 else
                 {
                     httpRequest.FilePath = saveFileDialog.FileName;
+                    eventAggregator.GetEvent<UpdateHttpRequestFileItemEvent>().Publish(new File
+                    {
+                        Id = id,
+                        Name = title,
+                        RelativeFilePath =
+                            relativePath
+                    });
                     eventAggregator.GetEvent<UpdateTabTitleEvent>().Publish(new TabHeader
                     {
                         Id = id,
@@ -684,32 +688,33 @@ namespace RestBox.ViewModels
                     });
                     fileService.SaveFile(saveFileDialog.FileName, jsonSerializer.ToJsonString(httpRequestFile));
                 }
+
+                Keyboard.ClearFocus();
+                eventAggregator.GetEvent<IsDirtyEvent>().Publish(false);
+                IsDirty = false;
             }
-            Keyboard.ClearFocus();
-            eventAggregator.GetEvent<IsDirtyEvent>().Publish(false);
-            IsDirty = false;
         }
 
-        private void SaveRequest(string id, object httpRequestContent)
+        public void Save(string id, object content)
         {
-            if (!(httpRequestContent is HttpRequest))
+            if (!(content is HttpRequest))
             {
                 return;
             }
 
-            if (((HttpRequest)httpRequestContent).DataContext != this)
+            if (((HttpRequest)content).DataContext != this)
             {
                 return;
             }
 
 
-            var httpRequest = httpRequestContent as HttpRequest;
+            var httpRequest = content as HttpRequest;
 
             var httpRequestViewModel = httpRequest.DataContext as HttpRequestViewModel;
 
             if (string.IsNullOrWhiteSpace(httpRequest.FilePath))
             {
-                SaveRequestAs(id, httpRequestContent);
+                SaveAs(id, content);
                 return;
             }
 
