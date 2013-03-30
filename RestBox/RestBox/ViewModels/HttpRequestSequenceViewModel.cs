@@ -2,6 +2,7 @@
 using System.Activities;
 using System.Activities.Presentation;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
@@ -61,8 +62,7 @@ namespace RestBox.ViewModels
 
             eventAggregator.GetEvent<RemoveInputBindingEvent>().Publish(true);
 
-            mainMenuApplicationService.CreateInitialMenuItems();
-            var fileMenu = mainMenuApplicationService.Get(null, "_File");
+            var fileMenu = mainMenuApplicationService.Get("file");
             var saveHttpRequest = new MenuItem { Header = "Save Http Request Sequence", InputGestureText = "Ctrl+S" };
             var saveHttpRequestAs = new MenuItem { Header = "Save Http Request Sequence As..." };
 
@@ -72,14 +72,19 @@ namespace RestBox.ViewModels
             mainMenuApplicationService.InsertMenuItem(fileMenu, saveHttpRequest, 3);
             mainMenuApplicationService.InsertMenuItem(fileMenu, saveHttpRequestAs, 4);
 
-            var sequenceMenuItem = new MenuItem { Header = "_Http Request Sequences" };
-            var runSequence = new MenuItem { Header = "_Run", InputGestureText = "F5", Command = ExecuteHttpSequenceCommand };
+            var sequences = mainMenuApplicationService.Get("sequences");
+            var runSequencesMenu = mainMenuApplicationService.GetChild(sequences, "sequencesRun");
+            runSequencesMenu.Command = ExecuteHttpSequenceCommand;
+            runSequencesMenu.IsEnabled = true;
 
             eventAggregator.GetEvent<AddInputBindingEvent>().Publish(new KeyBindingData { KeyGesture = saveKeyGesture, Command = saveHttpRequest.Command });
             eventAggregator.GetEvent<AddInputBindingEvent>().Publish(new KeyBindingData { KeyGesture = runSequenceKeyGesture, Command = ExecuteHttpSequenceCommand });
 
-            mainMenuApplicationService.InsertTopLevelMenuItem(sequenceMenuItem, 2);
-            mainMenuApplicationService.InsertMenuItem(sequenceMenuItem, runSequence, 0);
+            eventAggregator.GetEvent<UpdateToolBarEvent>().Publish(new List<ToolBarItemData>
+                {
+                    new ToolBarItemData{ Command = saveHttpRequest.Command, Visibility = Visibility.Visible,ToolBarItemType = ToolBarItemType.Save},
+                    new ToolBarItemData{ Command = ExecuteHttpSequenceCommand, Visibility = Visibility.Visible,ToolBarItemType = ToolBarItemType.Run}
+                });
         }
 
         private void SetupSaveRequestAs()

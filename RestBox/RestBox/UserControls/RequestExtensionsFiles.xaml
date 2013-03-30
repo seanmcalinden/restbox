@@ -22,7 +22,7 @@
             </Button>
         </Grid>
 
-        <DataGrid x:Name="RequestExtensionsDataGrid" HorizontalAlignment="Stretch" AutoGenerateColumns="False" ItemsSource="{Binding RequestExtensionFiles}" SelectionMode="Single" IsReadOnly="True" Grid.Row="2" SelectedItem="{Binding SelectedRequestExtensionFile}">
+        <DataGrid x:Name="RequestExtensionsDataGrid" HorizontalAlignment="Stretch" AutoGenerateColumns="False" ItemsSource="{Binding RequestExtensionFiles}" SelectionMode="Single" IsReadOnly="True" Grid.Row="2" SelectedItem="{Binding SelectedRequestExtensionFile, UpdateSourceTrigger=PropertyChanged}">
             <DataGrid.ContextMenu>
                 <ContextMenu>
                     <MenuItem Header="Remove" Command="{Binding RemoveRequestExtensionCommand}"  />

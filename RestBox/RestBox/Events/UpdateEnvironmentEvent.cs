@@ -2,7 +2,7 @@
 
 namespace RestBox.Events
 {
-    public class ResetMenuEvent : CompositePresentationEvent<bool>
+    public class UpdateEnvironmentEvent : CompositePresentationEvent<bool>
     {
     }
 }

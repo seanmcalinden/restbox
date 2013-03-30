@@ -19,6 +19,8 @@ namespace RestBox.ViewModels
 
         private readonly IIntellisenseService intellisenseService;
         private readonly IFileService fileService;
+        private IMainMenuApplicationService mainMenuApplicationService;
+        private IEventAggregator eventAggregator;
 
         #endregion
 
@@ -31,9 +33,25 @@ namespace RestBox.ViewModels
         {
             this.fileService = fileService;
             this.intellisenseService = intellisenseService;
+            this.eventAggregator = eventAggregator;
+            this.mainMenuApplicationService = mainMenuApplicationService;
             eventAggregator.GetEvent<UpdateEnvironmentItemEvent>().Subscribe(UpdateFileItem);
+            eventAggregator.GetEvent<BindSolutionMenuItemsEvent>().Subscribe(BindMenuItems);
+        }
 
-        } 
+        private void BindMenuItems(bool obj)
+        {
+            var environments = mainMenuApplicationService.Get("environments");
+
+            var addMenu = mainMenuApplicationService.GetChild(environments, "environmentsAdd");
+            var newMenu = mainMenuApplicationService.GetChild(addMenu, "environmentsNew");
+            newMenu.IsEnabled = true;
+            newMenu.Command = NewCommand;
+
+            var existingMenu = mainMenuApplicationService.GetChild(addMenu, "environmentsExisting");
+            existingMenu.IsEnabled = true;
+            existingMenu.Command = AddCommand;
+        }
 
         #endregion
 
@@ -41,7 +59,12 @@ namespace RestBox.ViewModels
         public ViewFile Selected
         {
             get { return selected; }
-            set { selected = value; OnPropertyChanged("Selected"); }
+            set { selected = value; OnPropertyChanged("Selected"); eventAggregator.GetEvent<UpdateEnvironmentEvent>().Publish(true);}
+        }
+
+        protected override void OnSelectedFileChange(File viewFile)
+        {
+            //throw new System.NotImplementedException();
         }
 
         protected override void SolutionLoadedEvent(bool obj)
@@ -56,6 +79,11 @@ namespace RestBox.ViewModels
                     intellisenseService.AddEnvironmentIntellisenseItem(environmentSetting.Setting, environmentSetting.SettingValue);
                 }
             }
+        }
+
+        protected override void DocumentChangedAdditionalHandler()
+        {
+           
         }
     }
 }

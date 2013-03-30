@@ -30,6 +30,7 @@ namespace RestBox
         private LayoutAnchorable environmentsLayout;
         private LayoutAnchorable requestExtensions;
         private LayoutAnchorable sequenceFiles;
+        private bool resetLayoutRequested = false;
 
         public Shell(
             ShellViewModel shellViewModel, 
@@ -59,7 +60,7 @@ namespace RestBox
             environmentsLayout = GetLayoutAnchorableById("EnvironmentsLayoutId");
             requestExtensions = GetLayoutAnchorableById("RequestExtensionsId");
             sequenceFiles = GetLayoutAnchorableById("SequenceFilesId");
-
+            
             httpRequestFilesLayout.Content = ServiceLocator.Current.GetInstance<HttpRequestFiles>();
             environmentsLayout.Content = ServiceLocator.Current.GetInstance<RequestEnvironments>();
             requestExtensions.Content = ServiceLocator.Current.GetInstance<RequestExtensions>();
@@ -81,7 +82,14 @@ namespace RestBox
             eventAggregator.GetEvent<UpdateViewMenuItemChecksEvent>().Subscribe(UpdateViewMenuChecks);
 
             eventAggregator.GetEvent<SaveAllEvent>().Subscribe(SaveAllHandler);
+
+            eventAggregator.GetEvent<ResetLayoutEvent>().Subscribe(ResetLayoutOnRestart);
             Closing += OnClosing;
+        }
+
+        private void ResetLayoutOnRestart(bool shouldReset)
+        {
+            resetLayoutRequested = shouldReset;
         }
 
         private void CreateStartPage()
@@ -110,7 +118,14 @@ namespace RestBox
             }
 
             CreateStartPage();
-            layoutApplicationService.Save(dockingManager);
+            if (!resetLayoutRequested)
+            {
+                layoutApplicationService.Save(dockingManager);
+            }
+            else
+            {
+                layoutApplicationService.Delete();
+            }
         }
 
         private void SaveAllHandler(bool obj)
@@ -368,13 +383,12 @@ namespace RestBox
                 documents[i].Close();
             }
             documents.Clear();
+            mainMenuApplicationService.DisableSolutionMenus();
         }
 
         private void DocumentIsActiveChanged(object sender, EventArgs eventArgs)
         {
             RemoveInputBindings(true);
-
-            mainMenuApplicationService.CreateInitialMenuItems();
 
             SetCloseSolutionState();
 

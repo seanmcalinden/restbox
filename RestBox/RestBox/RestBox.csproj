@@ -150,8 +150,14 @@
     <Compile Include="Events\AddRequestEnvironmentMenuItemsEvent.cs" />
     <Compile Include="Events\AddHttpRequestSequenceMenuItemsEvent.cs" />
     <Compile Include="Events\ApplicationShutdownEvent.cs" />
+    <Compile Include="Events\BindSolutionMenuItemsEvent.cs" />
+    <Compile Include="Events\ToolBarItemType.cs" />
+    <Compile Include="Events\ToolBarItemData.cs" />
+    <Compile Include="Events\UpdateEnvironmentEvent.cs" />
+    <Compile Include="Events\ResetLayoutEvent.cs" />
     <Compile Include="Events\SaveAllEvent.cs" />
     <Compile Include="Events\LayoutType.cs" />
+    <Compile Include="Events\UpdateToolBarEvent.cs" />
     <Compile Include="Events\UpdateViewMenuItemChecksEvent.cs" />
     <Compile Include="Events\ShowLayoutEvent.cs" />
     <Compile Include="Events\SolutionSavedEvent.cs" />
@@ -173,7 +179,6 @@
     <Compile Include="Events\OpenSolutionEvent.cs" />
     <Compile Include="Events\RemoveInputBindingEvent.cs" />
     <Compile Include="Events\RemoveTabEvent.cs" />
-    <Compile Include="Events\ResetMenuEvent.cs" />
     <Compile Include="Events\SelectEnvironmentItemEvent.cs" />
     <Compile Include="Factories\ILayoutDataFactory.cs" />
     <Compile Include="Factories\LayoutDataFactory.cs" />
@@ -271,6 +276,10 @@
     <Resource Include="Images\refresh-icon.png" />
     <Resource Include="Images\code-icon.png" />
     <Resource Include="Images\up-arrow-icon.png" />
+    <Resource Include="Images\open-icon.png" />
+    <Resource Include="Images\save-all-icon.png" />
+    <Resource Include="Images\save-icon.png" />
+    <Resource Include="Images\help-icon.png" />
     <Content Include="Intellisense.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

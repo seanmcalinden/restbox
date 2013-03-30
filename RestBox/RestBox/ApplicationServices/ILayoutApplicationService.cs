@@ -6,5 +6,6 @@ namespace RestBox.ApplicationServices
     {
         void Load(DockingManager dockingManager);
         void Save(DockingManager dockingManager);
+        void Delete();
     }
 }

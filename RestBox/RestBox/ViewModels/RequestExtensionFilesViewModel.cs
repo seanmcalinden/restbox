@@ -7,6 +7,7 @@ using Microsoft.Practices.Prism.Commands;
 using Microsoft.Practices.Prism.Events;
 using Microsoft.Win32;
 using RestBox.ApplicationServices;
+using RestBox.Events;
 
 namespace RestBox.ViewModels
 {
@@ -15,19 +16,32 @@ namespace RestBox.ViewModels
         #region Declarations
 
         private readonly IFileService fileService;
-        private readonly IIntellisenseService intellisenseService; 
+        private readonly IIntellisenseService intellisenseService;
+        private readonly IMainMenuApplicationService mainMenuApplicationService;
 
         #endregion
 
         #region Constructor
         
-        public RequestExtensionFilesViewModel(IEventAggregator eventAggregator, IFileService fileService, IIntellisenseService intellisenseService)
+        public RequestExtensionFilesViewModel(IEventAggregator eventAggregator, IFileService fileService, IIntellisenseService intellisenseService, IMainMenuApplicationService mainMenuApplicationService)
             : base(eventAggregator)
         {
             this.fileService = fileService;
             this.intellisenseService = intellisenseService;
+            this.mainMenuApplicationService = mainMenuApplicationService;
             RequestExtensionFiles = new ObservableCollection<ViewFile>();
-        } 
+
+            eventAggregator.GetEvent<BindSolutionMenuItemsEvent>().Subscribe(BindMenuItems);
+        }
+
+        private void BindMenuItems(bool obj)
+        {
+            var extension = mainMenuApplicationService.Get("extensions");
+
+            var addExtensionMenu = mainMenuApplicationService.GetChild(extension, "addExtension");
+            addExtensionMenu.IsEnabled = true;
+            addExtensionMenu.Command = AddRequestExtensionCommand;
+        }
 
         #endregion
 

@@ -6,16 +6,56 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />            
         </Grid.RowDefinitions>
 
         <Menu Grid.Row="0" ItemsSource="{Binding MenuItems}" />
-        <StatusBar DockPanel.Dock="Bottom" x:Name="StatusBar" Height="35" VerticalAlignment="Bottom" Grid.Row="2">
+        
+        <ToolBarTray Grid.Row="1">
+            <ToolBar Band="1" BandIndex="1">
+                <Button Command="{Binding NewSolutionCommand, UpdateSourceTrigger=PropertyChanged}" ToolTip="Create new solution">
+                    <Image Source="Images/new-icon.png" Height="20" Width="20"></Image>
+                </Button>
+                <Button Command="{Binding OpenSolutionCommand, UpdateSourceTrigger=PropertyChanged}" ToolTip="Open solution">
+                    <Image Source="Images/open-icon.png" Height="20" Width="20"></Image>
+                </Button>
+                <Button Visibility="{Binding SaveButtonVisibility}" Command="{Binding SaveCommand, UpdateSourceTrigger=PropertyChanged}" ToolTip="Save file">
+                    <Image Source="Images/save-icon.png" Height="20" Width="20"></Image>
+                </Button>
+                <Button ToolTip="Save All" Command="{Binding SaveAllCommand, UpdateSourceTrigger=PropertyChanged}">
+                    <Image Source="Images/save-all-icon.png" Height="20" Width="20"></Image>
+                </Button>
+            </ToolBar>
+            <ToolBar Band="1" BandIndex="2">
+                <Button Visibility="{Binding RunButtonVisibility}" Height="26" Command="{Binding RunCommand, UpdateSourceTrigger=PropertyChanged}">
+                    <StackPanel Orientation="Horizontal">
+                        <Label Content="Run" Padding="0" VerticalAlignment="Center"></Label>
+                        <Image Source="Images/play-icon.png" Height="20" Width="20"></Image>
+                    </StackPanel>
+                </Button>
+                <Label Content="Environment:" VerticalAlignment="Center" Padding="0"></Label>
+                <ComboBox Grid.Row="1" ItemsSource="{Binding Environments}" Width="150" VerticalAlignment="Center" SelectedItem="{Binding SelectedEnvironment, UpdateSourceTrigger=PropertyChanged}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <Label Content="{Binding Name}" Padding="0" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </ToolBar>
+            <ToolBar Band="1" BandIndex="3">
+                <Button Command="{Binding HelpCommand}" ToolTip="Get help online">
+                    <Image Source="Images/help-icon.png" Height="20" Width="20"></Image>
+                </Button>
+            </ToolBar>
+        </ToolBarTray>
+        
+        <StatusBar DockPanel.Dock="Bottom" x:Name="StatusBar" Height="35" VerticalAlignment="Bottom" Grid.Row="3">
             <Label Content="Ready" />
         </StatusBar>
         
-        <avalondock:DockingManager x:Name="dockingManager" Grid.Row="1">
+        <avalondock:DockingManager x:Name="dockingManager" Grid.Row="2">
 
             <avalondock:DockingManager.DocumentContextMenu>
                 <ContextMenu>
@@ -31,11 +71,11 @@
                 <avalondock:LayoutRoot.RightSide>
                     <avalondock:LayoutAnchorSide>
                         <avalondock:LayoutAnchorGroup>
-                            <avalondock:LayoutAnchorable ContentId="HttpRequestFilesLayoutId" x:Name="HttpRequestFilesLayout" Title="Http Requests" AutoHideWidth="300" ToolTip="Http Requests" CanClose="False" CanHide="False">
+                            <avalondock:LayoutAnchorable ContentId="HttpRequestFilesLayoutId" x:Name="HttpRequestFilesLayout" Title="Requests" AutoHideWidth="300" ToolTip="Requests" CanClose="False" CanHide="False">
                             </avalondock:LayoutAnchorable>
                             <avalondock:LayoutAnchorable ContentId="EnvironmentsLayoutId" x:Name="EnvironmentsLayout" Title="Environments" AutoHideWidth="300"  ToolTip="Environments" CanClose="False" CanHide="False">
                             </avalondock:LayoutAnchorable>
-                            <avalondock:LayoutAnchorable ContentId="RequestExtensionsId" x:Name="RequestExtensions" Title="Request Extensions" AutoHideWidth="300" ToolTip="Request Extensions" CanClose="False" CanHide="False">
+                            <avalondock:LayoutAnchorable ContentId="RequestExtensionsId" x:Name="RequestExtensions" Title="Extensions" AutoHideWidth="300" ToolTip="Extensions" CanClose="False" CanHide="False">
                             </avalondock:LayoutAnchorable>
                             <avalondock:LayoutAnchorable ContentId="SequenceFilesId" x:Name="SequenceFiles" Title="Sequences" AutoHideWidth="300" ToolTip="Sequences" CanClose="False" CanHide="False">
                             </avalondock:LayoutAnchorable>

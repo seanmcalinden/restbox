@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Microsoft.Practices.Prism.Commands;
@@ -74,8 +75,7 @@ namespace RestBox.ViewModels
 
             eventAggregator.GetEvent<RemoveInputBindingEvent>().Publish(true);
 
-            mainMenuApplicationService.CreateInitialMenuItems();
-            var fileMenu = mainMenuApplicationService.Get(null, "_File");
+            var fileMenu = mainMenuApplicationService.Get("file");
 
             var saveEnvironment = new MenuItem { Header = "Save Environment", InputGestureText = "Ctrl+S" };
             var saveEnvironmentAs = new MenuItem { Header = "Save Environment As..." };
@@ -85,6 +85,10 @@ namespace RestBox.ViewModels
 
             mainMenuApplicationService.InsertMenuItem(fileMenu, saveEnvironment, 3);
             mainMenuApplicationService.InsertMenuItem(fileMenu, saveEnvironmentAs, 4);
+            eventAggregator.GetEvent<UpdateToolBarEvent>().Publish(new List<ToolBarItemData>
+                {
+                    new ToolBarItemData{ Command = saveEnvironment.Command, Visibility = Visibility.Visible,ToolBarItemType = ToolBarItemType.Save}
+                });
         } 
 
         #endregion

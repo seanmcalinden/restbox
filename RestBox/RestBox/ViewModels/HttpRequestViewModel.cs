@@ -470,8 +470,7 @@ namespace RestBox.ViewModels
 
             eventAggregator.GetEvent<RemoveInputBindingEvent>().Publish(true);
 
-            mainMenuApplicationService.CreateInitialMenuItems();
-            var fileMenu = mainMenuApplicationService.Get(null, "_File");
+            var fileMenu = mainMenuApplicationService.Get("file");
             var saveHttpRequest = new MenuItem { Header = "Save Http Request", InputGestureText = "Ctrl+S" };
             var saveHttpRequestAs = new MenuItem { Header = "Save Http Request As..." };
 
@@ -481,14 +480,18 @@ namespace RestBox.ViewModels
             mainMenuApplicationService.InsertMenuItem(fileMenu, saveHttpRequest, 3);
             mainMenuApplicationService.InsertMenuItem(fileMenu, saveHttpRequestAs, 4);
 
-            var httpRequestMenu = new MenuItem { Header = "_Http Requests" };
-            var runHttpRequest = new MenuItem { Header = "_Run", InputGestureText = "F5", Command = MakeRequestCommand };
+            var requests = mainMenuApplicationService.Get("requests");
+            var runRequestMenu = mainMenuApplicationService.GetChild(requests, "requestsRun");
+            runRequestMenu.Command = MakeRequestCommand;
+            runRequestMenu.IsEnabled = true;
 
             eventAggregator.GetEvent<AddInputBindingEvent>().Publish(new KeyBindingData { KeyGesture = saveKeyGesture, Command = saveHttpRequest.Command });
             eventAggregator.GetEvent<AddInputBindingEvent>().Publish(new KeyBindingData { KeyGesture = runHttpRequestKeyGesture, Command = MakeRequestCommand });
-
-            mainMenuApplicationService.InsertTopLevelMenuItem(httpRequestMenu, 2);
-            mainMenuApplicationService.InsertMenuItem(httpRequestMenu, runHttpRequest, 0);
+            eventAggregator.GetEvent<UpdateToolBarEvent>().Publish(new List<ToolBarItemData>
+                {
+                    new ToolBarItemData{ Command = saveHttpRequest.Command, Visibility = Visibility.Visible,ToolBarItemType = ToolBarItemType.Save},
+                    new ToolBarItemData{ Command = MakeRequestCommand, Visibility = Visibility.Visible,ToolBarItemType = ToolBarItemType.Run}
+                });
         } 
 
         #endregion

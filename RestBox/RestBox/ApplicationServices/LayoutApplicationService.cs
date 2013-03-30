@@ -23,14 +23,24 @@ namespace RestBox.ApplicationServices
             };
 
             if (File.Exists(LayoutFileName))
+            {
                 serializer.Deserialize(LayoutFileName);
+            }
         }
 
         public void Save(DockingManager dockingManager)
         {
             var layoutSerializer = new XmlLayoutSerializer(dockingManager);
             layoutSerializer.Serialize(LayoutFileName);
-        } 
+        }
+
+        public void Delete()
+        {
+            if (File.Exists(LayoutFileName))
+            {
+                File.Delete(LayoutFileName);
+            }
+        }
 
         #endregion
     }

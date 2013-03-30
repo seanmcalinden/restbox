@@ -108,8 +108,11 @@ namespace RestBox.ViewModels
             {
                 selectedFile = value;
                 OnPropertyChanged("SelectedFile");
+                OnSelectedFileChange(value);
             }
         }
+
+        protected abstract void OnSelectedFileChange(File viewFile);
 
         #endregion
 
@@ -142,8 +145,12 @@ namespace RestBox.ViewModels
 
         protected void DocumentChanged(LayoutData layoutData)
         {
+            mainMenuApplicationService.ResetFileMenu();
+            DocumentChangedAdditionalHandler();
             RaiseDocumentChanged(layoutData);
         }
+
+        protected abstract void DocumentChangedAdditionalHandler();
 
         protected virtual void SolutionClosedEvent(bool obj)
         {
@@ -277,6 +284,23 @@ namespace RestBox.ViewModels
             {
                 if (layoutData.IsSelected)
                 {
+                    eventAggregator.GetEvent<UpdateToolBarEvent>().Publish(new List<ToolBarItemData>
+                        {
+                            new ToolBarItemData
+                                {
+                                    Command = null,
+                                    Visibility = Visibility.Collapsed,
+                                    ToolBarItemType = ToolBarItemType.Save
+                                },
+                            new ToolBarItemData
+                                {
+                                    Command = null,
+                                    Visibility = Visibility.Collapsed,
+                                    ToolBarItemType = ToolBarItemType.Run
+                                }
+                        });
+
+                    eventAggregator.GetEvent<RemoveInputBindingEvent>().Publish(true);
                     eventAggregator.GetEvent<TSelectItemEvent>().Publish(layoutData.ContentId);
                     eventAggregator.GetEvent<TAddMenuItemsEvent>().Publish((TUserControlViewModel)((TUserControl)layoutData.Content).DataContext);
                 }
@@ -522,7 +546,6 @@ namespace RestBox.ViewModels
                 var viewFile = ViewFiles.First(x => x.Id == layoutDocument.ContentId);
                 ViewFiles.Remove(viewFile);
             }
-            mainMenuApplicationService.CreateInitialMenuItems();
         }
 
         #endregion
