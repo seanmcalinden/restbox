@@ -9,7 +9,28 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-        <TabControl Grid.Column="0" TabStripPlacement="Bottom">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="100"></ColumnDefinition>
+                <ColumnDefinition Width="*"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="0" Command="{Binding ExecuteHttpRequestCommand}" Visibility="{Binding StartButtonVisibility}">
+                <StackPanel>
+                    <Image Width="25" Height="25" Grid.Column="0" Source="..\Images\play-icon.png" ToolTip="Start Sequence" />
+                </StackPanel>
+            </Button>
+            <Button Grid.Column="0" Command="{Binding CancelHttpRequestCommand, UpdateSourceTrigger=PropertyChanged}" Visibility="{Binding CancelButtonVisibility}">
+                <StackPanel>
+                    <Image Width="25" Height="25" Grid.Column="0" Source="..\Images\delete-icon.png" ToolTip="Cancel Sequence" />
+                </StackPanel>
+            </Button>
+            <ProgressBar Grid.Column="1"  IsEnabled="{Binding IsProgressBarEnabled}" Visibility="{Binding ProgressBarVisibility}" IsIndeterminate="True"></ProgressBar>
+        </Grid>
+        <TabControl Grid.Column="0" Grid.Row="1">
             <TabControl.Items>
                 <TabItem Header="Request" x:Name="RequestTab">
                     <Grid VerticalAlignment="Stretch">
@@ -18,7 +39,6 @@
                             <RowDefinition Height="130" />
                             <RowDefinition Height="*" MinHeight="10" />
                             <RowDefinition Height="40" />
-                            <RowDefinition Height="0" />
                         </Grid.RowDefinitions>
                         <Grid Grid.Row="0">
                             <Grid.RowDefinitions>
@@ -68,23 +88,7 @@
                                 </RichTextBox.Resources>
                             </RichTextBox>
                          </Grid>
-
-                        <Grid Grid.Row="3">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="100" />
-                            </Grid.ColumnDefinitions>
-                            <Label Grid.Column="0" Content="{Binding RequestErrorMessage}" Foreground="Red" />
-
-                            <Button Grid.Column="1" Command="{Binding ExecuteHttpRequestCommand}">
-                                <StackPanel>
-                                    <Image Width="25" Height="25" Grid.Column="0" Source="\images\play-icon.png" ToolTip="Make Request" />
-                                </StackPanel>
-                            </Button>
-                            <ProgressBar IsEnabled="{Binding IsProgressBarEnabled}" Visibility="{Binding ProgressBarVisibility}" IsIndeterminate="True" Grid.Column="1" Width="90" Height="30"  />
-                        </Grid>
-
-                        <Popup x:Name="IntellisensePopup" Grid.Row="4" IsOpen="False" MinWidth="100" MaxHeight="100" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Placement="Bottom" StaysOpen="False">
+                        <Popup x:Name="IntellisensePopup" Grid.Row="3" IsOpen="False" MinWidth="100" MaxHeight="100" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Placement="Bottom" StaysOpen="False">
                             <ListBox x:Name="IntellisenseItems" ItemsSource="{Binding IntellisenseItems}" KeyDown="OnSelectIntellisenseItem"></ListBox>
                         </Popup>
 
@@ -102,7 +106,13 @@
                         <TabControl Grid.Row="1">
                             <TabControl.Items>
                                 <TabItem Header="Headers" x:Name="HeaderResponseTab" Visibility="{Binding HeaderResponseTabVisibility}">
-                                    <TextBox Text="{Binding Path=HeaderResponse}" x:Name="HeaderResponse" MinLines="5" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" VerticalAlignment="Stretch"></TextBox>
+                                    <RichTextBox x:Name="HeaderResponse" Background="{Binding RequestHeadersColor}" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" VerticalAlignment="Stretch">
+                                        <RichTextBox.Resources>
+                                            <Style TargetType="{x:Type Paragraph}">
+                                                <Setter Property="Margin" Value="0"/>
+                                            </Style>
+                                        </RichTextBox.Resources>
+                                    </RichTextBox>
                                 </TabItem>
                                 <TabItem Header="Json" x:Name="JsonResponseTab" Visibility="{Binding JsonResponseTabVisibility}" IsSelected="{Binding JsonResponseTabSelected}">
                                     <TextBox Text="{Binding Path=JsonResponse}" x:Name="JsonResponse" MinLines="5" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" VerticalAlignment="Stretch"></TextBox>

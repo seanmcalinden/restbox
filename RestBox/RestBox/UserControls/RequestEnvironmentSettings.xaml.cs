@@ -51,7 +51,7 @@ namespace RestBox.UserControls
         private void SettingsChangedEvent(object sender, SelectedCellsChangedEventArgs e)
         {
             ((RequestEnvironmentSettingsViewModel)DataContext).IsDirty = true;
-            eventAggregator.GetEvent<IsDirtyEvent>().Publish(true);
+            eventAggregator.GetEvent<IsDirtyEvent>().Publish(new IsDirtyData((RequestEnvironmentSettingsViewModel)DataContext, true));
         } 
 
         #endregion

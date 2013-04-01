@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using RestBox.ViewModels;
 
 namespace RestBox.ApplicationServices
@@ -10,10 +11,11 @@ namespace RestBox.ApplicationServices
             HttpRequestItem httpRequestItem,
             List<RequestEnvironmentSetting> requestEnvironmentSettings,
             Action<Uri, List<RequestEnvironmentSetting>, HttpResponseItem> onSuccess,
-            Action<string> onError);
+            Action<string> onError,
+            CancellationToken cancellationToken);
 
         void ExecuteRequest(HttpRequestItem httpRequestItem, List<RequestEnvironmentSetting> requestEnvironmentSettings,
                             Action<Uri, List<RequestEnvironmentSetting>, HttpResponseItem> onSuccess,
-                            Action<string> onError, bool callMainThread = false);
+                            Action<string> onError, CancellationToken cancellationToken, bool callMainThread = false);
     }
 }

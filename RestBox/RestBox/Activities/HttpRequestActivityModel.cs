@@ -3,6 +3,7 @@ using System.Activities;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Threading;
 using System.Windows;
 using Microsoft.Practices.Prism.Events;
 using Microsoft.Practices.ServiceLocation;
@@ -46,7 +47,7 @@ namespace RestBox.Activities
             {
                 selectedHttpRequestIndex = value; 
                 OnPropertyChanged("SelectedHttpRequestIndex");
-                eventAggregator.GetEvent<IsDirtyEvent>().Publish(true);
+                eventAggregator.GetEvent<IsDirtyEvent>().Publish(new IsDirtyData(this, true));
             } 
         }
 
@@ -85,7 +86,7 @@ namespace RestBox.Activities
                 Body = httpRequestItemFile.Body,
                 Headers = httpRequestItemFile.Headers,
                 Verb = httpRequestItemFile.Verb
-            }, requestEnvironmentSettings, HandleResponse, HandleError);
+            }, requestEnvironmentSettings, HandleResponse, HandleError, default(CancellationToken));
         }
 
         private void HandleError(string errorMessage)

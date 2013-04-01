@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -69,6 +70,8 @@ namespace RestBox.ViewModels
             RawResponseTabVisibility = Visibility.Collapsed;
             ResponseInfoVisibility = Visibility.Hidden;
             ProgressBarVisibility = Visibility.Hidden;
+            StartButtonVisibility = Visibility.Visible;
+            CancelButtonVisibility = Visibility.Hidden;
             IntellisenseItems = new ObservableCollection<string>();
             RequestUriColor = Brushes.White;
             RequestHeadersColor = Brushes.White;
@@ -177,6 +180,7 @@ namespace RestBox.ViewModels
         public int ResponseStatusCode { get; set; }
         public string ResponseContentType { get; set; }
         public string ResponseHeaders { get; set; }
+
         public object ResponseBody { get; set; }
         public string ResponseBodyType { get; set; }
         public string ResponseReasonPhrase { get; set; }
@@ -193,6 +197,7 @@ namespace RestBox.ViewModels
             {
                 headerResponse = value;
                 OnPropertyChanged(x => x.HeaderResponse);
+                eventAggregator.GetEvent<UpdateResponseHeadersEvent>().Publish(this);
             }
         }
 
@@ -457,6 +462,28 @@ namespace RestBox.ViewModels
             }
         }
 
+        private Visibility startButtonVisibility;
+        public Visibility StartButtonVisibility
+        {
+            get { return startButtonVisibility; }
+            set
+            {
+                startButtonVisibility = value;
+                OnPropertyChanged(x => x.StartButtonVisibility);
+            }
+        }
+
+        private Visibility cancelButtonVisibility;
+        public Visibility CancelButtonVisibility
+        {
+            get { return cancelButtonVisibility; }
+            set
+            {
+                cancelButtonVisibility = value;
+                OnPropertyChanged(x => x.CancelButtonVisibility);
+            }
+        }
+
         #endregion
 
         #region EventHandlers
@@ -506,6 +533,13 @@ namespace RestBox.ViewModels
         public ICommand ExecuteHttpRequestCommand
         {
             get { return new DelegateCommand(ExecuteRequest); }
+        }
+
+        private ICommand cancelHttpRequestCommand;
+        public ICommand CancelHttpRequestCommand
+        {
+            get { return cancelHttpRequestCommand; }
+            set { cancelHttpRequestCommand = value; OnPropertyChanged(x => x.CancelHttpRequestCommand); }
         }
 
         #endregion
@@ -559,7 +593,8 @@ namespace RestBox.ViewModels
                     return;
                 }
 
-
+                StartButtonVisibility = Visibility.Hidden;
+                CancelButtonVisibility = Visibility.Visible;
                 IsProgressBarEnabled = true;
                 RequestErrorMessage = null;
                 var requestEnvironment = ServiceLocator.Current.GetInstance<RequestEnvironmentsFilesViewModel>();
@@ -573,13 +608,18 @@ namespace RestBox.ViewModels
 
                     requestEnvironmentSettings = requestEnvironmentSettingFile.RequestEnvironmentSettings;
                 }
+
+                var tokenSource = new CancellationTokenSource();
+
+                CancelHttpRequestCommand = new DelegateCommand(tokenSource.Cancel);
+
                 httpRequestService.BeginExecuteRequest(new HttpRequestItem
                     {
                         Url = RequestUrl,
                         Body = RequestBody,
                         Headers = RequestHeaders,
                         Verb = RequestVerbString
-                    }, requestEnvironmentSettings, DisplayHttpResponse, ShowRequestError);
+                    }, requestEnvironmentSettings, DisplayHttpResponse, ShowRequestError, tokenSource.Token);
             }
             catch (Exception ex)
             {
@@ -693,7 +733,7 @@ namespace RestBox.ViewModels
                 }
 
                 Keyboard.ClearFocus();
-                eventAggregator.GetEvent<IsDirtyEvent>().Publish(false);
+                eventAggregator.GetEvent<IsDirtyEvent>().Publish(new IsDirtyData(this, false));
                 IsDirty = false;
             }
         }
@@ -742,7 +782,7 @@ namespace RestBox.ViewModels
 
             fileService.SaveFile(filePath, jsonSerializer.ToJsonString(httpRequestFile));
 
-            eventAggregator.GetEvent<IsDirtyEvent>().Publish(false);
+            eventAggregator.GetEvent<IsDirtyEvent>().Publish(new IsDirtyData(this, false));
             Keyboard.ClearFocus();
             httpRequestViewModel.IsDirty = false;
         }
@@ -769,6 +809,8 @@ namespace RestBox.ViewModels
         public void ShowRequestError(string errorMessage)
         {
             IsProgressBarEnabled = false;
+            CancelButtonVisibility = Visibility.Hidden;
+            StartButtonVisibility = Visibility.Visible;
             eventAggregator.GetEvent<ShowErrorEvent>().Publish(new KeyValuePair<string, string>("Request Error",
                                                                                                 errorMessage));
         }
@@ -804,6 +846,8 @@ namespace RestBox.ViewModels
 
         private void DisplayHttpResponse(Uri requestUri, List<RequestEnvironmentSetting> requestEnvironmentSettings)
         {
+            StartButtonVisibility = Visibility.Visible;
+            CancelButtonVisibility = Visibility.Hidden;
             IsProgressBarEnabled = false;
             if (ResponseHeaders == null)
             {

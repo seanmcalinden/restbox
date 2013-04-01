@@ -145,7 +145,7 @@ namespace RestBox.ViewModels
             {
                 intellisenseService.AddEnvironmentIntellisenseItem(requestEnvironmentSetting.Setting, requestEnvironmentSetting.SettingValue);
             }
-            eventAggregator.GetEvent<IsDirtyEvent>().Publish(false);
+            eventAggregator.GetEvent<IsDirtyEvent>().Publish(new IsDirtyData(this, false));
             environmentSettingsViewModel.IsDirty = false;
             eventAggregator.GetEvent<UpdateTabTitleEvent>().Publish(new TabHeader
             {
@@ -212,7 +212,7 @@ namespace RestBox.ViewModels
                 }
 
                 Keyboard.ClearFocus();
-                eventAggregator.GetEvent<IsDirtyEvent>().Publish(false);
+                eventAggregator.GetEvent<IsDirtyEvent>().Publish(new IsDirtyData(this, false));
                 environmentSettingsViewModel.IsDirty = false;
                 eventAggregator.GetEvent<UpdateTabTitleEvent>().Publish(new TabHeader
                 {

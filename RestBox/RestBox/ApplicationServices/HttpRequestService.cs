@@ -8,6 +8,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
@@ -38,13 +39,14 @@ namespace RestBox.ApplicationServices
             HttpRequestItem httpRequestItem, 
             List<RequestEnvironmentSetting> requestEnvironmentSettings, 
             Action<Uri, List<RequestEnvironmentSetting>, HttpResponseItem> onSuccess,
-            Action<string> onError)
+            Action<string> onError,
+            CancellationToken cancellationToken)
         {
-            Task.Factory.StartNew(() => ExecuteRequest(httpRequestItem, requestEnvironmentSettings, onSuccess, onError, true));
+            Task.Factory.StartNew(() => ExecuteRequest(httpRequestItem, requestEnvironmentSettings, onSuccess, onError, cancellationToken, true), cancellationToken);
         }
 
         public void ExecuteRequest(HttpRequestItem httpRequestItem, List<RequestEnvironmentSetting> requestEnvironmentSettings, Action<Uri, List<RequestEnvironmentSetting>, HttpResponseItem> onSuccess,
-                            Action<string> onError, bool callMainThread = false)
+                            Action<string> onError, CancellationToken cancellationToken, bool callMainThread = false)
         {
             var httpRequestMessage = new HttpRequestMessage();
             using (var client = new HttpClient())
@@ -63,7 +65,17 @@ namespace RestBox.ApplicationServices
 
                     DateTime startTime = DateTime.Now;
 
-                    HttpResponseMessage httpResponseMessage = client.SendAsync(httpRequestMessage).Result;
+                    HttpResponseMessage httpResponseMessage;
+
+                    if (cancellationToken == default(CancellationToken))
+                    {
+                        httpResponseMessage = client.SendAsync(httpRequestMessage).Result;
+                    }
+                    else
+                    {
+                        httpResponseMessage = client.SendAsync(httpRequestMessage, cancellationToken).Result;
+                    }
+
                     DateTime completedTime = DateTime.Now;
 
                     var httpResponseItem = new HttpResponseItem(

@@ -55,7 +55,7 @@ namespace RestBox.Activities
             {
                 conditionTrueActivity = value;
                 OnPropertyChanged("ConditionTrueActivity");
-                eventAggregator.GetEvent<IsDirtyEvent>().Publish(true);
+                eventAggregator.GetEvent<IsDirtyEvent>().Publish(new IsDirtyData(this, true));
             }
         }
 
@@ -68,7 +68,7 @@ namespace RestBox.Activities
             {
                 conditionFalseActivity = value;
                 OnPropertyChanged("ConditionFalseActivity");
-                eventAggregator.GetEvent<IsDirtyEvent>().Publish(true);
+                eventAggregator.GetEvent<IsDirtyEvent>().Publish(new IsDirtyData(this, true));
             }
         }
 
@@ -83,7 +83,7 @@ namespace RestBox.Activities
             {
                 selectedResponseSectionIndex = value;
                 OnPropertyChanged("SelectedResponseSectionIndex");
-                eventAggregator.GetEvent<IsDirtyEvent>().Publish(true);
+                eventAggregator.GetEvent<IsDirtyEvent>().Publish(new IsDirtyData(this, true));
             }
         }
 
@@ -95,7 +95,7 @@ namespace RestBox.Activities
             {
                 selectedOperatorIndex = value;
                 OnPropertyChanged("SelectedOperatorIndex");
-                eventAggregator.GetEvent<IsDirtyEvent>().Publish(true);
+                eventAggregator.GetEvent<IsDirtyEvent>().Publish(new IsDirtyData(this, true));
             }
         }
 
@@ -107,7 +107,7 @@ namespace RestBox.Activities
             {
                 conditionValue = value;
                 OnPropertyChanged("ConditionValue");
-                eventAggregator.GetEvent<IsDirtyEvent>().Publish(true);
+                eventAggregator.GetEvent<IsDirtyEvent>().Publish(new IsDirtyData(this, true));
             }
         }
 

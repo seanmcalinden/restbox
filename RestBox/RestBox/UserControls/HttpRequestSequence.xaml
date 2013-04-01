@@ -6,7 +6,28 @@
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
     <Grid>
-        <TabControl Grid.Column="0" TabStripPlacement="Top">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="100"></ColumnDefinition>
+                <ColumnDefinition Width="*"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="0" Command="{Binding ExecuteHttpSequenceCommand}" Visibility="{Binding StartButtonVisibility}">
+                <StackPanel>
+                    <Image Width="25" Height="25" Grid.Column="0" Source="..\Images\play-icon.png" ToolTip="Start Sequence" />
+                </StackPanel>
+            </Button>
+            <Button Grid.Column="0" Command="{Binding CancelHttpSequenceCommand}" Visibility="{Binding CancelButtonVisibility}">
+                <StackPanel>
+                    <Image Width="25" Height="25" Grid.Column="0" Source="..\Images\delete-icon.png" ToolTip="Cancel Sequence" />
+                </StackPanel>
+            </Button>
+            <ProgressBar Grid.Column="1"  IsEnabled="{Binding IsProgressBarEnabled}" Visibility="{Binding ProgressBarVisibility}" IsIndeterminate="True"></ProgressBar>
+        </Grid>
+        <TabControl Grid.Row="1" TabStripPlacement="Top">
             <TabControl.Items>
                 <TabItem Header="Sequence Designer" x:Name="RequestTab">
                     <Grid x:Name="HttpSequenceGrid">
@@ -26,27 +47,8 @@
                 <TabItem Header="Runner" IsSelected="{Binding RunnerSelected}">
                     <Grid>
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="40"></RowDefinition>
                             <RowDefinition Height="*"></RowDefinition>
                         </Grid.RowDefinitions>
-                        <Grid Grid.Row="0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="100"></ColumnDefinition>
-                                <ColumnDefinition Width="*"></ColumnDefinition>
-                            </Grid.ColumnDefinitions>
-                            <Button Grid.Column="0" Command="{Binding ExecuteHttpSequenceCommand}" Visibility="{Binding StartButtonVisibility}">
-                                <StackPanel>
-                                    <Image Width="25" Height="25" Grid.Column="0" Source="..\Images\play-icon.png" ToolTip="Start Sequence" />
-                                </StackPanel>
-                            </Button>
-                            <Button Grid.Column="0" Command="{Binding CancelHttpSequenceCommand}" Visibility="{Binding CancelButtonVisibility}">
-                                <StackPanel>
-                                    <Image Width="25" Height="25" Grid.Column="0" Source="..\Images\delete-icon.png" ToolTip="Cancel Sequence" />
-                                </StackPanel>
-                            </Button>
-                            <ProgressBar Grid.Column="1"  IsEnabled="{Binding IsProgressBarEnabled}" Visibility="{Binding ProgressBarVisibility}" IsIndeterminate="True"></ProgressBar>
-                        </Grid>
-                    
                     <DataGrid x:Name="HttpRequestSequenceRunnerDataGrid" Grid.Row="1" AutoGenerateColumns="False" SelectionMode="Single" SelectedItem="{Binding SelectedResponse}" ItemsSource="{Binding Responses}" MouseDoubleClick="ActivateItem"  HorizontalAlignment="Stretch" IsReadOnly="True">
                         <DataGrid.Columns>
                             <DataGridTemplateColumn Header="Status Code" Width="75">

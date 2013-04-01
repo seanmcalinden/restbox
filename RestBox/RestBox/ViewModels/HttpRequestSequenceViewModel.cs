@@ -163,7 +163,7 @@ namespace RestBox.ViewModels
                             relativePath
                     });
                     Keyboard.ClearFocus();
-                    eventAggregator.GetEvent<IsDirtyEvent>().Publish(false);
+                    eventAggregator.GetEvent<IsDirtyEvent>().Publish(new IsDirtyData(this, false));
                     IsDirty = false;
 
             }
@@ -196,7 +196,7 @@ namespace RestBox.ViewModels
 
             WorkflowDesigner.Save(filePath);
 
-            eventAggregator.GetEvent<IsDirtyEvent>().Publish(false);
+            eventAggregator.GetEvent<IsDirtyEvent>().Publish(new IsDirtyData(this, false));
             Keyboard.ClearFocus();
             httpRequestSequenceViewModel.IsDirty = false;
         } 

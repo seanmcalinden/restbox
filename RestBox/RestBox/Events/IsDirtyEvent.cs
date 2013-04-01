@@ -2,7 +2,7 @@
 
 namespace RestBox.Events
 {
-    public class IsDirtyEvent : CompositePresentationEvent<bool>
+    public class IsDirtyEvent : CompositePresentationEvent<IsDirtyData>
     {
     }
 }

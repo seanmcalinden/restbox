@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Activities;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -314,56 +315,88 @@ namespace RestBox
             }
         }
 
-        private void IsDirtyHandler(bool isDirty)
+        private void IsDirtyHandler(IsDirtyData isDirtyData)
         {
-            var selectedDocument = dockingManager.Layout.ActiveContent;
-            if (selectedDocument == null || !(selectedDocument is LayoutDocument))
-            {
-                return;
-            }
-            IsDirty(selectedDocument, isDirty);
-        }
-
-        private void IsDirty(LayoutContent layoutContent, bool isDirty)
-        {
-            if (layoutContent == null)
-            {
-                return;
-            }
-
-            ISave control = null;
-
             var documents = GetDocuments();
+
+            if (isDirtyData.Document is NativeActivity)
+            {
+                foreach (var layoutDocument in documents)
+                {
+                    if (layoutDocument.Content is HttpRequestSequence)
+                    {
+                        var mainSequence = ((layoutDocument.Content as HttpRequestSequence).DataContext as HttpRequestSequenceViewModel).MainSequence;
+                        var isThisSequence = InspectActivity(isDirtyData.Document, mainSequence, 0);
+
+                        if (isThisSequence)
+                        {
+                            var control = ((ISave)((UserControl)layoutDocument.Content).DataContext);
+                            control.IsDirty = isDirtyData.IsDirty;
+                            if (isDirtyData.IsDirty)
+                            {
+                                if (!layoutDocument.Title.EndsWith(" *"))
+                                {
+                                    layoutDocument.Title = layoutDocument.Title + " *";
+                                    control.IsDirty = true;
+                                }
+                            }
+                            else
+                            {
+                                layoutDocument.Title = layoutDocument.Title.Replace(" *", "");
+                                control.IsDirty = false;
+                            }
+                        }
+                    }
+                }
+                return;
+            }
+
             foreach (var layoutDocument in documents)
             {
                 if (layoutDocument.Content is UserControl)
                 {
-                    if (((UserControl)layoutDocument.Content).DataContext is ISave)
+                    if (((UserControl)layoutDocument.Content).DataContext == isDirtyData.Document)
                     {
-                        control = ((ISave)((UserControl)layoutDocument.Content).DataContext);
+                        var control = ((ISave)((UserControl)layoutDocument.Content).DataContext);
+                        control.IsDirty = isDirtyData.IsDirty;
+                        if (isDirtyData.IsDirty)
+                        {
+                            if (!layoutDocument.Title.EndsWith(" *"))
+                            {
+                                layoutDocument.Title = layoutDocument.Title + " *";
+                                control.IsDirty = true;
+                            }
+                        }
+                        else
+                        {
+                            layoutDocument.Title = layoutDocument.Title.Replace(" *", "");
+                            control.IsDirty = false;
+                        }
                     }
                 }
             }
-
-            if (control == null)
-            {
-                return;
-            }
-
-            if (isDirty)
-            {
-                if (!layoutContent.Title.EndsWith(" *"))
-                {
-                    layoutContent.Title = layoutContent.Title + " *";
-                    control.IsDirty = true;
-                }
-            }
-            else
-            {
-                layoutContent.Title = layoutContent.Title.Replace(" *", "");
-                control.IsDirty = false;
-            }
         }
+
+        static bool InspectActivity(object activityToCheck, Activity root, int indent)
+        {
+            // Inspect the activity tree using WorkflowInspectionServices.
+            IEnumerator<Activity> activities =
+                WorkflowInspectionServices.GetActivities(root).GetEnumerator();
+
+            var isActivityToCheck = false;
+
+            while (activities.MoveNext())
+            {
+                if (activityToCheck == activities.Current)
+                {
+                    isActivityToCheck = true;
+                    break;
+                }
+                return InspectActivity(activityToCheck, activities.Current, indent + 2);
+            }
+            return isActivityToCheck;
+        }
+
 
         private void RemoveTabById(string id)
         {

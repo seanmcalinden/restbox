@@ -78,7 +78,7 @@ namespace RestBox.UserControls
 
         private void SelectionChanged(Selection selection) 
         {
-            eventAggregator.GetEvent<IsDirtyEvent>().Publish(true);
+            eventAggregator.GetEvent<IsDirtyEvent>().Publish(new IsDirtyData(httpRequestSequenceViewModel, true));
 
             var modelItem = selection.PrimarySelection; 
 

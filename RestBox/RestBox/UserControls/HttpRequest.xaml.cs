@@ -56,7 +56,8 @@ namespace RestBox.UserControls
             eventAggregator.GetEvent<UpdateRequestUrlEvent>().Subscribe(UpdateRequestUrl);
             eventAggregator.GetEvent<UpdateRequestHeadersEvent>().Subscribe(UpdateRequestHeaders);
             eventAggregator.GetEvent<UpdateRequestBodyEvent>().Subscribe(UpdateRequestBody);
-        } 
+            eventAggregator.GetEvent<UpdateResponseHeadersEvent>().Subscribe(UpdateResponseHeader);
+        }
 
         #endregion
 
@@ -77,7 +78,7 @@ namespace RestBox.UserControls
             if (!httpRequestViewModel.IsDirty)
             {
                 httpRequestViewModel.IsDirty = true;
-                eventAggregator.GetEvent<IsDirtyEvent>().Publish(true);
+                eventAggregator.GetEvent<IsDirtyEvent>().Publish(new IsDirtyData(httpRequestViewModel, true));
             }
         }
 
@@ -96,7 +97,7 @@ namespace RestBox.UserControls
                 if (!httpRequestViewModel.IsDirty)
                 {
                     httpRequestViewModel.IsDirty = true;
-                    eventAggregator.GetEvent<IsDirtyEvent>().Publish(true);
+                    eventAggregator.GetEvent<IsDirtyEvent>().Publish(new IsDirtyData(httpRequestViewModel, true));
                 }
             }
 
@@ -154,7 +155,7 @@ namespace RestBox.UserControls
                 if (!httpRequestViewModel.IsDirty)
                 {
                     httpRequestViewModel.IsDirty = true;
-                    eventAggregator.GetEvent<IsDirtyEvent>().Publish(true);
+                    eventAggregator.GetEvent<IsDirtyEvent>().Publish(new IsDirtyData(httpRequestViewModel, true));
                 }
             }
 
@@ -216,7 +217,7 @@ namespace RestBox.UserControls
                 if (!httpRequestViewModel.IsDirty)
                 {
                     httpRequestViewModel.IsDirty = true;
-                    eventAggregator.GetEvent<IsDirtyEvent>().Publish(true);
+                    eventAggregator.GetEvent<IsDirtyEvent>().Publish(new IsDirtyData(httpRequestViewModel, true));
                 }
             }
 
@@ -341,6 +342,25 @@ namespace RestBox.UserControls
 
             TextPointer navigator = RequestHeaders.Document.ContentStart;
             while (navigator.CompareTo(RequestHeaders.Document.ContentEnd) < 0)
+            {
+                TextPointerContext context = navigator.GetPointerContext(LogicalDirection.Backward);
+                if (context == TextPointerContext.ElementStart && navigator.Parent is Run)
+                {
+                    CheckHeaderWordsInRun((Run)navigator.Parent);
+                }
+                navigator = navigator.GetNextContextPosition(LogicalDirection.Forward);
+            }
+            FormatHeaders();
+        }
+
+        private void ResponseHeadersTextChanged()
+        {
+            if (HeaderResponse.Document == null) return;
+            var documentRange = new TextRange(HeaderResponse.Document.ContentStart, HeaderResponse.Document.ContentEnd);
+            documentRange.ClearAllProperties();
+
+            TextPointer navigator = HeaderResponse.Document.ContentStart;
+            while (navigator.CompareTo(HeaderResponse.Document.ContentEnd) < 0)
             {
                 TextPointerContext context = navigator.GetPointerContext(LogicalDirection.Backward);
                 if (context == TextPointerContext.ElementStart && navigator.Parent is Run)
@@ -610,6 +630,20 @@ namespace RestBox.UserControls
             if (!string.IsNullOrWhiteSpace(httpRequestViewModel.RequestUrl))
             {
                 new TextRange(RequestUrl.Document.ContentStart, RequestUrl.Document.ContentEnd).Text = httpRequestViewModel.RequestUrl;
+            }
+        }
+
+        private void UpdateResponseHeader(HttpRequestViewModel httpRequestViewModelToUpdate)
+        {
+            if (httpRequestViewModelToUpdate != httpRequestViewModel)
+            {
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(httpRequestViewModel.HeaderResponse))
+            {
+                new TextRange(HeaderResponse.Document.ContentStart, HeaderResponse.Document.ContentEnd).Text = httpRequestViewModel.HeaderResponse;
+                ResponseHeadersTextChanged();
             }
         }
 

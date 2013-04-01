@@ -151,6 +151,8 @@
     <Compile Include="Events\AddHttpRequestSequenceMenuItemsEvent.cs" />
     <Compile Include="Events\ApplicationShutdownEvent.cs" />
     <Compile Include="Events\BindSolutionMenuItemsEvent.cs" />
+    <Compile Include="Events\IsDirtyData.cs" />
+    <Compile Include="Events\UpdateResponseHeadersEvent.cs" />
     <Compile Include="Events\ToolBarItemType.cs" />
     <Compile Include="Events\ToolBarItemData.cs" />
     <Compile Include="Events\UpdateEnvironmentEvent.cs" />
