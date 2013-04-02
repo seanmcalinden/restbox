@@ -1,15 +1,19 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using AvalonDock.Layout;
 using Microsoft.Practices.Prism.Commands;
 using Microsoft.Practices.Prism.Events;
 using Microsoft.Practices.ServiceLocation;
 using Microsoft.Win32;
 using RestBox.Domain.Services;
 using RestBox.Events;
+using RestBox.UserControls;
+using RestBox.Utilities;
 using RestBox.ViewModels;
 
 namespace RestBox.ApplicationServices
@@ -70,15 +74,6 @@ namespace RestBox.ApplicationServices
             eventAggregator.GetEvent<UpdateViewMenuItemChecksEvent>().Publish(true);
 
             DisableSolutionMenus();
-
-            //if (!string.IsNullOrWhiteSpace(Solution.Current.FilePath))
-            //{
-            //    LoadSolutionMenus();
-            //}
-            //else
-            //{
-            //    DisableSolutionMenus();
-            //}
         }
 
         public void LoadSolutionMenus()
@@ -334,23 +329,23 @@ namespace RestBox.ApplicationServices
                            .Publish(new KeyBindingData {KeyGesture = saveAllKeyGesture, Command = saveAllMenu.Command});
 
             var newSolution = new MenuItem();
-            newSolution.Command = new DelegateCommand(CreateNewSolution);
+            newSolution.Command = new DelegateCommand(() => CreateNewSolution(shellViewModel));
             newSolution.Header = "_Solution";
 
-            var newRequest = new MenuItem();
-            newRequest.Command = new DelegateCommand(CreateNewRequest);
-            newRequest.Header = "_Http Request";
+            //var newRequest = new MenuItem();
+            //newRequest.Command = new DelegateCommand(CreateNewRequest);
+            //newRequest.Header = "_Http Request";
 
             var openSolution = new MenuItem();
-            openSolution.Command = new DelegateCommand(OpenSolution);
+            openSolution.Command = new DelegateCommand(() => OpenSolution(shellViewModel));
             openSolution.Header = "_Solution";
 
-            var openRequest = new MenuItem();
-            openRequest.Command = new DelegateCommand(OpenRequest);
-            openRequest.Header = "_Http Request";
+            //var openRequest = new MenuItem();
+            //openRequest.Command = new DelegateCommand(OpenRequest);
+            //openRequest.Header = "_Http Request";
 
             var closeSolution = new MenuItem();
-            closeSolution.Command = new DelegateCommand(CloseSolution);
+            closeSolution.Command = new DelegateCommand(() => CloseSolution(shellViewModel));
             closeSolution.Header = "_Close Solution";
             closeSolution.IsEnabled = true;
 
@@ -359,9 +354,9 @@ namespace RestBox.ApplicationServices
             exitMenu.Header = "E_xit";
 
             newMenu.Items.Add(newSolution);
-            newMenu.Items.Add(newRequest);
+           // newMenu.Items.Add(newRequest);
             openMenu.Items.Add(openSolution);
-            openMenu.Items.Add(openRequest);
+            //openMenu.Items.Add(openRequest);
 
             fileMenu.Items.Add(newMenu);
             fileMenu.Items.Add(openMenu);
@@ -523,24 +518,27 @@ namespace RestBox.ApplicationServices
 
         #region Helpers
 
-        private void CreateNewSolution()
+        private void CreateNewSolution(ShellViewModel shellViewModel)
         {
             eventAggregator.GetEvent<CloseSolutionEvent>().Publish(true);
             var saveFileDialog = new SaveFileDialog
                                      {
-                                         Filter = "Rest Box Solution (*.rsln)|*.rsln",
-                                         FileName = "Untitled",
-                                         Title = "Create Solution File"
+                                         Filter = SystemFileTypes.Solution.FilterText,
+                                         FileName = SystemFileTypes.Solution.UntitledFileName,
+                                         Title = SystemFileTypes.Solution.CreateTitle
                                      };
             if (saveFileDialog.ShowDialog() == true)
             {
-                Solution.Current.Clear();
-                Solution.Current.Name = Path.GetFileNameWithoutExtension(saveFileDialog.FileName);
-                Solution.Current.FilePath = saveFileDialog.FileName;
-                fileService.SaveSolution();
-                eventAggregator.GetEvent<NewSolutionEvent>().Publish(true);
-                LoadSolutionMenus();
-                eventAggregator.GetEvent<BindSolutionMenuItemsEvent>().Publish(true);
+                if (!shellViewModel.CloseSolutionLayoutDocuments())
+                {
+                    Solution.Current.Clear();
+                    Solution.Current.Name = Path.GetFileNameWithoutExtension(saveFileDialog.FileName);
+                    Solution.Current.FilePath = saveFileDialog.FileName;
+                    fileService.SaveSolution();
+                    eventAggregator.GetEvent<NewSolutionEvent>().Publish(true);
+                    LoadSolutionMenus();
+                    eventAggregator.GetEvent<BindSolutionMenuItemsEvent>().Publish(true);
+                }
             }
         }
 
@@ -552,48 +550,89 @@ namespace RestBox.ApplicationServices
 
         private void OpenRequest()
         {
-            var openFileDialog = new OpenFileDialog
-                                     {
-                                         Filter = "Rest Box Http Request (*.rhrq)|*.rhrq",
-                                         Title = "Open Http Request File"
-                                     };
-            if (openFileDialog.ShowDialog() == true)
-            {
-                eventAggregator.GetEvent<OpenHttpRequestEvent>().Publish(openFileDialog.FileName);
-            }
+            //var openFileDialog = new OpenFileDialog
+            //                         {
+            //                             Filter = SystemFileTypes.HttpRequest.FilterText,
+            //                             Title = SystemFileTypes.HttpRequest.OpenTitle
+            //                         };
+            //if (openFileDialog.ShowDialog() == true)
+            //{
+            //    var layout = new LayoutDocument
+            //        {
+            //            ContentId = "StandaloneHttpRequest-" + Guid.NewGuid(),
+            //            Content = ServiceLocator.Current.GetInstance<HttpRequest>(),
+            //            CanClose = false
+            //        };
+            //    eventAggregator.GetEvent<OpenHttpRequestEvent>().Publish(openFileDialog.FileName);
+            //}
         }
 
-        private void OpenSolution()
+        public void OpenSolution(ShellViewModel shellViewModel)
         {
             eventAggregator.GetEvent<CloseSolutionEvent>().Publish(true);
             var openFileDialog = new OpenFileDialog
-                                     {
-                                         Filter = "Rest Box Solution (*.rsln)|*.rsln",
-                                         Title = "Open Solution File"
-                                     };
+                {
+                    Filter = SystemFileTypes.Solution.FilterText,
+                    Title = SystemFileTypes.Solution.OpenTitle
+                };
             if (openFileDialog.ShowDialog() == true)
             {
-                Solution.Current.Clear();
-
-                using (var fileStream = openFileDialog.OpenFile())
+                if (!shellViewModel.CloseSolutionLayoutDocuments())
                 {
-                    using (var reader = new StreamReader(fileStream))
-                    {
-                        var fileContent = reader.ReadToEnd();
-                        Solution.Current = jsonSerializer.FromJsonString<Solution>(fileContent);
-                    }
+                    Solution.Current.Clear();
+                    DisableSolutionMenus();
 
+                    using (var fileStream = openFileDialog.OpenFile())
+                    {
+                        using (var reader = new StreamReader(fileStream))
+                        {
+                            var fileContent = reader.ReadToEnd();
+                            Solution.Current = jsonSerializer.FromJsonString<Solution>(fileContent);
+                        }
+
+                    }
+                    eventAggregator.GetEvent<OpenSolutionEvent>().Publish(true);
+                    LoadSolutionMenus();
+                    eventAggregator.GetEvent<BindSolutionMenuItemsEvent>().Publish(true);
+                    eventAggregator.GetEvent<SaveRestBoxStateEvent>().Publish(new RestBoxStateFile(RestBoxStateFileType.Solution, Solution.Current.FilePath));
                 }
+            }
+        }
+
+        public bool OpenSolution(string filePath)
+        {
+            if (!fileService.FileExists(filePath))
+            {
+                return false;
+            }
+
+            eventAggregator.GetEvent<CloseSolutionEvent>().Publish(true);
+
+            var shellViewModel = ServiceLocator.Current.GetInstance<ShellViewModel>();
+
+            if (!shellViewModel.CloseSolutionLayoutDocuments())
+            {
+                Solution.Current.Clear();
+                DisableSolutionMenus();
+
+                Solution.Current = fileService.Load<Solution>(filePath);
+
                 eventAggregator.GetEvent<OpenSolutionEvent>().Publish(true);
                 LoadSolutionMenus();
                 eventAggregator.GetEvent<BindSolutionMenuItemsEvent>().Publish(true);
+                eventAggregator.GetEvent<SaveRestBoxStateEvent>().Publish(new RestBoxStateFile(RestBoxStateFileType.Solution, Solution.Current.FilePath));
             }
+            return true;
         }
 
-        private void CloseSolution()
+        private void CloseSolution(ShellViewModel shellViewModel)
         {
-            Solution.Current.Clear();
-            eventAggregator.GetEvent<CloseSolutionEvent>().Publish(true);
+            if (!shellViewModel.CloseSolutionLayoutDocuments())
+            {
+                Solution.Current.Clear();
+                DisableSolutionMenus();
+                eventAggregator.GetEvent<CreateStartPageEvent>().Publish(true);
+            }
         } 
 
         #endregion

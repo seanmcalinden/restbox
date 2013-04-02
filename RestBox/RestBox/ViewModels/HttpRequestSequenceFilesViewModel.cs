@@ -4,6 +4,7 @@ using Microsoft.Practices.Prism.Events;
 using RestBox.ApplicationServices;
 using RestBox.Events;
 using RestBox.UserControls;
+using RestBox.Utilities;
 
 namespace RestBox.ViewModels
 {
@@ -28,7 +29,7 @@ namespace RestBox.ViewModels
                                          IMainMenuApplicationService mainMenuApplicationService)
             : base(
                 fileService, eventAggregator, mainMenuApplicationService, null, "New Http Request Sequence *",
-                () => Solution.Current.HttpRequestSequenceFiles, "Add Existing Http Request Sequence", "Rest Box Http Request Sequence (*.rseq)|*.rseq")
+                () => Solution.Current.HttpRequestSequenceFiles, SystemFileTypes.HttpSequence.AddExistingTitle, SystemFileTypes.HttpSequence.FilterText)
         {
             this.mainMenuApplicationService = mainMenuApplicationService;
             this.eventAggregator = eventAggregator;
@@ -61,6 +62,10 @@ namespace RestBox.ViewModels
         protected override void DocumentChangedAdditionalHandler()
         {
             var sequencesMenu = mainMenuApplicationService.Get("sequences");
+            if (sequencesMenu == null)
+            {
+                return;
+            }
             var runMenu = mainMenuApplicationService.GetChild(sequencesMenu, "sequencesRun");
             runMenu.IsEnabled = false;
         }

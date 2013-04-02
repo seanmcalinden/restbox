@@ -22,6 +22,9 @@ namespace RestBox.Installers
                                  .Configure(c => c.LifeStyle.Singleton.Named(c.Implementation.Name)));
             container.Register(
                     Component.For<ShellViewModel>().ImplementedBy<ShellViewModel>().LifeStyle.Singleton,
+                    Component.For<StartPage>().ImplementedBy<StartPage>().LifeStyle.Transient,
+                    Component.For<StartPageViewModel>().ImplementedBy<StartPageViewModel>().LifeStyle.Transient,
+                    Component.For<IRestBoxStateService>().ImplementedBy<RestBoxStateService>().LifeStyle.Singleton,
                     Component.For<ILayoutDataFactory>().ImplementedBy<LayoutDataFactory>().LifeStyle.Singleton,
                     Component.For<ILayoutApplicationService>().ImplementedBy<LayoutApplicationService>().LifeStyle.Singleton,
                     Component.For<IMainMenuApplicationService>().ImplementedBy<MainMenuApplicationService>().LifeStyle.Singleton,

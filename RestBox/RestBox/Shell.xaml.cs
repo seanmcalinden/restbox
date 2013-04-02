@@ -6,6 +6,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media.Imaging;
 using AvalonDock.Layout;
 using Microsoft.Practices.Prism.Events;
 using Microsoft.Practices.ServiceLocation;
@@ -13,6 +14,7 @@ using RestBox.ApplicationServices;
 using RestBox.Events;
 using RestBox.Factories;
 using RestBox.UserControls;
+using RestBox.Utilities;
 using RestBox.ViewModels;
 
 namespace RestBox
@@ -25,24 +27,27 @@ namespace RestBox
         private readonly IMainMenuApplicationService mainMenuApplicationService;
         private readonly ILayoutDataFactory layoutDataFactory;
         private readonly ILayoutApplicationService layoutApplicationService;
+        private readonly IRestBoxStateService restBoxStateService;
         private readonly IEventAggregator eventAggregator;
         private readonly ShellViewModel shellViewModel;
         private LayoutAnchorable httpRequestFilesLayout;
         private LayoutAnchorable environmentsLayout;
         private LayoutAnchorable requestExtensions;
         private LayoutAnchorable sequenceFiles;
-        private bool resetLayoutRequested = false;
+        private bool resetLayoutRequested;
 
         public Shell(
             ShellViewModel shellViewModel, 
             IEventAggregator eventAggregator, 
             IMainMenuApplicationService mainMenuApplicationService,
             ILayoutDataFactory layoutDataFactory,
-            ILayoutApplicationService layoutApplicationService)
+            ILayoutApplicationService layoutApplicationService,
+            IRestBoxStateService restBoxStateService)
         {
             this.mainMenuApplicationService = mainMenuApplicationService;
             this.layoutDataFactory = layoutDataFactory;
             this.layoutApplicationService = layoutApplicationService;
+            this.restBoxStateService = restBoxStateService;
             this.eventAggregator = eventAggregator;
             this.shellViewModel = shellViewModel;
             DataContext = shellViewModel;
@@ -51,11 +56,6 @@ namespace RestBox
             InitializeComponent();
 
             layoutApplicationService.Load(dockingManager);
-
-            //if (!(DocumentsPane.Children.Any(x => x.ContentId == "StartPage")))
-            //{
-            //    CreateStartPage();
-            //}
 
             httpRequestFilesLayout = GetLayoutAnchorableById("HttpRequestFilesLayoutId");
             environmentsLayout = GetLayoutAnchorableById("EnvironmentsLayoutId");
@@ -77,7 +77,6 @@ namespace RestBox
             eventAggregator.GetEvent<GetLayoutDataEvent>().Subscribe(GetLayoutContent);
 
             eventAggregator.GetEvent<ShowErrorEvent>().Subscribe(ShowError);
-            eventAggregator.GetEvent<CloseSolutionEvent>().Subscribe(CloseSolution);
 
             eventAggregator.GetEvent<ShowLayoutEvent>().Subscribe(ShowLayout);
             eventAggregator.GetEvent<UpdateViewMenuItemChecksEvent>().Subscribe(UpdateViewMenuChecks);
@@ -85,7 +84,17 @@ namespace RestBox
             eventAggregator.GetEvent<SaveAllEvent>().Subscribe(SaveAllHandler);
 
             eventAggregator.GetEvent<ResetLayoutEvent>().Subscribe(ResetLayoutOnRestart);
+            eventAggregator.GetEvent<SaveRestBoxStateEvent>().Subscribe(SaveRestBoxState);
+            eventAggregator.GetEvent<CreateStartPageEvent>().Subscribe(CreateStartPage);
+            
             Closing += OnClosing;
+
+            CreateStartPage(true);
+        }
+
+        private void SaveRestBoxState(RestBoxStateFile restBoxStateFile)
+        {
+            restBoxStateService.SaveState(restBoxStateFile);
         }
 
         private void ResetLayoutOnRestart(bool shouldReset)
@@ -93,32 +102,75 @@ namespace RestBox
             resetLayoutRequested = shouldReset;
         }
 
-        private void CreateStartPage()
+        private void CreateStartPage(bool obj)
         {
-            //var startPage = new LayoutDocument
-            //    {
-            //        Title = "Start Page",
-            //        ContentId = "StartPage"
-            //    };
-            //startPage.IsActiveChanged += DocumentIsActiveChanged;
-            //DocumentsPane.Children.Add(startPage);
+            var startPage = new LayoutDocument
+                {
+                    Title = "Start Page",
+                    ContentId = "StartPage",
+                    Content = ServiceLocator.Current.GetInstance<StartPage>(),
+                    IconSource = new BitmapImage(LayoutDocumentUtilities.GetImageUri(LayoutDocumentType.StartPage))
+                };
+            startPage.IsActiveChanged += StartPageDocumentIsActiveChanged;
+            AddLayoutDocument(startPage);
         }
 
-        private void OnClosing(object sender, CancelEventArgs cancelEventArgs)
+        public void OnClosing(object sender, CancelEventArgs cancelEventArgs)
+        {
+            OnClosing(sender,cancelEventArgs, null);
+        }
+
+        public void OnClosing(object sender, CancelEventArgs cancelEventArgs, Action<bool> callBack)
         {
             var documents = GetDocuments();
             foreach (var layoutDocument in documents)
             {
                 if (layoutDocument.Content is UserControl)
                 {
-                    if (((UserControl)layoutDocument.Content).DataContext is ISave)
+                    ISave context = ((UserControl) layoutDocument.Content).DataContext as ISave;
+                    if (context != null)
                     {
-                       layoutDocument.Close();
+                        if (context.IsDirty)
+                        {
+                            var result = MessageBox.Show(string.Format("Do you want to save {0}?", layoutDocument.Title),
+                                            string.Format("Save {0}?", layoutDocument.Title),
+                                            MessageBoxButton.YesNoCancel, MessageBoxImage.Question, MessageBoxResult.Yes);
+                            if (result == MessageBoxResult.Cancel)
+                            {
+                                cancelEventArgs.Cancel = true;
+                                if (callBack != null)
+                                {
+                                    callBack(true);
+                                }
+                                return;
+                            }
+
+                            if (result == MessageBoxResult.No)
+                            {
+                                layoutDocument.Close();
+                            }
+                            else if (result == MessageBoxResult.Yes)
+                            {
+                                context.Save(layoutDocument.ContentId, layoutDocument.Content);
+                                layoutDocument.Close();
+                            }
+                        }
+                        else
+                        {
+                            layoutDocument.Close();
+                        }
                     }
                 }
             }
 
-            CreateStartPage();
+            eventAggregator.GetEvent<CloseSolutionEvent>().Publish(true);
+
+            var startPage = GetDocumentById("StartPage");
+            if (startPage != null)
+            {
+                startPage.Close();
+            }
+
             if (!resetLayoutRequested)
             {
                 layoutApplicationService.Save(dockingManager);
@@ -126,6 +178,13 @@ namespace RestBox
             else
             {
                 layoutApplicationService.Delete();
+            }
+
+            mainMenuApplicationService.DisableSolutionMenus();
+
+            if (callBack != null)
+            {
+                callBack(false);
             }
         }
 
@@ -236,7 +295,7 @@ namespace RestBox
 
             foreach (var layoutDocument in layoutDocuments)
             {
-                if(layoutDocument.Content.GetType() == layoutDataRequest.UserControlType)
+                if (layoutDocument.Content != null && layoutDocument.Content.GetType() == layoutDataRequest.UserControlType)
                 {
                     if (((UserControl)layoutDocument.Content).DataContext.Equals(layoutDataRequest.DataContext))
                     {
@@ -409,14 +468,7 @@ namespace RestBox
 
         private void CloseSolution(bool obj)
         {
-            var documents = GetDocuments();
-
-            for(var i = 0; i < documents.Count; i++)
-            {
-                documents[i].Close();
-            }
-            documents.Clear();
-            mainMenuApplicationService.DisableSolutionMenus();
+            OnClosing(this, new CancelEventArgs(false));
         }
 
         private void DocumentIsActiveChanged(object sender, EventArgs eventArgs)
@@ -426,6 +478,26 @@ namespace RestBox
             SetCloseSolutionState();
 
             var currentSelectedTab = dockingManager.Layout.ActiveContent;
+
+            if (currentSelectedTab != null)
+            {
+
+                eventAggregator.GetEvent<DocumentChangedEvent>().Publish(
+                    layoutDataFactory.Create(
+                        currentSelectedTab.ContentId,
+                        currentSelectedTab.Content,
+                        currentSelectedTab.IsActive,
+                        currentSelectedTab.IsSelected));
+            }
+        }
+
+        private void StartPageDocumentIsActiveChanged(object sender, EventArgs eventArgs)
+        {
+            RemoveInputBindings(true);
+
+            SetCloseSolutionState();
+
+            var currentSelectedTab = GetDocumentById("StartPage");
 
             if (currentSelectedTab != null)
             {

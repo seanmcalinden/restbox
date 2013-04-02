@@ -5,6 +5,7 @@ using RestBox.ApplicationServices;
 using RestBox.Events;
 using RestBox.Mappers;
 using RestBox.UserControls;
+using RestBox.Utilities;
 
 namespace RestBox.ViewModels
 {
@@ -30,7 +31,7 @@ namespace RestBox.ViewModels
                                          IMapper<HttpRequestItemFile, HttpRequestViewModel> itemToViewModelMapper)
             : base(
                 fileService, eventAggregator, mainMenuApplicationService, itemToViewModelMapper, "New Http Request *",
-                () => Solution.Current.HttpRequestFiles, "Add Existing Http Request", "Rest Box Http Request (*.rhrq)|*.rhrq")
+                () => Solution.Current.HttpRequestFiles, SystemFileTypes.HttpRequest.AddExistingTitle, SystemFileTypes.HttpRequest.FilterText)
         {
             this.mainMenuApplicationService = mainMenuApplicationService;
             this.eventAggregator = eventAggregator;
@@ -63,6 +64,10 @@ namespace RestBox.ViewModels
         protected override void DocumentChangedAdditionalHandler()
         {
             var requestsMenu = mainMenuApplicationService.Get("requests");
+            if (requestsMenu == null)
+            {
+                return;
+            }
             var runMenu = mainMenuApplicationService.GetChild(requestsMenu, "requestsRun");
             runMenu.IsEnabled = false;
         }

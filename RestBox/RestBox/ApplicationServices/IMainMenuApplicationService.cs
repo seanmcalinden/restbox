@@ -1,4 +1,5 @@
 ﻿using System.Windows.Controls;
+using RestBox.ViewModels;
 
 namespace RestBox.ApplicationServices
 {
@@ -15,5 +16,7 @@ namespace RestBox.ApplicationServices
         void LoadSolutionMenus();
         void DisableSolutionMenus();
         void ResetFileMenu();
+        void OpenSolution(ShellViewModel shellViewModel);
+        bool OpenSolution(string filePath);
     }
 }

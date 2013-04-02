@@ -16,6 +16,7 @@ using RestBox.ApplicationServices;
 using RestBox.Domain.Entities;
 using RestBox.Events;
 using RestBox.UserControls;
+using RestBox.Utilities;
 
 namespace RestBox.ViewModels
 {
@@ -118,9 +119,9 @@ namespace RestBox.ViewModels
 
             var saveFileDialog = new SaveFileDialog
             {
-                Filter = "Rest Box Http Request Sequence (*.rseq)|*.rseq",
-                FileName = Path.GetFileName(httpRequestSequence.FilePath) ?? "Untitled",
-                Title = "Save Http Request Sequence As..."
+                Filter = SystemFileTypes.HttpSequence.FilterText,
+                FileName = Path.GetFileName(httpRequestSequence.FilePath) ?? SystemFileTypes.HttpSequence.UntitledFileName,
+                Title = SystemFileTypes.HttpSequence.SaveAsTitle
             };
 
             if (saveFileDialog.ShowDialog() == true)

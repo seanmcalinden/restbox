@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -16,7 +17,8 @@ namespace RestBox.ViewModels
     {
         #region Declarations
 
-        private readonly IMainMenuApplicationService mainMenuApplicationService; 
+        private readonly IMainMenuApplicationService mainMenuApplicationService;
+        private IEventAggregator eventAggregator;
 
         #endregion
 
@@ -27,6 +29,7 @@ namespace RestBox.ViewModels
           IMainMenuApplicationService mainMenuApplicationService)
         {
             this.mainMenuApplicationService = mainMenuApplicationService;
+            this.eventAggregator = eventAggregator;
             MenuItems = new ObservableCollection<MenuItem>();
             eventAggregator.GetEvent<NewSolutionEvent>().Subscribe(NewSolutionSetUp);
             eventAggregator.GetEvent<OpenSolutionEvent>().Subscribe(OpenSolution);
@@ -140,7 +143,6 @@ namespace RestBox.ViewModels
         private void CloseSolution(bool obj)
         {
             SolutionLoadedVisibility = Visibility.Hidden;
-            mainMenuApplicationService.DisableSolutionMenus();
         } 
 
         #endregion
@@ -227,8 +229,17 @@ namespace RestBox.ViewModels
 
         private void ExitApplication()
         {
-            Application.Current.Shutdown();
-        } 
+            var shell = ServiceLocator.Current.GetInstance<Shell>();
+            shell.OnClosing(shell, new CancelEventArgs(false), c => Application.Current.Shutdown());
+        }
+
+        public bool CloseSolutionLayoutDocuments()
+        {
+            var cancelled = false;
+            var shell = ServiceLocator.Current.GetInstance<Shell>();
+            shell.OnClosing(shell, new CancelEventArgs(false), c => cancelled = c);
+            return cancelled;
+        }
 
         #endregion
     }

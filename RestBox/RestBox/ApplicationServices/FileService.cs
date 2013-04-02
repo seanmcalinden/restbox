@@ -42,6 +42,7 @@ namespace RestBox.ApplicationServices
             {
                 SaveFile(Solution.Current.FilePath, jsonSerializer.ToJsonString(Solution.Current));
                 eventAggregator.GetEvent<SolutionSavedEvent>().Publish(true);
+                eventAggregator.GetEvent<SaveRestBoxStateEvent>().Publish(new RestBoxStateFile(RestBoxStateFileType.Solution, Solution.Current.FilePath));
             }
         }
 

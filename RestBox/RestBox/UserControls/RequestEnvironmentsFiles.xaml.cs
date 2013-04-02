@@ -6,6 +6,7 @@ using System.Windows.Input;
 using Microsoft.Practices.Prism.Events;
 using RestBox.ApplicationServices;
 using RestBox.Events;
+using RestBox.Utilities;
 using RestBox.ViewModels;
 
 namespace RestBox.UserControls
@@ -77,7 +78,7 @@ namespace RestBox.UserControls
             {
                 if (i == relativePathParts.Length - 1)
                 {
-                    sb.Append(selectedItem.Name + ".renv");
+                    sb.Append(selectedItem.Name + "." + SystemFileTypes.Environment.Extension);
                     break;
                 }
                 sb.Append(relativePathParts[i] + "/");

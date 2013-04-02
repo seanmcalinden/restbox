@@ -11,12 +11,14 @@ using System.IO;
 using System.Linq;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media.Imaging;
 using AvalonDock.Layout;
 using Microsoft.Practices.Prism.Events;
 using Microsoft.Practices.ServiceLocation;
 using RestBox.Activities;
 using RestBox.ApplicationServices;
 using RestBox.Events;
+using RestBox.Utilities;
 using RestBox.ViewModels;
 
 namespace RestBox.UserControls
@@ -78,6 +80,12 @@ namespace RestBox.UserControls
 
         private void SelectionChanged(Selection selection) 
         {
+            var httpRequestSequenceFilesViewModel = ServiceLocator.Current.GetInstance<HttpRequestSequenceFilesViewModel>();
+            if (httpRequestSequenceFilesViewModel.IsLoadingSequence)
+            {
+                return;
+            }
+
             eventAggregator.GetEvent<IsDirtyEvent>().Publish(new IsDirtyData(httpRequestSequenceViewModel, true));
 
             var modelItem = selection.PrimarySelection; 
@@ -231,7 +239,8 @@ namespace RestBox.UserControls
                     ContentId = "SequenceRequestView-" + Guid.NewGuid(),
                     Content = httpRequest,
                     IsSelected = true,
-                    CanFloat = true
+                    CanFloat = true,
+                    IconSource = new BitmapImage(LayoutDocumentUtilities.GetImageUri(LayoutDocumentType.Sequence))
                 };
 
                 ((HttpRequestViewModel)httpRequest.DataContext).DisplayHttpResponse(new Uri(httpRequestSequenceViewModel.SelectedResponse.CallingRequest.Url), requestEnvironmentSettings, httpRequestSequenceViewModel.SelectedResponse);

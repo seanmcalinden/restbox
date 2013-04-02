@@ -3,6 +3,7 @@ using RestBox.ApplicationServices;
 using RestBox.Events;
 using RestBox.Mappers;
 using RestBox.UserControls;
+using RestBox.Utilities;
 
 namespace RestBox.ViewModels
 {
@@ -29,7 +30,7 @@ namespace RestBox.ViewModels
         public RequestEnvironmentsFilesViewModel(IEventAggregator eventAggregator, IFileService fileService, IMainMenuApplicationService mainMenuApplicationService, IMapper<RequestEnvironmentSettingFile, RequestEnvironmentSettingsViewModel> itemToViewModelMapper, IIntellisenseService intellisenseService)
             : base(
                 fileService, eventAggregator, mainMenuApplicationService, itemToViewModelMapper, "New Environment *",
-                () => Solution.Current.RequestEnvironmentFiles, "Add existing environment", "Rest Box Environment (*.renv)|*.renv")
+                () => Solution.Current.RequestEnvironmentFiles, SystemFileTypes.Environment.AddExistingTitle, SystemFileTypes.Environment.FilterText)
         {
             this.fileService = fileService;
             this.intellisenseService = intellisenseService;

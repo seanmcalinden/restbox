@@ -14,6 +14,7 @@ using RestBox.Domain.Entities;
 using RestBox.Domain.Services;
 using RestBox.Events;
 using RestBox.UserControls;
+using RestBox.Utilities;
 
 namespace RestBox.ViewModels
 {
@@ -167,9 +168,9 @@ namespace RestBox.ViewModels
 
             var saveFileDialog = new SaveFileDialog
             {
-                Filter = "Rest Box Environment (*.renv)|*.renv",
-                FileName = Path.GetFileName(environmentSettings.FilePath) ?? "Untitled",
-                Title = "Save Environment As..."
+                Filter = SystemFileTypes.Environment.FilterText,
+                FileName = Path.GetFileName(environmentSettings.FilePath) ?? SystemFileTypes.Environment.UntitledFileName,
+                Title = SystemFileTypes.Environment.SaveAsTitle
             };
             var title = string.Empty;
             if (saveFileDialog.ShowDialog() == true)

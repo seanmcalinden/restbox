@@ -23,6 +23,7 @@ using RestBox.Domain.Entities;
 using RestBox.Domain.Services;
 using RestBox.Events;
 using RestBox.UserControls;
+using RestBox.Utilities;
 
 namespace RestBox.ViewModels
 {
@@ -661,9 +662,9 @@ namespace RestBox.ViewModels
 
             var saveFileDialog = new SaveFileDialog
             {
-                Filter = "Rest Box HttpRequest (*.rhrq)|*.rhrq",
-                FileName = Path.GetFileName(httpRequest.FilePath) ?? "Untitled",
-                Title = "Save Http Request As..."
+                Filter = SystemFileTypes.HttpRequest.FilterText,
+                FileName = Path.GetFileName(httpRequest.FilePath) ?? SystemFileTypes.HttpRequest.UntitledFileName,
+                Title = SystemFileTypes.HttpRequest.SaveAsTitle
             };
 
             if (saveFileDialog.ShowDialog() == true)

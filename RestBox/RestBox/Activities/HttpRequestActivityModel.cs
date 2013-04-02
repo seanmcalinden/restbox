@@ -47,7 +47,11 @@ namespace RestBox.Activities
             {
                 selectedHttpRequestIndex = value; 
                 OnPropertyChanged("SelectedHttpRequestIndex");
-                eventAggregator.GetEvent<IsDirtyEvent>().Publish(new IsDirtyData(this, true));
+                var httpRequestSequenceFilesViewModel = ServiceLocator.Current.GetInstance<HttpRequestSequenceFilesViewModel>();
+                if (!httpRequestSequenceFilesViewModel.IsLoadingSequence)
+                {
+                    eventAggregator.GetEvent<IsDirtyEvent>().Publish(new IsDirtyData(this, true));
+                }
             } 
         }
 

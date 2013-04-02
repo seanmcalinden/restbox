@@ -8,6 +8,7 @@ using Microsoft.Practices.Prism.Events;
 using Microsoft.Win32;
 using RestBox.ApplicationServices;
 using RestBox.Events;
+using RestBox.Utilities;
 
 namespace RestBox.ViewModels
 {
@@ -112,8 +113,8 @@ namespace RestBox.ViewModels
         {
             var openFileDialog = new OpenFileDialog
             {
-                Filter = "Executable (*.exe)|*.exe",
-                Title = "Add request extension"
+                Filter = SystemFileTypes.RequestExtension.FilterText,
+                Title = SystemFileTypes.RequestExtension.AddExistingTitle
             };
             if (openFileDialog.ShowDialog() == true)
             {

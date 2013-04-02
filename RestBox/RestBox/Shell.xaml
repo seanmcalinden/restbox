@@ -57,7 +57,24 @@
         
         <avalondock:DockingManager x:Name="dockingManager" Grid.Row="2">
 
-            <avalondock:DockingManager.DocumentContextMenu>
+            <avalondock:DockingManager.Theme>
+                <avalondock:VS2010Theme/>
+            </avalondock:DockingManager.Theme>
+            <avalondock:DockingManager.DocumentHeaderTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{Binding IconSource}" Margin="0,0,4,0" Height="18" Width="18" VerticalAlignment="Top"/>
+                        <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" VerticalAlignment="Top"/>
+                    </StackPanel>
+                </DataTemplate>
+            </avalondock:DockingManager.DocumentHeaderTemplate>
+            <avalondock:DockingManager.IconContentTemplate>
+<DataTemplate>
+                    <Image Source="{Binding IconSource}" Margin="0,0,4,0" Height="20" Width="20"/>
+                </DataTemplate>
+                </avalondock:DockingManager.IconContentTemplate>
+
+                    <avalondock:DockingManager.DocumentContextMenu>
                 <ContextMenu>
                     <MenuItem Header="{x:Static Properties:Resources.Document_Close}" 
                      Command="{Binding Path=CloseCommand}"
@@ -68,21 +85,27 @@
             </avalondock:DockingManager.DocumentContextMenu>
 
             <avalondock:LayoutRoot>
-                <avalondock:LayoutRoot.RightSide>
-                    <avalondock:LayoutAnchorSide>
-                        <avalondock:LayoutAnchorGroup>
-                            <avalondock:LayoutAnchorable ContentId="HttpRequestFilesLayoutId" x:Name="HttpRequestFilesLayout" Title="Requests" AutoHideWidth="300" ToolTip="Requests" CanClose="False" CanHide="False">
-                            </avalondock:LayoutAnchorable>
-                            <avalondock:LayoutAnchorable ContentId="EnvironmentsLayoutId" x:Name="EnvironmentsLayout" Title="Environments" AutoHideWidth="300"  ToolTip="Environments" CanClose="False" CanHide="False">
-                            </avalondock:LayoutAnchorable>
-                            <avalondock:LayoutAnchorable ContentId="RequestExtensionsId" x:Name="RequestExtensions" Title="Extensions" AutoHideWidth="300" ToolTip="Extensions" CanClose="False" CanHide="False">
-                            </avalondock:LayoutAnchorable>
-                            <avalondock:LayoutAnchorable ContentId="SequenceFilesId" x:Name="SequenceFiles" Title="Sequences" AutoHideWidth="300" ToolTip="Sequences" CanClose="False" CanHide="False">
-                            </avalondock:LayoutAnchorable>
-                        </avalondock:LayoutAnchorGroup>
-                    </avalondock:LayoutAnchorSide>
-                </avalondock:LayoutRoot.RightSide>
+                <avalondock:LayoutRoot.RootPanel>
+                    <avalondock:LayoutPanel Orientation="Horizontal">
+                    <avalondock:LayoutPanel Orientation="Vertical" DockWidth="0.954434993924666*">
+                        <avalondock:LayoutPanel Orientation="Horizontal">
+                            <avalondock:LayoutDocumentPane></avalondock:LayoutDocumentPane>
+                        </avalondock:LayoutPanel>
+                        <avalondock:LayoutAnchorablePaneGroup Orientation="Horizontal" DockHeight="241.54" FloatingWidth="282" FloatingHeight="925" FloatingLeft="814" FloatingTop="991">
+                            <avalondock:LayoutAnchorablePane DockHeight="241.54" FloatingWidth="282" FloatingHeight="925" FloatingLeft="814" FloatingTop="991">
+                                <avalondock:LayoutAnchorable CanHide="False" AutoHideWidth="300" AutoHideHeight="425" AutoHideMinWidth="100" AutoHideMinHeight="100" Title="Environments" IsSelected="True" ContentId="EnvironmentsLayoutId" FloatingLeft="854" FloatingTop="872" FloatingWidth="282" FloatingHeight="925" CanClose="False"></avalondock:LayoutAnchorable>
+                                <avalondock:LayoutAnchorable CanHide="False" AutoHideWidth="300" AutoHideMinWidth="100" AutoHideMinHeight="100" Title="Extensions" ContentId="RequestExtensionsId" FloatingLeft="814" FloatingTop="991" FloatingWidth="282" FloatingHeight="925" CanClose="False"></avalondock:LayoutAnchorable>
+                            </avalondock:LayoutAnchorablePane>
+                        </avalondock:LayoutAnchorablePaneGroup>
+                        </avalondock:LayoutPanel>
+                        <avalondock:LayoutAnchorablePane DockWidth="337" DockHeight="459.54" FloatingWidth="960" FloatingHeight="1040" FloatingLeft="1423" FloatingTop="542">
+                            <avalondock:LayoutAnchorable CanHide="False" AutoHideWidth="300" AutoHideMinWidth="100" AutoHideMinHeight="100" Title="Requests" IsSelected="True" ContentId="HttpRequestFilesLayoutId" FloatingLeft="1423" FloatingTop="542" FloatingWidth="960" FloatingHeight="1040" CanClose="False"></avalondock:LayoutAnchorable>
+                            <avalondock:LayoutAnchorable CanHide="False" AutoHideWidth="300" AutoHideMinWidth="100" AutoHideMinHeight="100" Title="Sequences" ContentId="SequenceFilesId" FloatingLeft="1423" FloatingTop="542" FloatingWidth="960" FloatingHeight="1040" CanClose="False"></avalondock:LayoutAnchorable>
+                        </avalondock:LayoutAnchorablePane>
+                    </avalondock:LayoutPanel>
+                </avalondock:LayoutRoot.RootPanel>
             </avalondock:LayoutRoot>
+
         </avalondock:DockingManager>
     </Grid>
 </Window>

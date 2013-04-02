@@ -57,7 +57,11 @@ namespace RestBox.Activities
             {
                 mainActivity = value;
                 OnPropertyChanged("MainActivity");
-                eventAggregator.GetEvent<IsDirtyEvent>().Publish(new IsDirtyData(this, true));
+                var httpRequestSequenceFilesViewModel = ServiceLocator.Current.GetInstance<HttpRequestSequenceFilesViewModel>();
+                if (!httpRequestSequenceFilesViewModel.IsLoadingSequence)
+                {
+                    eventAggregator.GetEvent<IsDirtyEvent>().Publish(new IsDirtyData(this, true));
+                }
             }
         }
 
@@ -70,7 +74,11 @@ namespace RestBox.Activities
             {
                 conditionTrueActivity = value;
                 OnPropertyChanged("ConditionTrueActivity");
-                eventAggregator.GetEvent<IsDirtyEvent>().Publish(new IsDirtyData(this, true));
+                var httpRequestSequenceFilesViewModel = ServiceLocator.Current.GetInstance<HttpRequestSequenceFilesViewModel>();
+                if (!httpRequestSequenceFilesViewModel.IsLoadingSequence)
+                {
+                    eventAggregator.GetEvent<IsDirtyEvent>().Publish(new IsDirtyData(this, true));
+                }
             }
         }
 
@@ -83,7 +91,11 @@ namespace RestBox.Activities
             {
                 conditionFalseActivity = value;
                 OnPropertyChanged("ConditionFalseActivity");
-                eventAggregator.GetEvent<IsDirtyEvent>().Publish(new IsDirtyData(this, true));
+                var httpRequestSequenceFilesViewModel = ServiceLocator.Current.GetInstance<HttpRequestSequenceFilesViewModel>();
+                if (!httpRequestSequenceFilesViewModel.IsLoadingSequence)
+                {
+                    eventAggregator.GetEvent<IsDirtyEvent>().Publish(new IsDirtyData(this, true));
+                }
             }
         }
 
@@ -97,8 +109,12 @@ namespace RestBox.Activities
             set
             {
                 selectedResponseSectionIndex = value;
-                OnPropertyChanged("SelectedResponseSectionIndex");
-                eventAggregator.GetEvent<IsDirtyEvent>().Publish(new IsDirtyData(this, true));
+                OnPropertyChanged("SelectedResponseSectionIndex"); 
+                var httpRequestSequenceFilesViewModel = ServiceLocator.Current.GetInstance<HttpRequestSequenceFilesViewModel>();
+                if (!httpRequestSequenceFilesViewModel.IsLoadingSequence)
+                {
+                    eventAggregator.GetEvent<IsDirtyEvent>().Publish(new IsDirtyData(this, true));
+                }
             }
         }
 
@@ -109,8 +125,12 @@ namespace RestBox.Activities
             set
             {
                 selectedOperatorIndex = value;
-                OnPropertyChanged("SelectedOperatorIndex");
-                eventAggregator.GetEvent<IsDirtyEvent>().Publish(new IsDirtyData(this, true));
+                OnPropertyChanged("SelectedOperatorIndex"); 
+                var httpRequestSequenceFilesViewModel = ServiceLocator.Current.GetInstance<HttpRequestSequenceFilesViewModel>();
+                if (!httpRequestSequenceFilesViewModel.IsLoadingSequence)
+                {
+                    eventAggregator.GetEvent<IsDirtyEvent>().Publish(new IsDirtyData(this, true));
+                }
             }
         }
 
@@ -121,8 +141,12 @@ namespace RestBox.Activities
             set
             {
                 conditionValue = value;
-                OnPropertyChanged("ConditionValue");
-                eventAggregator.GetEvent<IsDirtyEvent>().Publish(new IsDirtyData(this, true));
+                OnPropertyChanged("ConditionValue"); 
+                var httpRequestSequenceFilesViewModel = ServiceLocator.Current.GetInstance<HttpRequestSequenceFilesViewModel>();
+                if (!httpRequestSequenceFilesViewModel.IsLoadingSequence)
+                {
+                    eventAggregator.GetEvent<IsDirtyEvent>().Publish(new IsDirtyData(this, true));
+                }
             }
         }
 
@@ -134,7 +158,11 @@ namespace RestBox.Activities
             {
                 interval = value;
                 OnPropertyChanged("Interval");
-                eventAggregator.GetEvent<IsDirtyEvent>().Publish(new IsDirtyData(this, true));
+                var httpRequestSequenceFilesViewModel = ServiceLocator.Current.GetInstance<HttpRequestSequenceFilesViewModel>();
+                if (!httpRequestSequenceFilesViewModel.IsLoadingSequence)
+                {
+                    eventAggregator.GetEvent<IsDirtyEvent>().Publish(new IsDirtyData(this, true));
+                }
             }
         }
 
@@ -146,7 +174,11 @@ namespace RestBox.Activities
             {
                 maxRetries = value;
                 OnPropertyChanged("MaxRetries");
-                eventAggregator.GetEvent<IsDirtyEvent>().Publish(new IsDirtyData(this, true));
+                var httpRequestSequenceFilesViewModel = ServiceLocator.Current.GetInstance<HttpRequestSequenceFilesViewModel>();
+                if (!httpRequestSequenceFilesViewModel.IsLoadingSequence)
+                {
+                    eventAggregator.GetEvent<IsDirtyEvent>().Publish(new IsDirtyData(this, true));
+                }
             }
         }
 

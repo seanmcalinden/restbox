@@ -40,7 +40,7 @@
             </ComboBox.ItemTemplate>
         </ComboBox>
 
-        <DataGrid x:Name="EnvironmentsDataGrid" Grid.Row="2" AutoGenerateColumns="False" SelectionMode="Single" SelectedItem="{Binding SelectedFile, UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding ViewFiles}" MouseDoubleClick="ActivateItem"  HorizontalAlignment="Stretch" IsReadOnly="True">
+        <DataGrid x:Name="EnvironmentsDataGrid" Grid.Row="2" AutoGenerateColumns="False" SelectionMode="Single" SelectedItem="{Binding SelectedFile, UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding FilesCollectionView}" MouseDoubleClick="ActivateItem"  HorizontalAlignment="Stretch" IsReadOnly="True">
             <DataGrid.ContextMenu>
                 <ContextMenu>
                     <MenuItem Header="Clone" Command="{Binding CloneCommand}"  />

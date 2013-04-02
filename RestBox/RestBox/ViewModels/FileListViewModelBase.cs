@@ -10,6 +10,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Media.Imaging;
 using AvalonDock.Layout;
 using Microsoft.Practices.Prism.Commands;
 using Microsoft.Practices.Prism.Events;
@@ -20,6 +21,7 @@ using RestBox.Domain.Entities;
 using RestBox.Events;
 using RestBox.Mappers;
 using RestBox.UserControls;
+using RestBox.Utilities;
 
 namespace RestBox.ViewModels
 {
@@ -42,6 +44,7 @@ namespace RestBox.ViewModels
         private ViewFile viewFileToOpen;
         private const string Warning = "warning";
         private const string StandaloneNewItemPrefix = "StandaloneNewItem";
+        private LayoutDocumentType layoutDocumentType;
 
         #endregion
 
@@ -74,6 +77,19 @@ namespace RestBox.ViewModels
             eventAggregator.GetEvent<OpenSolutionEvent>().Subscribe(SolutionLoadedEvent);
             eventAggregator.GetEvent<CloseSolutionEvent>().Subscribe(SolutionClosedEvent);
             eventAggregator.GetEvent<DocumentChangedEvent>().Subscribe(DocumentChanged);
+
+            if (typeof (TUserControl) == typeof (HttpRequest))
+            {
+                layoutDocumentType = LayoutDocumentType.HttpRequest;
+            }
+            else if (typeof(TUserControl) == typeof(HttpRequestSequence))
+            {
+                layoutDocumentType = LayoutDocumentType.Sequence;
+            }
+            else if (typeof(TUserControl) == typeof(RequestEnvironmentSettings))
+            {
+                layoutDocumentType = LayoutDocumentType.Environment;
+            }
         } 
 
         #endregion
@@ -91,7 +107,12 @@ namespace RestBox.ViewModels
         public string FilesFilter
         {
             get { return filesFilter; }
-            set { filesFilter = value; OnPropertyChanged("FilesFilter"); FilesCollectionView.Refresh(); }
+            set
+            {
+                filesFilter = value; 
+                OnPropertyChanged("FilesFilter"); 
+                FilesCollectionView.Refresh();
+            }
         }
 
         public ObservableCollection<string> Groups { get; set; }
@@ -169,7 +190,9 @@ namespace RestBox.ViewModels
             item.Name = file.Name;
             item.RelativeFilePath = file.RelativeFilePath;
         }
-        
+
+        public bool IsLoadingSequence { get; set; }
+
         public void OpenItem(string fileName)
         {
             var itemUserControl = ServiceLocator.Current.GetInstance<TUserControl>();
@@ -185,7 +208,9 @@ namespace RestBox.ViewModels
             if (typeof(TUserControl) == typeof(HttpRequestSequence))
             {
                 var httpRequestSequenceViewModel = (viewModel as HttpRequestSequenceViewModel);
+                IsLoadingSequence = true;
                 var activity = ActivityXamlServices.Load(fileName);
+                IsLoadingSequence = false;
                 httpRequestSequenceViewModel.WorkflowDesigner.Load(activity);
                 httpRequestSequenceViewModel.MainSequence = activity;
                 var modelService = httpRequestSequenceViewModel.WorkflowDesigner.Context.Services.GetService<ModelService>();
@@ -198,7 +223,8 @@ namespace RestBox.ViewModels
                 ContentId = viewFileToOpen.Id,
                 Content = itemUserControl,
                 IsSelected = true,
-                CanFloat = true
+                CanFloat = true,
+                IconSource = new BitmapImage(LayoutDocumentUtilities.GetImageUri(layoutDocumentType))
             };
             layoutDocument.Closing += DocumentClosing;
 
@@ -260,7 +286,8 @@ namespace RestBox.ViewModels
                     ContentId = viewFileToOpen.Id,
                     Content = ServiceLocator.Current.GetInstance<TUserControl>(),
                     IsSelected = true,
-                    CanFloat = true
+                    CanFloat = true,
+                    IconSource = new BitmapImage(LayoutDocumentUtilities.GetImageUri(layoutDocumentType))
                 };
                 layoutDocument.Closing += DocumentClosing;
 
@@ -280,32 +307,43 @@ namespace RestBox.ViewModels
         protected void RaiseDocumentChanged(
             LayoutData layoutData)
         {
+            if (layoutData.ContentId == "StartPage")
+            {
+                RaiseClearToolBarEvent();
+                eventAggregator.GetEvent<RemoveInputBindingEvent>().Publish(true);
+                return;
+            }
+
             if (layoutData != null && layoutData.Content != null && layoutData.Content.GetType() == typeof(TUserControl))
             {
                 if (layoutData.IsSelected)
                 {
-                    eventAggregator.GetEvent<UpdateToolBarEvent>().Publish(new List<ToolBarItemData>
-                        {
-                            new ToolBarItemData
-                                {
-                                    Command = null,
-                                    Visibility = Visibility.Collapsed,
-                                    ToolBarItemType = ToolBarItemType.Save
-                                },
-                            new ToolBarItemData
-                                {
-                                    Command = null,
-                                    Visibility = Visibility.Collapsed,
-                                    ToolBarItemType = ToolBarItemType.Run
-                                }
-                        });
-
+                    RaiseClearToolBarEvent();
                     eventAggregator.GetEvent<RemoveInputBindingEvent>().Publish(true);
                     eventAggregator.GetEvent<TSelectItemEvent>().Publish(layoutData.ContentId);
                     eventAggregator.GetEvent<TAddMenuItemsEvent>().Publish((TUserControlViewModel)((TUserControl)layoutData.Content).DataContext);
                 }
             }
-        } 
+        }
+
+        private void RaiseClearToolBarEvent()
+        {
+            eventAggregator.GetEvent<UpdateToolBarEvent>().Publish(new List<ToolBarItemData>
+                {
+                    new ToolBarItemData
+                        {
+                            Command = null,
+                            Visibility = Visibility.Collapsed,
+                            ToolBarItemType = ToolBarItemType.Save
+                        },
+                    new ToolBarItemData
+                        {
+                            Command = null,
+                            Visibility = Visibility.Collapsed,
+                            ToolBarItemType = ToolBarItemType.Run
+                        }
+                });
+        }
 
         #endregion
 
@@ -371,7 +409,8 @@ namespace RestBox.ViewModels
                 Content = userControl,
                 Title = newItemTitle,
                 IsSelected = true,
-                CanFloat = true
+                CanFloat = true,
+                IconSource = new BitmapImage(LayoutDocumentUtilities.GetImageUri(layoutDocumentType))
             };
 
             if (typeof(TUserControl) == typeof(HttpRequestSequence))
@@ -410,7 +449,8 @@ namespace RestBox.ViewModels
                 ContentId = viewFileToOpen.Id,
                 Content = itemUserControl,
                 IsSelected = true,
-                CanFloat = true
+                CanFloat = true,
+                IconSource = new BitmapImage(LayoutDocumentUtilities.GetImageUri(layoutDocumentType))
             };
             layoutDocument.Closing += DocumentClosing;
 
@@ -541,6 +581,28 @@ namespace RestBox.ViewModels
         private void DocumentClosing(object sender, CancelEventArgs cancelEventArgs)
         {
             var layoutDocument = ((LayoutDocument)sender);
+
+            var context = ((UserControl)layoutDocument.Content).DataContext as ISave;
+            if (context != null)
+            {
+                if (context.IsDirty)
+                {
+                    var result = MessageBox.Show(string.Format("Do you want to save {0}?", layoutDocument.Title),
+                                    string.Format("Save {0}?", layoutDocument.Title),
+                                    MessageBoxButton.YesNoCancel, MessageBoxImage.Question, MessageBoxResult.Yes);
+                    if (result == MessageBoxResult.Cancel)
+                    {
+                        cancelEventArgs.Cancel = true;
+                        return;
+                    }
+                    
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        context.Save(layoutDocument.ContentId, layoutDocument.Content);
+                    }
+                }
+            }
+            
             if (layoutDocument.Title == newItemTitle)
             {
                 var viewFile = ViewFiles.First(x => x.Id == layoutDocument.ContentId);

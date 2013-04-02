@@ -140,6 +140,8 @@
     <Compile Include="ApplicationServices\IIntellisenseService.cs" />
     <Compile Include="ApplicationServices\JsonSerializer.cs" />
     <Compile Include="ApplicationServices\MainMenuApplicationService.cs" />
+    <Compile Include="ApplicationServices\IRestBoxStateService.cs" />
+    <Compile Include="ApplicationServices\RestBoxStateService.cs" />
     <Compile Include="Bootstrapper.cs" />
     <Compile Include="Events\AddInputBindingEvent.cs" />
     <Compile Include="Events\CloseSolutionEvent.cs" />
@@ -151,6 +153,8 @@
     <Compile Include="Events\AddHttpRequestSequenceMenuItemsEvent.cs" />
     <Compile Include="Events\ApplicationShutdownEvent.cs" />
     <Compile Include="Events\BindSolutionMenuItemsEvent.cs" />
+    <Compile Include="Events\CreateStartPageEvent.cs" />
+    <Compile Include="Events\SaveRestBoxStateEvent.cs" />
     <Compile Include="Events\IsDirtyData.cs" />
     <Compile Include="Events\UpdateResponseHeadersEvent.cs" />
     <Compile Include="Events\ToolBarItemType.cs" />
@@ -215,6 +219,13 @@
       <DependentUpon>RequestExtensionsFiles.xaml</DependentUpon>
     </Compile>
     <Compile Include="UserControls\ITabUserControlBase.cs" />
+    <Compile Include="UserControls\StartPage.xaml.cs">
+      <DependentUpon>StartPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Utilities\FileType.cs" />
+    <Compile Include="Utilities\LayoutDocumentType.cs" />
+    <Compile Include="Utilities\LayoutDocumentUtilities.cs" />
+    <Compile Include="Utilities\SystemFileTypes.cs" />
     <Compile Include="ViewModels\FileListViewModelBase.cs" />
     <Compile Include="ViewModels\HttpRequestSequenceRequestViewModel.cs" />
     <Compile Include="ViewModels\HttpRequestSequenceViewModel.cs" />
@@ -231,6 +242,8 @@
     <Compile Include="ViewModels\RequestEnvironmentSettingFile.cs" />
     <Compile Include="ViewModels\RequestEnvironmentSetting.cs" />
     <Compile Include="ViewModels\RequestEnvironmentSettingsViewModel.cs" />
+    <Compile Include="ViewModels\RestBoxState.cs" />
+    <Compile Include="ViewModels\StartPageViewModel.cs" />
     <Compile Include="ViewModels\ViewFile.cs" />
     <Compile Include="ViewModels\File.cs" />
     <Compile Include="ViewModels\HttpRequestItemFile.cs" />
@@ -282,6 +295,7 @@
     <Resource Include="Images\save-all-icon.png" />
     <Resource Include="Images\save-icon.png" />
     <Resource Include="Images\help-icon.png" />
+    <Resource Include="Images\start-page-icon.png" />
     <Content Include="Intellisense.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -356,6 +370,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="UserControls\RequestExtensionsFiles.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\StartPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
