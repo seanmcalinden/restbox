@@ -22,10 +22,8 @@ namespace RestBox.Installers
                                  .Configure(c => c.LifeStyle.Singleton.Named(c.Implementation.Name)));
             container.Register(
                     Component.For<ShellViewModel>().ImplementedBy<ShellViewModel>().LifeStyle.Singleton,
-                    Component.For<StartPage>().ImplementedBy<StartPage>().LifeStyle.Transient,
-                    Component.For<StartPageViewModel>().ImplementedBy<StartPageViewModel>().LifeStyle.Transient,
-                    Component.For<IRestBoxStateService>().ImplementedBy<RestBoxStateService>().LifeStyle.Singleton,
-                    Component.For<ILayoutDataFactory>().ImplementedBy<LayoutDataFactory>().LifeStyle.Singleton,
+                    Component.For<IRestBoxStateService>().ImplementedBy<RestBoxStateService>().LifeStyle.Transient,
+                    Component.For<ILayoutDataFactory>().ImplementedBy<LayoutDataFactory>().LifeStyle.Transient,
                     Component.For<ILayoutApplicationService>().ImplementedBy<LayoutApplicationService>().LifeStyle.Singleton,
                     Component.For<IMainMenuApplicationService>().ImplementedBy<MainMenuApplicationService>().LifeStyle.Singleton,
                     Component.For<HttpRequest>().ImplementedBy<HttpRequest>().LifeStyle.Transient,
@@ -41,6 +39,12 @@ namespace RestBox.Installers
                     Component.For<HttpRequestSequenceFilesViewModel>().ImplementedBy<HttpRequestSequenceFilesViewModel>().LifeStyle.Singleton,
                     Component.For<HttpRequestSequenceViewModel>().ImplementedBy<HttpRequestSequenceViewModel>().LifeStyle.Transient,
 
+                    Component.For<HttpInterceptorFiles>().ImplementedBy<HttpInterceptorFiles>().LifeStyle.Singleton,
+                    Component.For<HttpInterceptorFilesViewModel>().ImplementedBy<HttpInterceptorFilesViewModel>().LifeStyle.Singleton,
+                    Component.For<HttpInterceptor>().ImplementedBy<HttpInterceptor>().LifeStyle.Transient,
+                    Component.For<HttpInterceptorViewModel>().ImplementedBy<HttpInterceptorViewModel>().LifeStyle.Transient,
+                    Component.For<IProxyService>().ImplementedBy<ProxyService>().LifeStyle.Singleton,
+                    
                     Component.For<RequestEnvironments>().ImplementedBy<RequestEnvironments>().LifeStyle.Singleton,
                     Component.For<RequestEnvironmentSettings>().ImplementedBy<RequestEnvironmentSettings>().LifeStyle.Transient,
                     Component.For<RequestEnvironmentsFilesViewModel>().ImplementedBy<RequestEnvironmentsFilesViewModel>().LifeStyle.Singleton,
@@ -52,8 +56,11 @@ namespace RestBox.Installers
 
                     Component.For<IMapper<HttpRequestItemFile, HttpRequestViewModel>>().ImplementedBy<MapHttpRequestItemFileToHttpRequestViewModel>(),
                     Component.For<IMapper<RequestEnvironmentSettingFile, RequestEnvironmentSettingsViewModel>>().ImplementedBy<MapRequestEnvironmentFileToRequestEnvironmentSettingsViewModel>(),
+                    Component.For<IMapper<HttpRequestItemFile, HttpInterceptorViewModel>>().ImplementedBy<MapHttpRequestItemToHttpInterceptorViewModel>(),
 
-                    Component.For<HttpRequestActivityModel>().ImplementedBy<HttpRequestActivityModel>().LifeStyle.Transient);
+                    Component.For<HttpRequestActivityModel>().ImplementedBy<HttpRequestActivityModel>().LifeStyle.Transient,
+                    Component.For<StartPage>().ImplementedBy<StartPage>().LifeStyle.Transient,
+                    Component.For<StartPageViewModel>().ImplementedBy<StartPageViewModel>().LifeStyle.Transient);
 
 
         }

@@ -16,6 +16,23 @@
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <WarningLevel>4</WarningLevel>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <PublishUrl>C:\temp\RestBox\Published\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <AutorunEnabled>true</AutorunEnabled>
+    <ApplicationRevision>1</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <PublishWizardCompleted>true</PublishWizardCompleted>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -40,6 +57,18 @@
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>RestBox.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ManifestCertificateThumbprint>EC9A55C112FFC56EDACC494C2A40554B6230701C</ManifestCertificateThumbprint>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ManifestKeyFile>RestBox_TemporaryKey.pfx</ManifestKeyFile>
+  </PropertyGroup>
+  <PropertyGroup>
+    <GenerateManifests>true</GenerateManifests>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignManifests>true</SignManifests>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="AutoMapper">
@@ -70,6 +99,10 @@
     </Reference>
     <Reference Include="CommonServiceLocator.WindsorAdapter, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\CommonServiceLocator.WindsorAdapter.1.0\lib\NET35\CommonServiceLocator.WindsorAdapter.dll</HintPath>
+    </Reference>
+    <Reference Include="FiddlerCore4, Version=4.4.0.1, Culture=neutral, PublicKeyToken=67cb91587178ac5a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Libraries\FiddlerCore4.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Practices.Prism, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Prism.4.0.0.0\lib\NET40\Microsoft.Practices.Prism.dll</HintPath>
@@ -138,11 +171,14 @@
     <Compile Include="ApplicationServices\IHttpRequestService.cs" />
     <Compile Include="ApplicationServices\IMainMenuApplicationService.cs" />
     <Compile Include="ApplicationServices\IIntellisenseService.cs" />
+    <Compile Include="ApplicationServices\IProxyService.cs" />
     <Compile Include="ApplicationServices\JsonSerializer.cs" />
     <Compile Include="ApplicationServices\MainMenuApplicationService.cs" />
     <Compile Include="ApplicationServices\IRestBoxStateService.cs" />
+    <Compile Include="ApplicationServices\ProxyService.cs" />
     <Compile Include="ApplicationServices\RestBoxStateService.cs" />
     <Compile Include="Bootstrapper.cs" />
+    <Compile Include="Events\AddHttpInterceptorMenuItemsEvent.cs" />
     <Compile Include="Events\AddInputBindingEvent.cs" />
     <Compile Include="Events\CloseSolutionEvent.cs" />
     <Compile Include="Events\AddEnvironmentLayoutDocumentEvent.cs" />
@@ -153,9 +189,16 @@
     <Compile Include="Events\AddHttpRequestSequenceMenuItemsEvent.cs" />
     <Compile Include="Events\ApplicationShutdownEvent.cs" />
     <Compile Include="Events\BindSolutionMenuItemsEvent.cs" />
+    <Compile Include="Events\SelectHttpInterceptorItemEvent.cs" />
+    <Compile Include="Events\StatusBarData.cs" />
     <Compile Include="Events\CreateStartPageEvent.cs" />
     <Compile Include="Events\SaveRestBoxStateEvent.cs" />
     <Compile Include="Events\IsDirtyData.cs" />
+    <Compile Include="Events\UpdateHttpInterceptorFileItemEvent.cs" />
+    <Compile Include="Events\UpdateInterceptorBodyEvent.cs" />
+    <Compile Include="Events\UpdateInterceptorHeadersEvent.cs" />
+    <Compile Include="Events\UpdateInterceptorUrlEvent.cs" />
+    <Compile Include="Events\UpdateJsonResponseEvent.cs" />
     <Compile Include="Events\UpdateResponseHeadersEvent.cs" />
     <Compile Include="Events\ToolBarItemType.cs" />
     <Compile Include="Events\ToolBarItemData.cs" />
@@ -163,6 +206,8 @@
     <Compile Include="Events\ResetLayoutEvent.cs" />
     <Compile Include="Events\SaveAllEvent.cs" />
     <Compile Include="Events\LayoutType.cs" />
+    <Compile Include="Events\UpdateResponseRawBodyEvent.cs" />
+    <Compile Include="Events\UpdateStatusBarEvent.cs" />
     <Compile Include="Events\UpdateToolBarEvent.cs" />
     <Compile Include="Events\UpdateViewMenuItemChecksEvent.cs" />
     <Compile Include="Events\ShowLayoutEvent.cs" />
@@ -186,16 +231,27 @@
     <Compile Include="Events\RemoveInputBindingEvent.cs" />
     <Compile Include="Events\RemoveTabEvent.cs" />
     <Compile Include="Events\SelectEnvironmentItemEvent.cs" />
+    <Compile Include="Events\UpdateXmlResponseEvent.cs" />
     <Compile Include="Factories\ILayoutDataFactory.cs" />
     <Compile Include="Factories\LayoutDataFactory.cs" />
     <Compile Include="Installers\ShellInstaller.cs" />
     <Compile Include="ApplicationServices\LayoutApplicationService.cs" />
     <Compile Include="ApplicationServices\ILayoutApplicationService.cs" />
     <Compile Include="Mappers\IMapper.cs" />
+    <Compile Include="Mappers\MapHttpRequestItemToHttpInterceptorViewModel.cs" />
     <Compile Include="Mappers\MapRequestEnvironmentFileToRequestEnvironmentSettingsViewModel.cs" />
     <Compile Include="Mappers\MapHttpRequestItemFileToHttpRequestViewModel.cs" />
     <Compile Include="Shell.xaml.cs">
       <DependentUpon>Shell.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UserControls\About.xaml.cs">
+      <DependentUpon>About.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UserControls\HttpInterceptor.xaml.cs">
+      <DependentUpon>HttpInterceptor.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UserControls\HttpInterceptorFiles.xaml.cs">
+      <DependentUpon>HttpInterceptorFiles.xaml</DependentUpon>
     </Compile>
     <Compile Include="UserControls\HttpRequest.xaml.cs">
       <DependentUpon>HttpRequest.xaml</DependentUpon>
@@ -226,11 +282,13 @@
     <Compile Include="Utilities\LayoutDocumentType.cs" />
     <Compile Include="Utilities\LayoutDocumentUtilities.cs" />
     <Compile Include="Utilities\SystemFileTypes.cs" />
+    <Compile Include="ViewModels\AboutViewModel.cs" />
+    <Compile Include="ViewModels\HttpInterceptorFilesViewModel.cs" />
     <Compile Include="ViewModels\FileListViewModelBase.cs" />
+    <Compile Include="ViewModels\HttpInterceptorViewModel.cs" />
     <Compile Include="ViewModels\HttpRequestSequenceRequestViewModel.cs" />
     <Compile Include="ViewModels\HttpRequestSequenceViewModel.cs" />
     <Compile Include="ViewModels\HttpRequestSequenceFilesViewModel.cs" />
-    <Compile Include="ViewModels\FileListViewModel.cs" />
     <Compile Include="ViewModels\HeaderItem.cs" />
     <Compile Include="ViewModels\HttpRequestFilesViewModel.cs" />
     <Compile Include="ViewModels\HttpRequestItem.cs" />
@@ -238,6 +296,11 @@
     <Compile Include="ViewModels\ISave.cs" />
     <Compile Include="ViewModels\LayoutData.cs" />
     <Compile Include="ViewModels\MainMenuItem.cs" />
+    <Compile Include="ViewModels\NoLayoutFiles\NoItemEvent.cs" />
+    <Compile Include="ViewModels\NoLayoutFiles\NoLayoutUserControl.cs" />
+    <Compile Include="ViewModels\NoLayoutFiles\NoLayoutViewModel.cs" />
+    <Compile Include="ViewModels\NoLayoutFiles\NoMenuItemsEvent.cs" />
+    <Compile Include="ViewModels\NoLayoutFiles\NoSettingFile.cs" />
     <Compile Include="ViewModels\RequestExtensionFilesViewModel.cs" />
     <Compile Include="ViewModels\RequestEnvironmentSettingFile.cs" />
     <Compile Include="ViewModels\RequestEnvironmentSetting.cs" />
@@ -270,7 +333,18 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Resource Include="RestBox.ico" />
+    <None Include="RestBox_TemporaryKey.pfx" />
+    <Resource Include="Images\interceptor-icon.png" />
+    <Content Include="Libraries\FiddlerCore4.dll" />
+    <Content Include="Libraries\License.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Libraries\makecert.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="RestBox.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -345,6 +419,18 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="UserControls\About.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\HttpInterceptor.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\HttpInterceptorFiles.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="UserControls\HttpRequest.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -390,7 +476,31 @@
   <ItemGroup>
     <Resource Include="Images\remove-icon.png" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.5">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4.5 %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <FileAssociation Include=".rbsln">
+      <Visible>False</Visible>
+      <Description>REST Box Solution</Description>
+      <Progid>rbsln</Progid>
+      <DefaultIcon>RestBox.ico</DefaultIcon>
+    </FileAssociation>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

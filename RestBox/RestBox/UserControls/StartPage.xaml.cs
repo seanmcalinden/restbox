@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Controls;
+using Microsoft.Practices.Prism.Events;
 using Microsoft.Practices.ServiceLocation;
 using RestBox.ApplicationServices;
+using RestBox.Domain.Services;
 using RestBox.ViewModels;
+using System.Diagnostics;
 
 namespace RestBox.UserControls
 {
@@ -12,12 +15,10 @@ namespace RestBox.UserControls
     /// </summary>
     public partial class StartPage : UserControl
     {
-        private readonly StartPageViewModel startPageViewModel;
         private readonly IMainMenuApplicationService mainMenuApplicationService;
 
-        public StartPage(StartPageViewModel startPageViewModel, IMainMenuApplicationService mainMenuApplicationService)
+        public StartPage(IMainMenuApplicationService mainMenuApplicationService, StartPageViewModel startPageViewModel)
         {
-            this.startPageViewModel = startPageViewModel;
             this.mainMenuApplicationService = mainMenuApplicationService;
             DataContext = startPageViewModel;
 

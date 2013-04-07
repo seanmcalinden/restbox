@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -92,7 +93,15 @@ namespace RestBox.UserControls
 
         private void ActivateItem(object sender, MouseButtonEventArgs e)
         {
+            eventAggregator.GetEvent<UpdateStatusBarEvent>().Publish(new StatusBarData
+                {
+                    StatusBarText = "Loading Sequence..."
+                });
             httpRequestSequenceFilesViewModel.ActivateItem();
+            eventAggregator.GetEvent<UpdateStatusBarEvent>().Publish(new StatusBarData
+            {
+                StatusBarText = "Ready"
+            });
         } 
 
     }

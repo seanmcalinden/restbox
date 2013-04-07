@@ -11,6 +11,7 @@ namespace RestBox.Mappers
             destination.RequestVerb = destination.RequestVerbs.First(x => x.Content.ToString() == source.Verb);
             destination.RequestHeaders = source.Headers;
             destination.RequestBody = source.Body;
+            destination.IsDirty = false;
         }
     }
 }

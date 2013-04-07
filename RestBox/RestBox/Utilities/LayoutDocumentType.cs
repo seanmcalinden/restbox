@@ -6,6 +6,7 @@
         HttpRequest,
         Environment,
         Sequence,
-        Extension
+        Extension,
+        Interceptor
     }
 }

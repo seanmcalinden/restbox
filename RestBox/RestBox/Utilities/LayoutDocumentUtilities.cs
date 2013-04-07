@@ -24,6 +24,9 @@ namespace RestBox.Utilities
                 case LayoutDocumentType.Extension:
                     imageName = "requestextension-icon.png";
                     break;
+                case LayoutDocumentType.Interceptor:
+                    imageName = "interceptor-icon.png";
+                    break;
             }
 
             return new Uri(string.Format("pack://application:,,,/RestBox;component/Images/{0}", imageName));

@@ -65,7 +65,19 @@ namespace RestBox.Activities
                 OnPropertyChanged("Icon");
             }
         }
+
+        private string description;
+        public string Description
+        {
+            get { return description; }
+            set
+            {
+                description = value;
+                OnPropertyChanged("Description");
+            }
+        }
         
+
         protected override void Execute(NativeActivityContext context)
         {
             workflowInstanceId = context.WorkflowInstanceId;
@@ -102,7 +114,7 @@ namespace RestBox.Activities
 
             HttpRequestSequenceViewModel viewModel;
             HttpRequestSequenceViewModel.RunningWorkflows.TryGetValue(workflowInstanceId, out viewModel);
-            AddOnUi(viewModel.Responses, new HttpResponseItem(0,null, null, null, null, DateTime.MinValue, DateTime.MinValue, 0, new HttpRequestItem
+            AddOnUi(viewModel.Responses, new HttpResponseItem(0,null, null, null, Description, null, DateTime.MinValue, DateTime.MinValue, 0, new HttpRequestItem
                 {
                     Name = HttpRequests[SelectedHttpRequestIndex].Name + ": " + errorMessage
                 }));
@@ -112,6 +124,7 @@ namespace RestBox.Activities
         {
             HttpRequestSequenceViewModel viewModel;
             HttpRequestSequenceViewModel.RunningWorkflows.TryGetValue(workflowInstanceId, out viewModel);
+            httpResponseItem.Description = Description;
             AddOnUi(viewModel.Responses, httpResponseItem);
         }
 

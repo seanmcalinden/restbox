@@ -5,12 +5,13 @@ namespace RestBox.ViewModels
 {
     public class HttpResponseItem
     {
-        public HttpResponseItem(int statusCode, string reasonPhrase, string headers, object body, string contentType, DateTime requestStart, DateTime responseReceived, Double totalRequestSeconds, HttpRequestItem callingRequest)
+        public HttpResponseItem(int statusCode, string reasonPhrase, string headers, object body, string description, string contentType, DateTime requestStart, DateTime responseReceived, Double totalRequestSeconds, HttpRequestItem callingRequest)
         {
             StatusCode = statusCode;
             ReasonPhrase = reasonPhrase;
             Headers = headers;
             Body = body;
+            Description = description;
             ContentType = contentType;
             RequestStart = requestStart;
             ResponseReceived = responseReceived;
@@ -22,6 +23,7 @@ namespace RestBox.ViewModels
         public string ReasonPhrase { get; private set; }
         public string Headers { get; private set; }
         public object Body { get; private set; }
+        public string Description { get; set; }
         public string ContentType { get; private set; }
         public DateTime RequestStart { get; private set; }
         public string RequestStartString {

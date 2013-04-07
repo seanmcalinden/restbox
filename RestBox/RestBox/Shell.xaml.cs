@@ -3,10 +3,13 @@ using System.Activities;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 using AvalonDock.Layout;
 using Microsoft.Practices.Prism.Events;
 using Microsoft.Practices.ServiceLocation;
@@ -34,6 +37,7 @@ namespace RestBox
         private LayoutAnchorable environmentsLayout;
         private LayoutAnchorable requestExtensions;
         private LayoutAnchorable sequenceFiles;
+        private LayoutAnchorable interceptorFiles;
         private bool resetLayoutRequested;
 
         public Shell(
@@ -61,11 +65,13 @@ namespace RestBox
             environmentsLayout = GetLayoutAnchorableById("EnvironmentsLayoutId");
             requestExtensions = GetLayoutAnchorableById("RequestExtensionsId");
             sequenceFiles = GetLayoutAnchorableById("SequenceFilesId");
+            interceptorFiles = GetLayoutAnchorableById("InterceptorFilesId");
             
             httpRequestFilesLayout.Content = ServiceLocator.Current.GetInstance<HttpRequestFiles>();
             environmentsLayout.Content = ServiceLocator.Current.GetInstance<RequestEnvironments>();
             requestExtensions.Content = ServiceLocator.Current.GetInstance<RequestExtensions>();
-            sequenceFiles.Content = ServiceLocator.Current.GetInstance<HttpRequestSequenceFiles>();   
+            sequenceFiles.Content = ServiceLocator.Current.GetInstance<HttpRequestSequenceFiles>();
+            interceptorFiles.Content = ServiceLocator.Current.GetInstance<HttpInterceptorFiles>();   
          
             eventAggregator.GetEvent<AddInputBindingEvent>().Subscribe(AddInputBinding);
             eventAggregator.GetEvent<RemoveInputBindingEvent>().Subscribe(RemoveInputBindings);
@@ -86,10 +92,21 @@ namespace RestBox
             eventAggregator.GetEvent<ResetLayoutEvent>().Subscribe(ResetLayoutOnRestart);
             eventAggregator.GetEvent<SaveRestBoxStateEvent>().Subscribe(SaveRestBoxState);
             eventAggregator.GetEvent<CreateStartPageEvent>().Subscribe(CreateStartPage);
+            eventAggregator.GetEvent<UpdateStatusBarEvent>().Subscribe(UpdateStatusBar);
             
             Closing += OnClosing;
-
             CreateStartPage(true);
+        }
+
+        private void UpdateStatusBar(StatusBarData statusBarData)
+        {
+            // TODO: Does not work, loading needs to be on a different thread and then dispatch
+            Task.Factory.StartNew(() => RunOnUi(() => StatusBarText.Content = statusBarData.StatusBarText));
+        }
+
+        private void RunOnUi(Action action)
+        {
+            StatusBarText.Dispatcher.Invoke(DispatcherPriority.Render, action);
         }
 
         private void SaveRestBoxState(RestBoxStateFile restBoxStateFile)
@@ -104,6 +121,7 @@ namespace RestBox
 
         private void CreateStartPage(bool obj)
         {
+
             var startPage = new LayoutDocument
                 {
                     Title = "Start Page",

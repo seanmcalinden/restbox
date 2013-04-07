@@ -83,6 +83,7 @@ namespace RestBox.ApplicationServices
                         httpResponseMessage.ReasonPhrase,
                         GetResponseHeaders(httpResponseMessage),
                         SetContent(httpResponseMessage),
+                        "",
                         GetContentType(httpResponseMessage),
                         startTime,
                         completedTime,
@@ -137,7 +138,7 @@ namespace RestBox.ApplicationServices
 
         private string ReplaceTokensTokens(string value, List<RequestEnvironmentSetting> requestEnvironmentSettings)
         {
-            if (value == null || requestEnvironmentSettings == null || requestEnvironmentSettings.Count == 0)
+            if (value == null)
             {
                 return value;
             }

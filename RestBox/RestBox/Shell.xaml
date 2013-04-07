@@ -8,7 +8,8 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />            
+            <RowDefinition Height="Auto" />    
+            
         </Grid.RowDefinitions>
 
         <Menu Grid.Row="0" ItemsSource="{Binding MenuItems}" />
@@ -52,7 +53,7 @@
         </ToolBarTray>
         
         <StatusBar DockPanel.Dock="Bottom" x:Name="StatusBar" Height="35" VerticalAlignment="Bottom" Grid.Row="3">
-            <Label Content="Ready" />
+            <Label x:Name="StatusBarText" Content="Ready" />
         </StatusBar>
         
         <avalondock:DockingManager x:Name="dockingManager" Grid.Row="2">
@@ -101,6 +102,7 @@
                         <avalondock:LayoutAnchorablePane DockWidth="337" DockHeight="459.54" FloatingWidth="960" FloatingHeight="1040" FloatingLeft="1423" FloatingTop="542">
                             <avalondock:LayoutAnchorable CanHide="False" AutoHideWidth="300" AutoHideMinWidth="100" AutoHideMinHeight="100" Title="Requests" IsSelected="True" ContentId="HttpRequestFilesLayoutId" FloatingLeft="1423" FloatingTop="542" FloatingWidth="960" FloatingHeight="1040" CanClose="False"></avalondock:LayoutAnchorable>
                             <avalondock:LayoutAnchorable CanHide="False" AutoHideWidth="300" AutoHideMinWidth="100" AutoHideMinHeight="100" Title="Sequences" ContentId="SequenceFilesId" FloatingLeft="1423" FloatingTop="542" FloatingWidth="960" FloatingHeight="1040" CanClose="False"></avalondock:LayoutAnchorable>
+                            <avalondock:LayoutAnchorable CanHide="False" AutoHideWidth="300" AutoHideMinWidth="100" AutoHideMinHeight="100" Title="Interceptors" ContentId="InterceptorFilesId" FloatingLeft="1423" FloatingTop="542" FloatingWidth="960" FloatingHeight="1040" CanClose="False"></avalondock:LayoutAnchorable>
                         </avalondock:LayoutAnchorablePane>
                     </avalondock:LayoutPanel>
                 </avalondock:LayoutRoot.RootPanel>

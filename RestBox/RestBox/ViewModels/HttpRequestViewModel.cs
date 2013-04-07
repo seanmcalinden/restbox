@@ -66,7 +66,9 @@ namespace RestBox.ViewModels
             ResponseTabVisibility = Visibility.Collapsed;
             HeaderResponseTabVisibility = Visibility.Collapsed;
             JsonResponseTabVisibility = Visibility.Collapsed;
+            WebBrowserTabVisibility = Visibility.Collapsed;
             XmlResponseTabVisibility = Visibility.Collapsed;
+            TreeResponseTabVisibility = Visibility.Collapsed;
             ImageResponseTabVisibility = Visibility.Collapsed;
             RawResponseTabVisibility = Visibility.Collapsed;
             ResponseInfoVisibility = Visibility.Hidden;
@@ -224,6 +226,7 @@ namespace RestBox.ViewModels
             {
                 jsonResponse = value;
                 OnPropertyChanged(x => x.JsonResponse);
+                eventAggregator.GetEvent<UpdateJsonResponseEvent>().Publish(this);
             }
         }
 
@@ -236,6 +239,7 @@ namespace RestBox.ViewModels
             {
                 xmlResponse = value;
                 OnPropertyChanged(x => x.XmlResponse);
+                eventAggregator.GetEvent<UpdateXmlResponseEvent>().Publish(this);
             }
         }
 
@@ -248,6 +252,7 @@ namespace RestBox.ViewModels
             {
                 rawResponse = value;
                 OnPropertyChanged(x => x.RawResponse);
+                eventAggregator.GetEvent<UpdateResponseRawBodyEvent>().Publish(this);
             }
         }
 
@@ -335,6 +340,18 @@ namespace RestBox.ViewModels
             }
         }
 
+        private Visibility webBrowserTabVisibility;
+        public Visibility WebBrowserTabVisibility
+        {
+            get { return webBrowserTabVisibility; }
+            set
+            {
+                webBrowserTabVisibility = value;
+                OnPropertyChanged(x => x.WebBrowserTabVisibility);
+            }
+        }
+        
+
         private bool jsonResponseTabSelected;
 
         public bool JsonResponseTabSelected
@@ -368,6 +385,28 @@ namespace RestBox.ViewModels
             {
                 xmlResponseTabSelected = value;
                 OnPropertyChanged(x => x.XmlResponseTabSelected);
+            }
+        }
+
+        private Visibility treeResponseTabVisibility;
+        public Visibility TreeResponseTabVisibility
+        {
+            get { return treeResponseTabVisibility; }
+            set
+            {
+                treeResponseTabVisibility = value;
+                OnPropertyChanged(x => x.TreeResponseTabVisibility);
+            }
+        }
+
+        private bool treeResponseTabSelected;
+        public bool TreeResponseTabSelected
+        {
+            get { return treeResponseTabSelected; }
+            set
+            {
+                treeResponseTabSelected = value;
+                OnPropertyChanged(x => x.TreeResponseTabSelected);
             }
         }
 
@@ -416,6 +455,29 @@ namespace RestBox.ViewModels
             {
                 imageResponseTabSelected = value;
                 OnPropertyChanged(x => x.ImageResponseTabSelected);
+            }
+        }
+
+        private XmlDocument treeResponse;
+        public XmlDocument TreeResponse
+        {
+            get { return treeResponse; }
+            set
+            {
+                treeResponse = value;
+                OnPropertyChanged(x => x.TreeResponse);
+            }
+        }
+
+        private bool webBrowserTabSelected;
+
+        public bool WebBrowserTabSelected
+        {
+            get { return webBrowserTabSelected; }
+            set
+            {
+                webBrowserTabSelected = value;
+                OnPropertyChanged(x => x.WebBrowserTabSelected);
             }
         }
 
@@ -965,7 +1027,7 @@ namespace RestBox.ViewModels
             return JsonConvert.SerializeObject(parsedJson, Newtonsoft.Json.Formatting.Indented);
         }
 
-        private string IndentXMLString(string xml)
+       private string IndentXMLString(string xml)
         {
             try
             {

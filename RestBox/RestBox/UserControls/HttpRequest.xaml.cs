@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Net;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -57,6 +58,9 @@ namespace RestBox.UserControls
             eventAggregator.GetEvent<UpdateRequestHeadersEvent>().Subscribe(UpdateRequestHeaders);
             eventAggregator.GetEvent<UpdateRequestBodyEvent>().Subscribe(UpdateRequestBody);
             eventAggregator.GetEvent<UpdateResponseHeadersEvent>().Subscribe(UpdateResponseHeader);
+            eventAggregator.GetEvent<UpdateResponseRawBodyEvent>().Subscribe(UpdateRawResponse);
+            eventAggregator.GetEvent<UpdateXmlResponseEvent>().Subscribe(UpdateXmlResponse);
+            eventAggregator.GetEvent<UpdateJsonResponseEvent>().Subscribe(UpdateJsonResponse);
         }
 
         #endregion
@@ -644,6 +648,45 @@ namespace RestBox.UserControls
             {
                 new TextRange(HeaderResponse.Document.ContentStart, HeaderResponse.Document.ContentEnd).Text = httpRequestViewModel.HeaderResponse;
                 ResponseHeadersTextChanged();
+            }
+        }
+
+        private void UpdateRawResponse(HttpRequestViewModel httpRequestViewModelToUpdate)
+        {
+            if (httpRequestViewModelToUpdate != httpRequestViewModel)
+            {
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(httpRequestViewModel.RawResponse))
+            {
+                new TextRange(RawResponse.Document.ContentStart, RawResponse.Document.ContentEnd).Text = httpRequestViewModel.RawResponse;
+            }
+        }
+
+        private void UpdateJsonResponse(HttpRequestViewModel httpRequestViewModelToUpdate)
+        {
+            if (httpRequestViewModelToUpdate != httpRequestViewModel)
+            {
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(httpRequestViewModel.JsonResponse))
+            {
+                new TextRange(JsonResponse.Document.ContentStart, JsonResponse.Document.ContentEnd).Text = httpRequestViewModel.JsonResponse;
+            }
+        }
+
+        private void UpdateXmlResponse(HttpRequestViewModel httpRequestViewModelToUpdate)
+        {
+            if (httpRequestViewModelToUpdate != httpRequestViewModel)
+            {
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(httpRequestViewModel.XmlResponse))
+            {
+                new TextRange(XmlResponse.Document.ContentStart, XmlResponse.Document.ContentEnd).Text = httpRequestViewModel.XmlResponse;
             }
         }
 

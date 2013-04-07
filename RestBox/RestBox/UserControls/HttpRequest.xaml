@@ -106,7 +106,7 @@
                         <TabControl Grid.Row="1">
                             <TabControl.Items>
                                 <TabItem Header="Headers" x:Name="HeaderResponseTab" Visibility="{Binding HeaderResponseTabVisibility}">
-                                    <RichTextBox x:Name="HeaderResponse" Background="{Binding RequestHeadersColor}" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" VerticalAlignment="Stretch">
+                                    <RichTextBox IsDocumentEnabled="True" x:Name="HeaderResponse" Background="{Binding RequestHeadersColor}" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" VerticalAlignment="Stretch">
                                         <RichTextBox.Resources>
                                             <Style TargetType="{x:Type Paragraph}">
                                                 <Setter Property="Margin" Value="0"/>
@@ -115,19 +115,38 @@
                                     </RichTextBox>
                                 </TabItem>
                                 <TabItem Header="Json" x:Name="JsonResponseTab" Visibility="{Binding JsonResponseTabVisibility}" IsSelected="{Binding JsonResponseTabSelected}">
-                                    <TextBox Text="{Binding Path=JsonResponse}" x:Name="JsonResponse" MinLines="5" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" VerticalAlignment="Stretch"></TextBox>
+                                    <RichTextBox IsDocumentEnabled="True" x:Name="JsonResponse" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" VerticalAlignment="Stretch">
+                                        <RichTextBox.Resources>
+                                            <Style TargetType="{x:Type Paragraph}">
+                                                <Setter Property="Margin" Value="0"/>
+                                            </Style>
+                                        </RichTextBox.Resources>
+                                    </RichTextBox>
                                 </TabItem>
                                 <TabItem Header="Xml" x:Name="XmlResponseTab" Visibility="{Binding XmlResponseTabVisibility}" IsSelected="{Binding XmlResponseTabSelected}">
-                                    <TextBox Text="{Binding Path=XmlResponse}" x:Name="XmlResponse" MinLines="5" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" VerticalAlignment="Stretch"></TextBox>
+                                    <RichTextBox IsDocumentEnabled="True" x:Name="XmlResponse" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" VerticalAlignment="Stretch">
+                                        <RichTextBox.Resources>
+                                            <Style TargetType="{x:Type Paragraph}">
+                                                <Setter Property="Margin" Value="0"/>
+                                            </Style>
+                                        </RichTextBox.Resources>
+                                    </RichTextBox>
                                 </TabItem>
+                                <!--<TabItem Header="Tree" x:Name="TreeResponseTab" Visibility="{Binding TreeResponseTabVisibility}" IsSelected="{Binding TreeResponseTabSelected}">
+                                    <TreeView x:Name="ResponseTreeView" ItemsSource="{Binding TreeResponse}">
+                                    </TreeView>
+                                </TabItem>-->
                                 <TabItem Header="Image" x:Name="ImageResponseTab" Visibility="{Binding ImageResponseTabVisibility}" IsSelected="{Binding ImageResponseTabSelected}">
                                     <Image x:Name="ImageResponse" VerticalAlignment="Stretch" Source="{Binding Path=ImageSource}"/>
                                 </TabItem>
-                                <!--<TabItem Header="Web View" x:Name="WebBrowserTab" Visibility="{Binding WebBrowserTabVisibility}" IsSelected="{Binding WebBrowserTabSelected}">
-                                    <WebBrowser x:Name="ResponseWebBrowser" />
-                                </TabItem>-->
                                 <TabItem Header="Raw" x:Name="RawResponseTab" Visibility="{Binding RawResponseTabVisibility}" IsSelected="{Binding RawResponseTabSelected}">
-                                    <TextBox Text="{Binding Path=RawResponse}" x:Name="RawResponse" MinLines="5" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" VerticalAlignment="Stretch"></TextBox>
+                                    <RichTextBox IsDocumentEnabled="True" x:Name="RawResponse" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" VerticalAlignment="Stretch">
+                                        <RichTextBox.Resources>
+                                            <Style TargetType="{x:Type Paragraph}">
+                                                <Setter Property="Margin" Value="0"/>
+                                            </Style>
+                                        </RichTextBox.Resources>
+                                    </RichTextBox>
                                 </TabItem>
                             </TabControl.Items>
                         </TabControl>

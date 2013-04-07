@@ -39,11 +39,11 @@ namespace RestBox.ViewModels
         private readonly IMapper<TItemFile, TUserControlViewModel> itemToViewModelMapper;
         private readonly string newItemTitle;
         private readonly Func<List<File>> viewFilesAction;
+        private readonly Func<List<string>> stringViewFilesAction;
         private readonly string openFileTitle;
         private readonly string openFileFilter;
         private ViewFile viewFileToOpen;
         private const string Warning = "warning";
-        private const string StandaloneNewItemPrefix = "StandaloneNewItem";
         private LayoutDocumentType layoutDocumentType;
 
         #endregion
@@ -79,6 +79,52 @@ namespace RestBox.ViewModels
             eventAggregator.GetEvent<DocumentChangedEvent>().Subscribe(DocumentChanged);
 
             if (typeof (TUserControl) == typeof (HttpRequest))
+            {
+                layoutDocumentType = LayoutDocumentType.HttpRequest;
+            }
+            else if (typeof(TUserControl) == typeof(HttpRequestSequence))
+            {
+                layoutDocumentType = LayoutDocumentType.Sequence;
+            }
+            else if (typeof(TUserControl) == typeof(RequestEnvironmentSettings))
+            {
+                layoutDocumentType = LayoutDocumentType.Environment;
+            }
+            else if (typeof(TUserControl) == typeof(HttpInterceptor))
+            {
+                layoutDocumentType = LayoutDocumentType.Interceptor;
+            }
+        }
+
+        protected FileListViewModelBase(
+            IFileService fileService,
+            IEventAggregator eventAggregator,
+            IMainMenuApplicationService mainMenuApplicationService,
+            IMapper<TItemFile, TUserControlViewModel> itemToViewModelMapper,
+            string newItemTitle,
+            Func<List<string>> viewFilesAction,
+            string openFileTitle,
+            string openFileFilter)
+        {
+            this.fileService = fileService;
+            this.eventAggregator = eventAggregator;
+            this.mainMenuApplicationService = mainMenuApplicationService;
+            this.itemToViewModelMapper = itemToViewModelMapper;
+            this.newItemTitle = newItemTitle;
+            this.stringViewFilesAction = viewFilesAction;
+            this.openFileTitle = openFileTitle;
+            this.openFileFilter = openFileFilter;
+            SolutionLoadedVisibility = Visibility.Hidden;
+
+            ViewFiles = new ObservableCollection<ViewFile>();
+            Groups = new ObservableCollection<string>();
+            SetupFilesCollectionView();
+            eventAggregator.GetEvent<NewSolutionEvent>().Subscribe(SolutionLoadedEvent);
+            eventAggregator.GetEvent<OpenSolutionEvent>().Subscribe(SolutionLoadedEvent);
+            eventAggregator.GetEvent<CloseSolutionEvent>().Subscribe(SolutionClosedEvent);
+            eventAggregator.GetEvent<DocumentChangedEvent>().Subscribe(DocumentChanged);
+
+            if (typeof(TUserControl) == typeof(HttpRequest))
             {
                 layoutDocumentType = LayoutDocumentType.HttpRequest;
             }
@@ -143,21 +189,25 @@ namespace RestBox.ViewModels
         {
             ViewFiles.Clear();
 
-            foreach (var file in viewFilesAction())
+            if (viewFilesAction != null)
             {
-                var requestView = new ViewFile
+                foreach (var file in viewFilesAction())
                 {
-                    Id = file.Id,
-                    Name = file.Name,
-                    Groups = file.Groups,
-                    RelativeFilePath = file.RelativeFilePath
-                };
-                if (!fileService.FileExists(fileService.GetFilePath(Solution.Current.FilePath, file.RelativeFilePath)))
-                {
-                    requestView.Icon = Warning;
-                }
+                    var requestView = new ViewFile
+                        {
+                            Id = file.Id,
+                            Name = file.Name,
+                            Groups = file.Groups,
+                            RelativeFilePath = file.RelativeFilePath
+                        };
+                    if (
+                        !fileService.FileExists(fileService.GetFilePath(Solution.Current.FilePath, file.RelativeFilePath)))
+                    {
+                        requestView.Icon = Warning;
+                    }
 
-                ViewFiles.Add(requestView);
+                    ViewFiles.Add(requestView);
+                }
             }
 
             SolutionLoadedVisibility = Visibility.Visible;
@@ -264,7 +314,13 @@ namespace RestBox.ViewModels
         {
             if (selectedFile != null && selectedFile.Groups != null)
             {
-                viewFilesAction().First(x => x.Id == selectedFile.Id).Groups = selectedFile.Groups;
+                var viewFile = viewFilesAction().FirstOrDefault(x => x.Id == selectedFile.Id);
+
+                if (viewFile != null)
+                {
+                    viewFile.Groups = selectedFile.Groups;
+                }
+
                 fileService.SaveSolution();
             }   
         }
@@ -314,7 +370,7 @@ namespace RestBox.ViewModels
                 return;
             }
 
-            if (layoutData != null && layoutData.Content != null && layoutData.Content.GetType() == typeof(TUserControl))
+            if (layoutData.Content != null && layoutData.Content.GetType() == typeof(TUserControl))
             {
                 if (layoutData.IsSelected)
                 {
@@ -443,19 +499,21 @@ namespace RestBox.ViewModels
 
             itemToViewModelMapper.Map(item, viewModel);
 
+            ((ISave) viewModel).IsDirty = true;
+
             var layoutDocument = new LayoutDocument
             {
                 Title = Path.GetFileNameWithoutExtension(newItemTitle),
-                ContentId = viewFileToOpen.Id,
+                ContentId = newViewFile.Id,
                 Content = itemUserControl,
                 IsSelected = true,
                 CanFloat = true,
                 IconSource = new BitmapImage(LayoutDocumentUtilities.GetImageUri(layoutDocumentType))
             };
-            layoutDocument.Closing += DocumentClosing;
 
             eventAggregator.GetEvent<AddLayoutDocumentEvent>().Publish(layoutDocument);
             eventAggregator.GetEvent<TAddMenuItemsEvent>().Publish((TUserControlViewModel)((TUserControl)layoutDocument.Content).DataContext);
+            layoutDocument.Closing += DocumentClosing;
 
         }
 
@@ -502,6 +560,11 @@ namespace RestBox.ViewModels
 
         private void DeleteItem()
         {
+            if (selectedFile == null)
+            {
+                return;
+            }
+
             var id = SelectedFile.Id;
             if (SelectedFile.Name == newItemTitle)
             {
@@ -550,9 +613,12 @@ namespace RestBox.ViewModels
             }
         }
 
-        private void OpenFolder()
+        public virtual void OpenFolder()
         {
-            fileService.OpenFileInWindowsExplorer(selectedFile.RelativeFilePath);
+            if (selectedFile != null && selectedFile.RelativeFilePath != null)
+            {
+                fileService.OpenFileInWindowsExplorer(selectedFile.RelativeFilePath);
+            }
         }
 
         #endregion

@@ -12,11 +12,19 @@ namespace RestBox.ViewModels
         private readonly IRestBoxStateService restBoxStateService;
         private readonly IFileService fileService;
 
-        public StartPageViewModel(IRestBoxStateService restBoxStateService, IFileService fileService)
+        public StartPageViewModel(IFileService fileService, IRestBoxStateService restBoxStateService)
         {
             this.restBoxStateService = restBoxStateService;
             this.fileService = fileService;
-            RestBoxStateFiles = new ObservableCollection<RestBoxStateFile>(restBoxStateService.GetState().RestBoxStateFiles);
+            var state = restBoxStateService.GetState();
+            if (state != null)
+            {
+                RestBoxStateFiles = new ObservableCollection<RestBoxStateFile>(restBoxStateService.GetState().RestBoxStateFiles);
+            }
+            else
+            {
+                RestBoxStateFiles = new ObservableCollection<RestBoxStateFile>();
+            }
         }
 
         public ObservableCollection<RestBoxStateFile> RestBoxStateFiles { get; set; } 

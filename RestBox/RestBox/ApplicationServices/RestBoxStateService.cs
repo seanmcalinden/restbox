@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using RestBox.Domain.Services;
 using RestBox.ViewModels;
+using System.Diagnostics;
 
 namespace RestBox.ApplicationServices
 {

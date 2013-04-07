@@ -18,6 +18,7 @@ namespace RestBox.ViewModels
             RequestEnvironmentFiles = new List<File>();
             RequestExtensionsFilePaths = new List<string>();
             HttpRequestSequenceFiles = new List<File>();
+            HttpInterceptorFiles = new List<File>();
         } 
 
         #endregion
@@ -29,6 +30,7 @@ namespace RestBox.ViewModels
         public List<File> HttpRequestFiles { get; set; }
         public List<File> RequestEnvironmentFiles { get; set; }
         public List<File> HttpRequestSequenceFiles { get; set; }
+        public List<File> HttpInterceptorFiles { get; set; }
         public List<string> RequestExtensionsFilePaths { get; set; }
         
         #endregion
@@ -47,6 +49,7 @@ namespace RestBox.ViewModels
             FilePath = null;
             HttpRequestFiles.Clear();
             RequestEnvironmentFiles.Clear();
+            HttpInterceptorFiles.Clear();
             RequestExtensionsFilePaths.Clear();
         } 
 

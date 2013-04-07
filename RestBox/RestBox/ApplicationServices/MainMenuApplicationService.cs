@@ -60,6 +60,7 @@ namespace RestBox.ApplicationServices
             var viewMenu = CreateViewMenu();
             var helpMenu = CreateHelpMenu();
             var requestMenu = CreateRequestMenu();
+            var interceptorMenu = CreateInterceptorMenu();
             var environmentMenu = CreateEnvironmentMenu();
             var extensionsMenu = CreateRequestExtensionsMenu();
             var sequencesMenu = CreateSequencesMenu();
@@ -68,12 +69,46 @@ namespace RestBox.ApplicationServices
             shellViewModel.MenuItems.Add(viewMenu);
             shellViewModel.MenuItems.Add(requestMenu);
             shellViewModel.MenuItems.Add(environmentMenu);
+            shellViewModel.MenuItems.Add(interceptorMenu);
             shellViewModel.MenuItems.Add(sequencesMenu);
             shellViewModel.MenuItems.Add(extensionsMenu);
             shellViewModel.MenuItems.Add(helpMenu);
             eventAggregator.GetEvent<UpdateViewMenuItemChecksEvent>().Publish(true);
 
             DisableSolutionMenus();
+        }
+
+        private MenuItem CreateInterceptorMenu()
+        {
+            var menuItem = new MenuItem();
+            menuItem.Header = "_Interceptors";
+            menuItem.Name = "interceptors";
+
+            var addInterceptor = new MenuItem();
+            addInterceptor.Header = "_Add";
+            addInterceptor.Name = "interceptorsAdd";
+
+            var newInterceptor = new MenuItem();
+            newInterceptor.Header = "_New";
+            newInterceptor.Name = "interceptorsNew";
+
+            var existingInterceptor = new MenuItem();
+            existingInterceptor.Header = "_Existing";
+            existingInterceptor.Name = "interceptorsExisting";
+
+            var startInterceptor = new MenuItem();
+            startInterceptor.Header = "_Start";
+            startInterceptor.Name = "interceptorsStart";
+            startInterceptor.InputGestureText = "F5";
+            startInterceptor.IsEnabled = false;
+
+            addInterceptor.Items.Add(newInterceptor);
+            addInterceptor.Items.Add(existingInterceptor);
+
+            menuItem.Items.Add(startInterceptor);
+            menuItem.Items.Add(new Separator());
+            menuItem.Items.Add(addInterceptor);
+            return menuItem;
         }
 
         public void LoadSolutionMenus()
@@ -96,6 +131,12 @@ namespace RestBox.ApplicationServices
             if (sequencesMenuItem != null)
             {
                 sequencesMenuItem.Visibility = Visibility.Visible;
+            }
+
+            var interceptorsMenuItem = shellViewModel.MenuItems.FirstOrDefault(x => x.Name == "interceptors");
+            if (sequencesMenuItem != null)
+            {
+                interceptorsMenuItem.Visibility = Visibility.Visible;
             }
 
             var extensionsMenuItem = shellViewModel.MenuItems.FirstOrDefault(x => x.Name == "extensions");
@@ -231,6 +272,12 @@ namespace RestBox.ApplicationServices
                 sequencesMenuItem.Visibility = Visibility.Collapsed;
             }
 
+            var interceptorsMenuItem = shellViewModel.MenuItems.FirstOrDefault(x => x.Name == "interceptors");
+            if (sequencesMenuItem != null)
+            {
+                interceptorsMenuItem.Visibility = Visibility.Collapsed;
+            }
+
             var extensionsMenuItem = shellViewModel.MenuItems.FirstOrDefault(x => x.Name == "extensions");
             if (extensionsMenuItem != null)
             {
@@ -261,7 +308,8 @@ namespace RestBox.ApplicationServices
             onlineDocumentation.Command = new DelegateCommand(() => LaunchHelp(HelpSite.Documentation));
 
             var aboutMenu = new MenuItem();
-            aboutMenu.Header = "_About RestBox";
+            aboutMenu.Header = "_About REST Box";
+            aboutMenu.Command = new DelegateCommand(CreateAboutWindow);
 
             helpMenu.Items.Add(tutorials);
             helpMenu.Items.Add(onlineDocumentation);
@@ -269,6 +317,25 @@ namespace RestBox.ApplicationServices
             helpMenu.Items.Add(aboutMenu);
 
             return helpMenu;
+        }
+
+        private About aboutWindow;
+
+        private void CreateAboutWindow()
+        {
+            aboutWindow = new About
+                {
+                    WindowStartupLocation = WindowStartupLocation.CenterScreen,
+                    WindowStyle = WindowStyle.None,
+                    ShowInTaskbar = false
+                };
+            aboutWindow.Show();
+            aboutWindow.Deactivated += WindowOnDeactivated;
+        }
+
+        private void WindowOnDeactivated(object sender, EventArgs eventArgs)
+        {
+            aboutWindow.Close();
         }
 
         private enum HelpSite

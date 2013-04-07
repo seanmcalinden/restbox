@@ -16,12 +16,12 @@
                 <ColumnDefinition Width="20" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <Button Grid.Column="0" ToolTip="Create new http request"  Height="20" Width="20" Command="{Binding NewCommand}">
+            <Button Grid.Column="0" ToolTip="Create new sequence"  Height="20" Width="20" Command="{Binding NewCommand}">
                 <StackPanel>
                     <Image Source="../Images/new-icon.png" />
                 </StackPanel>
             </Button>
-            <Button Grid.Column="1"  ToolTip="Add existing http request"  Height="20" Width="20" Command="{Binding AddCommand}">
+            <Button Grid.Column="1"  ToolTip="Add existing sequence"  Height="20" Width="20" Command="{Binding AddCommand}">
                 <StackPanel>
                     <Image Source="../Images/add-icon.png" />
                 </StackPanel>
