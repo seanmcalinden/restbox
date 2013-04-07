@@ -1,0 +1,113 @@
+﻿<Window x:Class="RestBox.Shell"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:avalondock="http://avalondock.codeplex.com"
+        xmlns:UserControls="clr-namespace:RestBox.UserControls"
+        xmlns:Properties="clr-namespace:AvalonDock.Properties;assembly=AvalonDock" Title="{Binding ApplicationTitle}" Height="600" Width="800" WindowStartupLocation="CenterScreen" WindowState="Maximized">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />    
+            
+        </Grid.RowDefinitions>
+
+        <Menu Grid.Row="0" ItemsSource="{Binding MenuItems}" />
+        
+        <ToolBarTray Grid.Row="1">
+            <ToolBar Band="1" BandIndex="1">
+                <Button Command="{Binding NewSolutionCommand, UpdateSourceTrigger=PropertyChanged}" ToolTip="Create new solution">
+                    <Image Source="Images/new-icon.png" Height="20" Width="20"></Image>
+                </Button>
+                <Button Command="{Binding OpenSolutionCommand, UpdateSourceTrigger=PropertyChanged}" ToolTip="Open solution">
+                    <Image Source="Images/open-icon.png" Height="20" Width="20"></Image>
+                </Button>
+                <Button Visibility="{Binding SaveButtonVisibility}" Command="{Binding SaveCommand, UpdateSourceTrigger=PropertyChanged}" ToolTip="Save file">
+                    <Image Source="Images/save-icon.png" Height="20" Width="20"></Image>
+                </Button>
+                <Button ToolTip="Save All" Command="{Binding SaveAllCommand, UpdateSourceTrigger=PropertyChanged}">
+                    <Image Source="Images/save-all-icon.png" Height="20" Width="20"></Image>
+                </Button>
+            </ToolBar>
+            <ToolBar Band="1" BandIndex="2">
+                <Button Visibility="{Binding RunButtonVisibility}" Height="26" Command="{Binding RunCommand, UpdateSourceTrigger=PropertyChanged}">
+                    <StackPanel Orientation="Horizontal">
+                        <Label Content="Run" Padding="0" VerticalAlignment="Center"></Label>
+                        <Image Source="Images/play-icon.png" Height="20" Width="20"></Image>
+                    </StackPanel>
+                </Button>
+                <Label Content="Environment:" VerticalAlignment="Center" Padding="0"></Label>
+                <ComboBox Grid.Row="1" ItemsSource="{Binding Environments}" Width="150" VerticalAlignment="Center" SelectedItem="{Binding SelectedEnvironment, UpdateSourceTrigger=PropertyChanged}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <Label Content="{Binding Name}" Padding="0" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </ToolBar>
+            <ToolBar Band="1" BandIndex="3">
+                <Button Command="{Binding HelpCommand}" ToolTip="Get help online">
+                    <Image Source="Images/help-icon.png" Height="20" Width="20"></Image>
+                </Button>
+            </ToolBar>
+        </ToolBarTray>
+        
+        <StatusBar DockPanel.Dock="Bottom" x:Name="StatusBar" Height="35" VerticalAlignment="Bottom" Grid.Row="3">
+            <Label x:Name="StatusBarText" Content="Ready" />
+        </StatusBar>
+        
+        <avalondock:DockingManager x:Name="dockingManager" Grid.Row="2">
+
+            <avalondock:DockingManager.Theme>
+                <avalondock:VS2010Theme/>
+            </avalondock:DockingManager.Theme>
+            <avalondock:DockingManager.DocumentHeaderTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{Binding IconSource}" Margin="0,0,4,0" Height="18" Width="18" VerticalAlignment="Top"/>
+                        <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" VerticalAlignment="Top"/>
+                    </StackPanel>
+                </DataTemplate>
+            </avalondock:DockingManager.DocumentHeaderTemplate>
+            <avalondock:DockingManager.IconContentTemplate>
+<DataTemplate>
+                    <Image Source="{Binding IconSource}" Margin="0,0,4,0" Height="20" Width="20"/>
+                </DataTemplate>
+                </avalondock:DockingManager.IconContentTemplate>
+
+                    <avalondock:DockingManager.DocumentContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="{x:Static Properties:Resources.Document_Close}" 
+                     Command="{Binding Path=CloseCommand}"
+                     Visibility="{Binding Path=IsEnabled, RelativeSource={RelativeSource Self}, Mode=OneWay}"/>
+                    <MenuItem Header="{x:Static Properties:Resources.Document_CloseAllButThis}" 
+                     Command="{Binding Path=CloseAllButThisCommand}"/>
+                </ContextMenu>
+            </avalondock:DockingManager.DocumentContextMenu>
+
+            <avalondock:LayoutRoot>
+                <avalondock:LayoutRoot.RootPanel>
+                    <avalondock:LayoutPanel Orientation="Horizontal">
+                    <avalondock:LayoutPanel Orientation="Vertical" DockWidth="0.954434993924666*">
+                        <avalondock:LayoutPanel Orientation="Horizontal">
+                            <avalondock:LayoutDocumentPane></avalondock:LayoutDocumentPane>
+                        </avalondock:LayoutPanel>
+                        <avalondock:LayoutAnchorablePaneGroup Orientation="Horizontal" DockHeight="241.54" FloatingWidth="282" FloatingHeight="925" FloatingLeft="814" FloatingTop="991">
+                            <avalondock:LayoutAnchorablePane DockHeight="241.54" FloatingWidth="282" FloatingHeight="925" FloatingLeft="814" FloatingTop="991">
+                                <avalondock:LayoutAnchorable CanHide="False" AutoHideWidth="300" AutoHideHeight="425" AutoHideMinWidth="100" AutoHideMinHeight="100" Title="Environments" IsSelected="True" ContentId="EnvironmentsLayoutId" FloatingLeft="854" FloatingTop="872" FloatingWidth="282" FloatingHeight="925" CanClose="False"></avalondock:LayoutAnchorable>
+                                <avalondock:LayoutAnchorable CanHide="False" AutoHideWidth="300" AutoHideMinWidth="100" AutoHideMinHeight="100" Title="Extensions" ContentId="RequestExtensionsId" FloatingLeft="814" FloatingTop="991" FloatingWidth="282" FloatingHeight="925" CanClose="False"></avalondock:LayoutAnchorable>
+                            </avalondock:LayoutAnchorablePane>
+                        </avalondock:LayoutAnchorablePaneGroup>
+                        </avalondock:LayoutPanel>
+                        <avalondock:LayoutAnchorablePane DockWidth="337" DockHeight="459.54" FloatingWidth="960" FloatingHeight="1040" FloatingLeft="1423" FloatingTop="542">
+                            <avalondock:LayoutAnchorable CanHide="False" AutoHideWidth="300" AutoHideMinWidth="100" AutoHideMinHeight="100" Title="Requests" IsSelected="True" ContentId="HttpRequestFilesLayoutId" FloatingLeft="1423" FloatingTop="542" FloatingWidth="960" FloatingHeight="1040" CanClose="False"></avalondock:LayoutAnchorable>
+                            <avalondock:LayoutAnchorable CanHide="False" AutoHideWidth="300" AutoHideMinWidth="100" AutoHideMinHeight="100" Title="Sequences" ContentId="SequenceFilesId" FloatingLeft="1423" FloatingTop="542" FloatingWidth="960" FloatingHeight="1040" CanClose="False"></avalondock:LayoutAnchorable>
+                            <avalondock:LayoutAnchorable CanHide="False" AutoHideWidth="300" AutoHideMinWidth="100" AutoHideMinHeight="100" Title="Interceptors" ContentId="InterceptorFilesId" FloatingLeft="1423" FloatingTop="542" FloatingWidth="960" FloatingHeight="1040" CanClose="False"></avalondock:LayoutAnchorable>
+                        </avalondock:LayoutAnchorablePane>
+                    </avalondock:LayoutPanel>
+                </avalondock:LayoutRoot.RootPanel>
+            </avalondock:LayoutRoot>
+
+        </avalondock:DockingManager>
+    </Grid>
+</Window>
